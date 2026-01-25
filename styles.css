@@ -46,14 +46,14 @@
 
 body {
     margin: 0;
-    background-color: var(--bg-dark);
+    background-color: #ffffff;
     color: var(--text-dark);
     font-family: 'Inter', sans-serif;
     height: 100vh;
+    width: 100vw;
     overflow: hidden;
-    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
-    overflow-x: hidden;
-    overscroll-behavior-y: none;
+    position: relative;
+    /* Zurück zu relative für stabileren Tab-Flow */
 }
 
 h1,

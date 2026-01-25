@@ -78,7 +78,7 @@ export class ChatView {
         }).join('')}
             </div>
 
-            <!-- Global Modals (Using fixed with 100vw to ignore parents) -->
+            <!-- Global Modals (Using fixed with 100vw and left: 0 to bypass container limits) -->
             <div id="emoji-picker-container" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9000;">
                 <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div>
                 <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content; max-width: 90%;">
@@ -92,25 +92,25 @@ export class ChatView {
             </div>
 
             <!-- Chat Input Container -->
-            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0; z-index: 1000; transition: bottom 0.2s;">
-                <div style="max-width: 450px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px; padding: 0 10px;">
+            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0; z-index: 1000; transition: bottom 0.1s;">
+                <div style="display: flex; align-items: flex-end; gap: 8px; padding: 0 10px;">
                     <div style="flex: 1; position: relative;">
                         <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px;">
                             <span id="reply-text">Antworten auf...</span>
                             <button id="cancel-reply" style="float: right; border: none; background: none;">&times;</button>
                         </div>
                         <div style="background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="width: 100%; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px;"></textarea>
+                            <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="width: 100%; background: transparent; border: none; padding: 8px 15px; outline: none; resize: none; font-size: 16px;"></textarea>
                         </div>
                     </div>
                     <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;"><i class="ph-fill ph-paper-plane-right" style="font-size: 20px;"></i></button>
                 </div>
             </div>
 
-            <!-- Reaction Modal (True 100vw Layer) -->
-            <div id="reaction-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; background: rgba(0,0,0,0); transition: background 0.3s;">
-                <div id="reaction-sheet" style="position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 25px 25px 0 0; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding-bottom: env(safe-area-inset-bottom);">
-                    <div style="padding: 20px;">
+            <!-- Reaction Modal (True Full-Width Layer) -->
+            <div id="reaction-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; background: rgba(0,0,0,0); transition: background 0.3s; pointer-events: none;">
+                <div id="reaction-sheet" style="position: absolute; bottom: 0; left: 0; width: 100vw; max-width: none !important; background: white; border-radius: 25px 25px 0 0; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: auto;">
+                    <div style="padding: 20px 20px 40px 20px;">
                         <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px;"></div>
                         <h3 id="reaction-count-title" style="margin-bottom: 20px;">X Reaktionen</h3>
                         <div id="reaction-users-list" style="overflow-y: auto; max-height: 40vh;"></div>
@@ -129,23 +129,43 @@ export class ChatView {
         const modal = document.getElementById('reaction-modal');
         const nav = document.querySelector('.bottom-nav');
         const singleEmojiInput = document.getElementById('single-emoji-input');
+        const feedContainer = document.querySelector('.content-area');
 
-        // Robust Keyboard/Nav Handling using VisualViewport or Resize
+        // Reset display state upon entering
+        if (nav) nav.style.display = 'flex';
+
         const updateLayout = () => {
-            const isKeyboardOpen = window.innerHeight < 500; // Vereinfachter Check
-            if (isKeyboardOpen) {
-                if (nav) nav.style.display = 'none';
-                inputContainer.style.bottom = '0';
+            // Only act if the current view is still focused on our input
+            if (!document.body.contains(input)) return;
+
+            const isKeyboardOpen = window.innerHeight < window.outerHeight * 0.7;
+            if (isKeyboardOpen || document.activeElement === input || document.activeElement === singleEmojiInput) {
+                if (nav) nav.style.visibility = 'hidden';
+                if (inputContainer) inputContainer.style.bottom = '0';
             } else {
-                if (nav) nav.style.display = 'flex';
-                inputContainer.style.bottom = 'calc(var(--nav-height) + env(safe-area-inset-bottom))';
+                if (nav) nav.style.visibility = 'visible';
+                if (inputContainer) inputContainer.style.bottom = 'calc(var(--nav-height) + env(safe-area-inset-bottom))';
             }
         };
-        window.visualViewport?.addEventListener('resize', updateLayout);
-        input.addEventListener('focus', updateLayout);
-        input.addEventListener('blur', () => setTimeout(updateLayout, 100));
 
-        // Long Press Logic
+        window.addEventListener('resize', updateLayout);
+        input?.addEventListener('focus', updateLayout);
+        input?.addEventListener('blur', () => setTimeout(updateLayout, 150));
+        singleEmojiInput?.addEventListener('focus', updateLayout);
+
+        if (this.shouldScroll) {
+            feedContainer.scrollTop = feedContainer.scrollHeight;
+        }
+
+        document.getElementById('test-user-switch').addEventListener('click', () => {
+            if (store.state.currentUser.name === 'Julius') {
+                store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
+            } else {
+                store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
+            }
+            location.reload();
+        });
+
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -186,7 +206,6 @@ export class ChatView {
             bubble.addEventListener('contextmenu', e => e.preventDefault());
         });
 
-        // Modal Logic
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -206,7 +225,7 @@ export class ChatView {
                     `;
                 }).join('');
                 document.querySelectorAll('.reaction-row').forEach(row => {
-                    if (row.dataset.isMe === 'true') row.onclick = () => { store.addReaction(pill.dataset.id, row.dataset.emoji); modal.click(); };
+                    if (row.dataset.isMe === 'true') row.onclick = () => { store.addReaction(pill.dataset.id, row.dataset.emoji); modal.onclick({ target: modal }); };
                 });
                 modal.style.display = 'block';
                 setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.style.transform = 'translateY(0)'; }, 10);
@@ -214,14 +233,13 @@ export class ChatView {
         });
 
         modal.onclick = (e) => {
-            if (e.target === modal) {
+            if (e.target === modal || e.target === sheet) { // Added sheet click for safety
                 modal.style.background = 'rgba(0,0,0,0)';
                 sheet.style.transform = 'translateY(110%)';
                 setTimeout(() => modal.style.display = 'none', 300);
             }
         };
 
-        // Swipe down to close sheet
         let startY = 0;
         sheet.addEventListener('touchstart', (e) => startY = e.touches[0].clientY, { passive: true });
         sheet.addEventListener('touchmove', (e) => {
@@ -233,7 +251,6 @@ export class ChatView {
             else sheet.style.transform = 'translateY(0)';
         });
 
-        // + Button / Custom Emoji
         document.getElementById('show-full-picker-btn').onclick = () => {
             emojiBar.style.display = 'none';
             document.getElementById('single-emoji-input-container').style.display = 'block';
