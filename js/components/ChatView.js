@@ -110,15 +110,17 @@ export class ChatView {
                     <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
                 
-                <!-- Single Emoji Input (Bottom Sheet Style) -->
-                <div id="single-emoji-input-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f2f5; border: 1px solid #ddd; border-bottom: none; border-radius: 16px 16px 0 0; padding: 15px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 3002;">
-                    <input type="text" id="single-emoji-input" placeholder="" 
-                        style="width: 100%; font-size: 30px; text-align: center; padding: 10px; border-radius: 12px; border: 1px solid #ddd; outline: none; caret-color: var(--primary);">
+                <!-- Single Emoji Input (Bottom Sheet Style) match Chat Input Style -->
+                <div id="single-emoji-input-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #f8f9fa; border-radius: 20px 20px 0 0; padding: 15px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 3002;">
+                    <div style="background: white; padding: 5px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee;">
+                        <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..." 
+                            style="width: 100%; background: transparent; border: none; color: var(--text-dark); padding: 8px 12px; outline: none; font-family: inherit; font-size: 16px; text-align: center;">
+                    </div>
                 </div>
             </div>
 
             <!-- Chat Input (Fixed ABOVE Tabs) -->
-            <div style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 20%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 102; pointer-events: none;">
+            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 20%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 102; pointer-events: none;">
                 <div style="max-width: 450px; margin: 0 auto; pointer-events: auto;">
                     <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none; font-size: 11px; margin: 0 5px;">
                         <span id="reply-text" style="color: var(--text-muted); font-weight: 500;">Antworten auf...</span>
@@ -299,8 +301,37 @@ export class ChatView {
             }
         });
 
-        // Open Sheet & Delete Logic
+        // Input Focus Handling (Hide Tabs on Keyboard)
+        const nav = document.querySelector('.bottom-nav');
+
+        const handleFocus = () => {
+            if (nav) nav.style.display = 'none';
+            // Wenn Tastatur offen, Chat-Input ganz nach unten
+            document.getElementById('chat-input-container').style.bottom = '0';
+        };
+
+        const handleBlur = () => {
+            // Warte kurz, falls nur Fokuswechsel passiert
+            setTimeout(() => {
+                if (nav) nav.style.display = 'flex';
+                document.getElementById('chat-input-container').style.bottom = 'calc(var(--nav-height) + env(safe-area-inset-bottom))';
+                // Scroll Back
+                window.scrollTo(0, 0);
+            }, 200);
+        };
+
+        if (input) {
+            input.addEventListener('focus', handleFocus);
+            input.addEventListener('blur', handleBlur);
+        }
+
+        if (singleEmojiInput) {
+            singleEmojiInput.addEventListener('focus', handleFocus);
+            singleEmojiInput.addEventListener('blur', handleBlur);
+        }
+
         document.querySelectorAll('.reaction-pill').forEach(pill => {
+            // ... (restlicher Code)
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const msgId = pill.dataset.id;

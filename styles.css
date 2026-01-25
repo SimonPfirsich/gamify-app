@@ -80,8 +80,26 @@ h4 {
 .content-area {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 0;
+    /* Radikaler Reset für Edge-to-Edge */
     padding-bottom: calc(var(--nav-height) + 20px);
+}
+
+/* Spezialfall: Padding nur für Nicht-Chat Views wiederherstellen wenn nötig */
+.content-area> :not(#chat-feed) {
+    padding: 20px;
+}
+
+#chat-feed {
+    padding: 10px 0;
+    /* Nur vertikales Padding */
+}
+
+/* Keyboard-Fix: Wenn Bildschirm sehr flach wird (Tastatur offen), Nav verstecken */
+@media (max-height: 450px) {
+    .bottom-nav {
+        display: none !important;
+    }
 }
 
 /* --- Navigation --- */
