@@ -10,10 +10,48 @@ const initialState = {
 
 class Store {
     constructor() {
-        // Load from local storage or use initial state
-        const saved = localStorage.getItem('gamify_state');
-        this.state = saved ? JSON.parse(saved) : initialState;
+        this.state = {
+            currentUser: { id: '7fcb9560-f435-430c-8090-e4b2d41a7985', name: 'Julius', avatar: '👨‍🚀' },
+            users: [],
+            challenges: [],
+            events: [],
+            chat: []
+        };
         this.listeners = [];
+        this.init();
+    }
+
+    async init() {
+        await this.fetchData();
+        this.setupSubscriptions();
+    }
+
+    async fetchData() {
+        try {
+            // Fetch challenges with actions
+            const { data: challenges } = await supabaseClient.from('challenges').select('*, actions(*)');
+            // Fetch profiles/users
+            const { data: profiles } = await supabaseClient.from('profiles').select('*');
+            // Fetch events
+            const { data: events } = await supabaseClient.from('events').select('*');
+            // Fetch messages
+            const { data: messages } = await supabaseClient.from('messages').select('*');
+
+            if (challenges) this.state.challenges = challenges;
+            if (profiles) this.state.users = profiles;
+            if (events) this.state.events = events;
+            if (messages) this.state.chat = messages;
+
+            this.notify();
+        } catch (e) {
+            console.error("Supabase Sync Error:", e);
+        }
+    }
+
+    setupSubscriptions() {
+        supabaseClient.channel('db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public' }, () => this.fetchData())
+            .subscribe();
     }
 
     subscribe(listener) {
@@ -21,56 +59,110 @@ class Store {
     }
 
     notify() {
-        localStorage.setItem('gamify_state', JSON.stringify(this.state));
         this.listeners.forEach(l => l(this.state));
     }
 
-    addEvent(challengeId, actionId) {
+    async addEvent(challengeId, actionId) {
+        // Optimistic Update: Sofort lokal anzeigen
         const action = this.state.challenges.find(c => c.id === challengeId).actions.find(a => a.id === actionId);
-        const event = {
-            id: 'evt_' + Date.now(),
-            userId: this.state.currentUser.id,
-            challengeId,
-            actionId,
-            timestamp: Date.now()
+        const tempEvent = {
+            id: 'temp_' + Date.now(),
+            user_id: this.state.currentUser.id,
+            action_id: actionId,
+            challenge_id: challengeId,
+            created_at: new Date().toISOString()
         };
-        this.state.events.push(event);
 
-        // Post automatically to chat? Maybe not always, but requested "Chat should see events"
-        const chatMsg = {
-            id: 'msg_' + Date.now(),
-            userId: this.state.currentUser.id,
-            type: 'event',
-            eventId: event.id,
-            text: `hat ${action.name} ausgeführt!`,
-            timestamp: Date.now(),
-            reactions: {}
-        };
-        this.state.chat.push(chatMsg);
-
+        this.state.events.push(tempEvent);
         this.notify();
+
+        // Hintergrund-Sync mit Supabase
+        const { data, error } = await supabaseClient.from('events').insert([
+            { user_id: this.state.currentUser.id, action_id: actionId, challenge_id: challengeId }
+        ]).select();
+
+        if (error) {
+            this.state.events = this.state.events.filter(e => e.id !== tempEvent.id);
+            this.notify();
+            return console.error(error);
+        }
+
+        // Auto-post to chat
+        await this.addMessage(`hat ${action ? action.name : 'eine Action'} ausgeführt!`, 'event', data[0].id);
     }
 
-    addMessage(text) {
-        const msg = {
-            id: 'msg_' + Date.now(),
-            userId: this.state.currentUser.id,
-            text,
-            type: 'text',
-            timestamp: Date.now(),
+    async addMessage(text, type = 'text', eventId = null, replyTo = null) {
+        // Optimistic Update
+        const tempMsg = {
+            id: 'temp_' + Date.now(),
+            user_id: this.state.currentUser.id,
+            content: text,
+            type: type,
+            event_id: eventId,
+            reply_to: replyTo,
+            challenge_id: this.state.challenges[0]?.id,
+            created_at: new Date().toISOString(),
             reactions: {}
         };
-        this.state.chat.push(msg);
+        this.state.chat.push(tempMsg);
         this.notify();
+
+        const { error } = await supabaseClient.from('messages').insert([
+            {
+                user_id: this.state.currentUser.id,
+                content: text,
+                type: type,
+                event_id: eventId,
+                reply_to: replyTo,
+                challenge_id: this.state.challenges[0]?.id
+            }
+        ]);
+
+        if (error) {
+            this.state.chat = this.state.chat.filter(m => m.id !== tempMsg.id);
+            this.notify();
+            console.error("Send Message Error:", error);
+        }
+
+        // Realtime Subscription wird den finalen State glattziehen
+    }
+
+    async addReaction(messageId, emoji) {
+        const msg = this.state.chat.find(m => m.id === messageId);
+        if (!msg) return;
+
+        let reactions = Array.isArray(msg.reactions) ? [...msg.reactions] : [];
+        const userId = this.state.currentUser.id;
+
+        // Find if user already reacted with this emoji
+        const existingIdx = reactions.findIndex(r => r.u === userId && r.e === emoji);
+
+        if (existingIdx > -1) {
+            // Remove if already exists (Toggle)
+            reactions.splice(existingIdx, 1);
+        } else {
+            // Add new reaction
+            reactions.push({ u: userId, e: emoji });
+        }
+
+        // Optimistic
+        msg.reactions = reactions;
+        this.notify();
+
+        const { error } = await supabaseClient.from('messages')
+            .update({ reactions: reactions })
+            .eq('id', messageId);
+
+        if (error) console.error("Reaction Error:", error);
     }
 
     // Helper to get totals
     getLeaderboard(challengeId, filterActionId = null, timeFilter = 'all') {
         // Filter events by challenge, time, and action
-        let filteredEvents = this.state.events.filter(e => e.challengeId === challengeId);
+        let filteredEvents = this.state.events.filter(e => e.challenge_id === challengeId);
 
         if (filterActionId) {
-            filteredEvents = filteredEvents.filter(e => e.actionId === filterActionId);
+            filteredEvents = filteredEvents.filter(e => e.action_id === filterActionId);
         }
 
         // Aggregate by user
@@ -78,16 +170,17 @@ class Store {
         this.state.users.forEach(u => scores[u.id] = 0);
 
         filteredEvents.forEach(e => {
-            const challenge = this.state.challenges.find(c => c.id === e.challengeId);
-            const action = challenge.actions.find(a => a.id === e.actionId);
-            if (scores[e.userId] !== undefined) {
-                scores[e.userId] += action.points;
+            const challenge = this.state.challenges.find(c => c.id === e.challenge_id);
+            if (!challenge) return;
+            const action = challenge.actions.find(a => a.id === e.action_id);
+            if (action && scores[e.user_id] !== undefined) {
+                scores[e.user_id] += action.points;
             }
         });
 
         return Object.entries(scores)
             .map(([userId, score]) => ({
-                user: this.state.users.find(u => u.id === userId),
+                user: this.state.users.find(u => u.id === userId) || { name: 'Unbekannt', avatar: '👤' },
                 score
             }))
             .sort((a, b) => b.score - a.score);

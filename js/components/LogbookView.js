@@ -2,11 +2,12 @@ import { store } from '../store.js';
 
 export class LogbookView {
     render() {
-        const events = store.state.events
-            .filter(e => e.challengeId === store.state.challenges[0].id)
-            .sort((a, b) => b.timestamp - a.timestamp);
+        const challenge = store.state.challenges && store.state.challenges[0];
+        if (!challenge) return `<div style="padding: 40px; text-align: center;">Lade Logbuch...</div>`;
 
-        const challenge = store.state.challenges[0];
+        const events = store.state.events
+            .filter(e => e.challenge_id === challenge.id)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         return `
             <div class="header">
@@ -17,9 +18,9 @@ export class LogbookView {
                 ${events.length === 0 ? '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Keine Einträge vorhanden.</div>' : ''}
                 
                 ${events.map(event => {
-            const action = challenge.actions.find(a => a.id === event.actionId);
-            const user = store.state.users.find(u => u.id === event.userId);
-            const date = new Date(event.timestamp);
+            const action = challenge.actions.find(a => a.id === event.action_id);
+            const user = store.state.users.find(u => u.id === event.user_id) || { name: 'Unbekannt' };
+            const date = new Date(event.created_at);
             const isMe = user.id === store.state.currentUser.id;
 
             return `
@@ -27,16 +28,16 @@ export class LogbookView {
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="
                                     width: 40px; height: 40px; 
-                                    background: ${action.color}20; 
-                                    color: ${action.color};
+                                    background: ${action ? action.color : '#ccc'}20; 
+                                    color: ${action ? action.color : '#ccc'};
                                     border-radius: 12px; 
                                     display: flex; align-items: center; justify-content: center;
                                     font-size: 20px;
                                 ">
-                                    <i class="${action.icon} ph-fill"></i>
+                                    <i class="${action ? action.icon : 'ph-question'} ph-fill"></i>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; font-size: 14px;">${action.name}</div>
+                                    <div style="font-weight: 600; font-size: 14px;">${action ? action.name : 'Unbekannte Action'}</div>
                                     <div style="font-size: 11px; color: var(--text-muted);">
                                         ${user.name} • ${date.toLocaleString()}
                                     </div>

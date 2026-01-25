@@ -7,7 +7,12 @@ export class LeaderboardView {
     }
 
     render() {
-        const challenge = store.state.challenges[0];
+        const challenge = store.state.challenges && store.state.challenges[0];
+
+        if (!challenge) {
+            return `<div style="padding: 40px; text-align: center;">Lade Bestenliste...</div>`;
+        }
+
         const leaderboard = store.getLeaderboard(challenge.id, this.actionFilter === 'all' ? null : this.actionFilter);
 
         return `

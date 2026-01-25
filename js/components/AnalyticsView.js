@@ -7,12 +7,16 @@ export class AnalyticsView {
     }
 
     render() {
-        const challenge = store.state.challenges[0];
+        const challenge = store.state.challenges && store.state.challenges[0];
+
+        if (!challenge) {
+            return `<div style="padding: 40px; text-align: center;">Lade Analytics...</div>`;
+        }
 
         // Calculate Metric
-        const events = store.state.events.filter(e => e.challengeId === challenge.id);
-        const countNum = events.filter(e => e.actionId === this.numeratorId).length;
-        const countDenom = events.filter(e => e.actionId === this.denominatorId).length;
+        const events = store.state.events.filter(e => e.challenge_id === challenge.id);
+        const countNum = events.filter(e => e.action_id === this.numeratorId).length;
+        const countDenom = events.filter(e => e.action_id === this.denominatorId).length;
 
         let ratio = 0;
         let displayValue = "0%";

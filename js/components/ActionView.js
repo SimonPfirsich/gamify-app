@@ -3,7 +3,22 @@ import { store } from '../store.js';
 export class ActionView {
     render() {
         // Just take the first challenge for now
-        const challenge = store.state.challenges[0];
+        const challenge = store.state.challenges && store.state.challenges[0];
+
+        if (!challenge) {
+            return `
+                <div class="header">
+                    <h1>Willkommen!</h1>
+                </div>
+                <div class="card" style="text-align: center; padding: 40px;">
+                    <i class="ph-fill ph-database" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+                    <p>Warte auf Daten...</p>
+                    <p style="font-size: 12px; margin-top: 8px; color: var(--text-muted);">
+                        Die App verbindet sich gerade mit deiner Cloud.
+                    </p>
+                </div>
+            `;
+        }
 
         return `
             <div class="header">
@@ -41,7 +56,9 @@ export class ActionView {
     }
 
     afterRender() {
-        const challenge = store.state.challenges[0];
+        const challenge = store.state.challenges && store.state.challenges[0];
+        if (!challenge) return;
+
         document.querySelectorAll('.action-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const actionId = btn.dataset.id;
