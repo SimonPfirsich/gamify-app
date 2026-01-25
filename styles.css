@@ -170,3 +170,18 @@ h4 {
     text-align: center;
     margin-top: 50%;
 }
+
+/* Mobile Optimierungen und UX Fixes */
+.message-bubble,
+.reaction-pill {
+    user-select: none;
+    -webkit-user-select: none;
+    /* Safari/Chrome */
+    -webkit-touch-callout: none;
+    /* iOS Menu unterdrücken */
+}
+
+/* Dynamische Positionierung für Emojis */
+#emoji-bar {
+    transition: top 0.2s, opacity 0.2s;
+}

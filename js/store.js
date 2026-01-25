@@ -10,8 +10,10 @@ const initialState = {
 
 class Store {
     constructor() {
+        // Lade User-Status (für Tests zwischen Julius und Simon umschaltbar)
+        const savedUser = localStorage.getItem('gamify_user');
         this.state = {
-            currentUser: { id: '7fcb9560-f435-430c-8090-e4b2d41a7985', name: 'Julius', avatar: '👨‍🚀' },
+            currentUser: savedUser ? JSON.parse(savedUser) : initialState.currentUser,
             users: [],
             challenges: [],
             events: [],
@@ -19,6 +21,13 @@ class Store {
         };
         this.listeners = [];
         this.init();
+    }
+
+    switchUser(id, name, avatar) {
+        const newUser = { id, name, avatar };
+        this.state.currentUser = newUser;
+        localStorage.setItem('gamify_user', JSON.stringify(newUser));
+        this.notify();
     }
 
     async init() {
@@ -134,12 +143,17 @@ class Store {
         let reactions = Array.isArray(msg.reactions) ? [...msg.reactions] : [];
         const userId = this.state.currentUser.id;
 
-        // Find if user already reacted with this emoji
-        const existingIdx = reactions.findIndex(r => r.u === userId && r.e === emoji);
+        // Find existing reaction from this user
+        const userActionIdx = reactions.findIndex(r => r.u === userId);
 
-        if (existingIdx > -1) {
-            // Remove if already exists (Toggle)
-            reactions.splice(existingIdx, 1);
+        if (userActionIdx > -1) {
+            if (reactions[userActionIdx].e === emoji) {
+                // Same emoji? Remove it (Toggle)
+                reactions.splice(userActionIdx, 1);
+            } else {
+                // Different emoji? Replace it
+                reactions[userActionIdx].e = emoji;
+            }
         } else {
             // Add new reaction
             reactions.push({ u: userId, e: emoji });
