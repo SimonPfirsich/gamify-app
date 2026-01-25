@@ -15,8 +15,6 @@ export class ChatView {
     render() {
         const chat = store.state.chat.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const currentUser = store.state.currentUser;
-
-        this.shouldScroll = chat.length > this.lastMessageCount;
         this.lastMessageCount = chat.length;
 
         return `
@@ -27,13 +25,12 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 90px; overflow-x: hidden;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 120px; overflow-x: hidden; padding-top: 10px;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
             const isEvent = msg.type === 'event';
             const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
-
             const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
@@ -41,32 +38,23 @@ export class ChatView {
 
             return `
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; transition: transform 0.2s; width: 100%;">
-                            
                             <div class="swipe-indicator" style="position: absolute; left: -20px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
-
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
-                                ${isEvent ? '' : `
-                                    <div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
-                                        ${user.avatar}
-                                    </div>
-                                `}
-                                
+                                ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
                                 <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: 100%;">
                                     <div class="message-bubble" style="
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
-                                        padding: ${isEvent ? '6px 12px' : '8px 12px'}; 
+                                        padding: ${isEvent ? '6px 12px' : '9px 12px'}; 
                                         border-radius: ${isEvent ? '20px' : '18px'}; 
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
                                         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
                                         font-size: ${isEvent ? '12px' : '15px'};
                                         cursor: pointer;
-                                        -webkit-user-select: none;
-                                        user-select: none;
-                                        touch-action: pan-y;
+                                        user-select: none; -webkit-user-select: none;
                                     ">
                                         ${replyMsg ? `
                                             <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'};">
@@ -76,79 +64,56 @@ export class ChatView {
                                         ` : ''}
                                         <div style="line-height: 1.4; white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
                                     </div>
-                                    
                                     ${reactions.length > 0 ? `
-                                        <div class="reaction-pill" data-id="${msg.id}" style="
-                                            display: flex; align-items: center; gap: 4px; 
-                                            background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 6px; 
-                                            margin-top: -10px; margin-${isMe ? 'right' : 'left'}: 8px;
-                                            box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; cursor: pointer;
-                                            z-index: 5;
-                                        ">
+                                        <div class="reaction-pill" data-id="${msg.id}" style="display: flex; align-items: center; gap: 4px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2px 6px; margin-top: -10px; margin-${isMe ? 'right' : 'left'}: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; cursor: pointer; z-index: 5;">
                                             <span>${topEmojis.join('')}</span>
                                             <span style="color: var(--text-muted); font-weight: 600; font-size: 10px; margin-left: 2px;">${reactions.length}</span>
                                         </div>
                                     ` : ''}
                                 </div>
                             </div>
-
-
-
-                            ${isEvent ? '' : `
-                                <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding: 0 40px;">
-                                    ${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            `}
+                            ${isEvent ? '' : `<span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; padding: 0 44px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`}
                         </div>
                     `;
         }).join('')}
             </div>
 
-            <!-- Emoji Picker Popover -->
-            <div id="emoji-picker-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000;">
-                <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div> <!-- Almost transparent -->
-                <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 6px 10px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: max-content; max-width: 95%; z-index: 3001;">
-                    <!-- Will be filled dynamically -->
-                    <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+            <!-- Global Modals (Using fixed with 100vw to ignore parents) -->
+            <div id="emoji-picker-container" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9000;">
+                <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div>
+                <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content; max-width: 90%;">
+                    <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer;">+</button>
                 </div>
-                
-                <!-- Single Emoji Input (Bottom Sheet Style) match Chat Input Style -->
-                <div id="single-emoji-input-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #f8f9fa; border-radius: 20px 20px 0 0; padding: 15px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 3002;">
-                    <div style="background: white; padding: 5px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee;">
-                        <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..." 
-                            style="width: 100%; background: transparent; border: none; color: var(--text-dark); padding: 8px 12px; outline: none; font-family: inherit; font-size: 16px; text-align: center;">
+                <div id="single-emoji-input-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #f8f9fa; border-radius: 20px 20px 0 0; padding: 15px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); border-top: 1px solid #ddd;">
+                    <div style="background: white; padding: 5px; border-radius: 25px; border: 1px solid #eee;">
+                        <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..." style="width: 100%; background: transparent; border: none; padding: 10px; text-align: center; font-size: 20px;">
                     </div>
                 </div>
             </div>
 
-            <!-- Chat Input (Fixed ABOVE Tabs) -->
-            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 20%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 102; pointer-events: none;">
-                <div style="max-width: 450px; margin: 0 auto; pointer-events: auto;">
-                    <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none; font-size: 11px; margin: 0 5px;">
-                        <span id="reply-text" style="color: var(--text-muted); font-weight: 500;">Antworten auf...</span>
-                        <button id="cancel-reply" style="background: none; border: none; font-size: 16px; cursor: pointer;">&times;</button>
+            <!-- Chat Input Container -->
+            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0; z-index: 1000; transition: bottom 0.2s;">
+                <div style="max-width: 450px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px; padding: 0 10px;">
+                    <div style="flex: 1; position: relative;">
+                        <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px;">
+                            <span id="reply-text">Antworten auf...</span>
+                            <button id="cancel-reply" style="float: right; border: none; background: none;">&times;</button>
+                        </div>
+                        <div style="background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="width: 100%; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px;"></textarea>
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: flex-end; gap: 6px; background: white; padding: 5px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 5px; border: 1px solid #eee;">
-                        <textarea id="chat-input" placeholder="Nachricht..." rows="1"
-                            style="flex: 1; background: transparent; border: none; color: var(--text-dark); padding: 8px 12px; outline: none; resize: none; font-family: inherit; font-size: 16px; max-height: 100px;"></textarea>
-                        <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-                            <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
-                        </button>
-                    </div>
+                    <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;"><i class="ph-fill ph-paper-plane-right" style="font-size: 20px;"></i></button>
                 </div>
             </div>
 
-            <!-- Reaction Detail Bottom Sheet -->
-            <div id="reaction-modal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.4); pointer-events: none; transition: background 0.3s; align-items: flex-end;">
-                <!-- Removing padding from container to make it flush -->
-                <div id="reaction-sheet" style="background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); pointer-events: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); max-height: 45vh;">
-                    
-                    <!-- Content inside gets the padding -->
-                    <div style="padding: 15px 20px 30px 20px;">
-                        <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; cursor: ns-resize;"></div>
-                        <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">X Reaktionen</h3>
-                        <div id="reaction-users-list" style="overflow-y: auto; max-height: 25vh;"></div>
+            <!-- Reaction Modal (True 100vw Layer) -->
+            <div id="reaction-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; background: rgba(0,0,0,0); transition: background 0.3s;">
+                <div id="reaction-sheet" style="position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 25px 25px 0 0; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding-bottom: env(safe-area-inset-bottom);">
+                    <div style="padding: 20px;">
+                        <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px;"></div>
+                        <h3 id="reaction-count-title" style="margin-bottom: 20px;">X Reaktionen</h3>
+                        <div id="reaction-users-list" style="overflow-y: auto; max-height: 40vh;"></div>
                     </div>
                 </div>
             </div>
@@ -157,64 +122,51 @@ export class ChatView {
 
     afterRender() {
         const input = document.getElementById('chat-input');
-        if (!input) return;
-        const feedContainer = document.querySelector('.content-area');
-        const sheet = document.getElementById('reaction-sheet');
-        const modal = document.getElementById('reaction-modal');
+        const inputContainer = document.getElementById('chat-input-container');
         const pickerContainer = document.getElementById('emoji-picker-container');
         const emojiBar = document.getElementById('emoji-bar');
+        const sheet = document.getElementById('reaction-sheet');
+        const modal = document.getElementById('reaction-modal');
+        const nav = document.querySelector('.bottom-nav');
         const singleEmojiInput = document.getElementById('single-emoji-input');
 
-        if (this.shouldScroll) {
-            feedContainer.scrollTop = feedContainer.scrollHeight;
-        }
-
-        // Switch User Logic
-        document.getElementById('test-user-switch').addEventListener('click', () => {
-            if (store.state.currentUser.name === 'Julius') {
-                store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
+        // Robust Keyboard/Nav Handling using VisualViewport or Resize
+        const updateLayout = () => {
+            const isKeyboardOpen = window.innerHeight < 500; // Vereinfachter Check
+            if (isKeyboardOpen) {
+                if (nav) nav.style.display = 'none';
+                inputContainer.style.bottom = '0';
             } else {
-                store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
+                if (nav) nav.style.display = 'flex';
+                inputContainer.style.bottom = 'calc(var(--nav-height) + env(safe-area-inset-bottom))';
             }
-            location.reload();
-        });
+        };
+        window.visualViewport?.addEventListener('resize', updateLayout);
+        input.addEventListener('focus', updateLayout);
+        input.addEventListener('blur', () => setTimeout(updateLayout, 100));
 
-        // Event Handling
+        // Long Press Logic
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
-            const msgId = wrapper.dataset.id;
             const bubble = wrapper.querySelector('.message-bubble');
-
-            // Only Long Press on Bubble
             bubble.addEventListener('touchstart', (e) => {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
                 this.longPressTimer = setTimeout(() => {
-                    this.selectedMsgId = msgId;
-
+                    this.selectedMsgId = wrapper.dataset.id;
                     const rect = bubble.getBoundingClientRect();
-                    const pickerHeight = 50;
-                    let top = rect.top - pickerHeight - 8;
-                    if (top < 60) top = rect.bottom + 8;
-
                     pickerContainer.style.display = 'block';
-                    emojiBar.style.display = 'flex';
-                    emojiBar.style.top = `${top}px`;
+                    emojiBar.style.top = `${rect.top < 150 ? rect.bottom + 10 : rect.top - 65}px`;
                     document.getElementById('single-emoji-input-container').style.display = 'none';
-
-                    // Update Emoji List
                     this.renderSmartEmojiList();
-
-                    if (window.navigator.vibrate) window.navigator.vibrate(50);
-                }, 400); // Schnellerer Longpress
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }, 400);
             }, { passive: true });
 
             wrapper.addEventListener('touchmove', (e) => {
                 const diffX = e.touches[0].clientX - this.touchStartX;
                 const diffY = e.touches[0].clientY - this.touchStartY;
-                if (Math.abs(diffY) > 10) clearTimeout(this.longPressTimer);
-
+                if (Math.abs(diffY) > 10 || Math.abs(diffX) > 10) clearTimeout(this.longPressTimer);
                 if (diffX > 20 && Math.abs(diffY) < 20) {
-                    clearTimeout(this.longPressTimer);
                     wrapper.style.transform = `translateX(${Math.min(diffX, 60)}px)`;
                     wrapper.querySelector('.swipe-indicator').style.opacity = Math.min(diffX / 60, 1);
                 }
@@ -223,232 +175,111 @@ export class ChatView {
             wrapper.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
                 if (e.changedTouches[0].clientX - this.touchStartX > 50) {
-                    this.currentReplyId = msgId;
-                    const preview = document.getElementById('reply-preview');
-                    preview.style.display = 'flex';
-                    // Fix für Zeilenumbrüche im Preview
-                    document.getElementById('reply-text').innerText = "Antworten auf: " + bubble.innerText.replace(/[\n\r]+/g, ' ').substring(0, 25) + "...";
+                    this.currentReplyId = wrapper.dataset.id;
+                    document.getElementById('reply-preview').style.display = 'flex';
+                    document.getElementById('reply-text').innerText = "Antworten auf: " + bubble.innerText.substring(0, 20) + "...";
                     input.focus();
                 }
                 wrapper.style.transform = '';
                 wrapper.querySelector('.swipe-indicator').style.opacity = 0;
             });
-
-            bubble.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); return false; });
+            bubble.addEventListener('contextmenu', e => e.preventDefault());
         });
 
-        // Emoji Selection
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('emoji-choice')) {
-                const emoji = e.target.dataset.emoji;
-                store.addReaction(this.selectedMsgId, emoji);
-                this.trackEmojiUsage(emoji);
-                pickerContainer.style.display = 'none';
-            }
-        });
-
-        document.getElementById('show-full-picker-btn').addEventListener('click', () => {
-            emojiBar.style.display = 'none';
-            const container = document.getElementById('single-emoji-input-container');
-            container.style.display = 'block';
-            singleEmojiInput.value = '';
-            singleEmojiInput.focus();
-        });
-
-        // Single Emoji Input Logic
-        singleEmojiInput.addEventListener('input', (e) => {
-            const val = singleEmojiInput.value;
-            // Regex for Emoji detection (simplified)
-            const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-            const match = val.match(emojiRegex);
-
-            if (match) {
-                // Found an emoji! Send it immediately
-                const emoji = match[0];
-                store.addReaction(this.selectedMsgId, emoji);
-                this.trackEmojiUsage(emoji);
-                pickerContainer.style.display = 'none';
-                singleEmojiInput.value = '';
-                singleEmojiInput.blur();
-            } else {
-                // Not an emoji? Clear it.
-                if (val.length > 0) singleEmojiInput.value = '';
-            }
-        });
-
-        document.getElementById('emoji-picker-overlay').addEventListener('click', () => {
-            pickerContainer.style.display = 'none';
-        });
-
-        // Sheet Swipe to Close
-        const sheetHandle = document.getElementById('sheet-handle');
-        sheet.addEventListener('touchstart', (e) => {
-            this.sheetTouchStartY = e.touches[0].clientY;
-            this.isSwipingSheet = true;
-            sheet.style.transition = 'none';
-        }, { passive: true });
-
-        sheet.addEventListener('touchmove', (e) => {
-            if (!this.isSwipingSheet) return;
-            const diffY = e.touches[0].clientY - this.sheetTouchStartY;
-            if (diffY > 0) {
-                sheet.style.transform = `translateY(${diffY}px)`;
-            }
-        }, { passive: true });
-
-        sheet.addEventListener('touchend', (e) => {
-            this.isSwipingSheet = false;
-            sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            const diffY = e.changedTouches[0].clientY - this.sheetTouchStartY;
-            if (diffY > 100) {
-                modal.style.background = 'rgba(0,0,0,0)';
-                modal.style.pointerEvents = 'none';
-                sheet.style.transform = 'translateY(100%)';
-            } else {
-                sheet.style.transform = 'translateY(0)';
-            }
-        });
-
-        // Input Focus Handling (Hide Tabs on Keyboard)
-        const nav = document.querySelector('.bottom-nav');
-
-        const handleFocus = () => {
-            if (nav) nav.style.display = 'none';
-            // Wenn Tastatur offen, Chat-Input ganz nach unten
-            document.getElementById('chat-input-container').style.bottom = '0';
-        };
-
-        const handleBlur = () => {
-            // Warte kurz, falls nur Fokuswechsel passiert
-            setTimeout(() => {
-                if (nav) nav.style.display = 'flex';
-                document.getElementById('chat-input-container').style.bottom = 'calc(var(--nav-height) + env(safe-area-inset-bottom))';
-                // Scroll Back
-                window.scrollTo(0, 0);
-            }, 200);
-        };
-
-        if (input) {
-            input.addEventListener('focus', handleFocus);
-            input.addEventListener('blur', handleBlur);
-        }
-
-        if (singleEmojiInput) {
-            singleEmojiInput.addEventListener('focus', handleFocus);
-            singleEmojiInput.addEventListener('blur', handleBlur);
-        }
-
+        // Modal Logic
         document.querySelectorAll('.reaction-pill').forEach(pill => {
-            // ... (restlicher Code)
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const msgId = pill.dataset.id;
-                const msg = store.state.chat.find(m => m.id === msgId);
-                const reactions = msg.reactions || [];
-                const currentUserId = store.state.currentUser.id;
-
-                document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktion${reactions.length > 1 ? 'en' : ''}`;
-
-                const list = document.getElementById('reaction-users-list');
-                list.innerHTML = reactions.map(r => {
+                const reactions = (store.state.chat.find(m => m.id === pill.dataset.id))?.reactions || [];
+                document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
+                document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
-                    const isMe = r.u === currentUserId;
+                    const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-is-me="${isMe}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; opacity: ${isMe ? 1 : 0.8}; cursor: ${isMe ? 'pointer' : 'default'};">
+                        <div class="reaction-row" data-emoji="${r.e}" data-is-me="${isMe}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 36px; height: 36px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">${user?.avatar || '👤'}</div>
-                                <span style="font-weight: 500; font-size: 14px;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
+                                <span>${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 20px;">${r.e}</span>
-                                ${isMe ? '<span style="font-size: 12px; color: #ef4444;">✕</span>' : ''}
-                            </div>
+                            <span style="font-size: 22px;">${r.e}</span>
                         </div>
                     `;
                 }).join('');
-
-                list.querySelectorAll('.reaction-row').forEach(row => {
-                    if (row.dataset.isMe === "true") {
-                        row.addEventListener('click', () => {
-                            store.addReaction(msgId, row.dataset.emoji);
-                            modal.click();
-                        });
-                    }
+                document.querySelectorAll('.reaction-row').forEach(row => {
+                    if (row.dataset.isMe === 'true') row.onclick = () => { store.addReaction(pill.dataset.id, row.dataset.emoji); modal.click(); };
                 });
-
-                modal.style.display = 'flex';
-                modal.style.pointerEvents = 'auto';
-
-                // FIX: Verstecke den Chat Input, damit er nicht durch das Sheet "durchscheint"
-                const chatInputContainer = document.getElementById('chat-input-container');
-                if (chatInputContainer) chatInputContainer.style.display = 'none';
-
-                setTimeout(() => {
-                    modal.style.background = 'rgba(0,0,0,0.4)';
-                    sheet.style.transform = 'translateY(0)';
-                }, 10);
+                modal.style.display = 'block';
+                setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.style.transform = 'translateY(0)'; }, 10);
             });
         });
 
-        modal.addEventListener('click', (e) => {
+        modal.onclick = (e) => {
             if (e.target === modal) {
                 modal.style.background = 'rgba(0,0,0,0)';
-                modal.style.pointerEvents = 'none';
-                sheet.style.transform = 'translateY(100%)';
-
-                // FIX: Input wieder anzeigen (nach kurzer Verzögerung)
-                setTimeout(() => {
-                    const chatInputContainer = document.getElementById('chat-input-container');
-                    if (chatInputContainer) chatInputContainer.style.display = 'block';
-                }, 300);
+                sheet.style.transform = 'translateY(110%)';
+                setTimeout(() => modal.style.display = 'none', 300);
             }
+        };
+
+        // Swipe down to close sheet
+        let startY = 0;
+        sheet.addEventListener('touchstart', (e) => startY = e.touches[0].clientY, { passive: true });
+        sheet.addEventListener('touchmove', (e) => {
+            const diff = e.touches[0].clientY - startY;
+            if (diff > 0) sheet.style.transform = `translateY(${diff}px)`;
+        }, { passive: true });
+        sheet.addEventListener('touchend', (e) => {
+            if (e.changedTouches[0].clientY - startY > 100) modal.onclick({ target: modal });
+            else sheet.style.transform = 'translateY(0)';
         });
 
-        // Input
-        document.getElementById('send-btn').addEventListener('click', () => {
+        // + Button / Custom Emoji
+        document.getElementById('show-full-picker-btn').onclick = () => {
+            emojiBar.style.display = 'none';
+            document.getElementById('single-emoji-input-container').style.display = 'block';
+            singleEmojiInput.focus();
+        };
+
+        singleEmojiInput.oninput = () => {
+            const match = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+            if (match) {
+                store.addReaction(this.selectedMsgId, match[0]);
+                this.trackEmojiUsage(match[0]);
+                pickerContainer.style.display = 'none';
+            }
+        };
+
+        document.getElementById('emoji-picker-overlay').onclick = () => pickerContainer.style.display = 'none';
+
+        document.getElementById('send-btn').onclick = () => {
             if (input.value.trim()) {
                 store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
                 input.value = '';
-                input.style.height = 'auto';
-                this.currentReplyId = null;
                 document.getElementById('reply-preview').style.display = 'none';
             }
-        });
-
-        document.getElementById('cancel-reply').addEventListener('click', () => {
-            this.currentReplyId = null;
-            document.getElementById('reply-preview').style.display = 'none';
-        });
+        };
     }
 
-    // ... Methods trackEmojiUsage and renderSmartEmojiList remain same
-    trackEmojiUsage(emoji) {
+    trackEmojiUsage(e) {
         let usage = JSON.parse(localStorage.getItem('emoji_usage') || '{}');
-        usage[emoji] = (usage[emoji] || 0) + 1;
+        usage[e] = (usage[e] || 0) + 1;
         localStorage.setItem('emoji_usage', JSON.stringify(usage));
     }
 
     renderSmartEmojiList() {
         const usage = JSON.parse(localStorage.getItem('emoji_usage') || '{}');
         const sorted = Object.keys(usage).sort((a, b) => usage[b] - usage[a]);
-        const defaults = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-        const smartList = [...new Set([...sorted.slice(0, 3), ...defaults])].slice(0, 5);
-
+        const list = [...new Set([...sorted.slice(0, 3), '👍', '❤️', '😂', '😮', '😢', '🙏'])].slice(0, 6);
         const bar = document.getElementById('emoji-bar');
-        const plusBtn = document.getElementById('show-full-picker-btn');
-
-        while (bar.firstChild && bar.firstChild !== plusBtn) {
-            bar.removeChild(bar.firstChild);
-        }
-
-        smartList.forEach(e => {
+        const plus = document.getElementById('show-full-picker-btn');
+        bar.querySelectorAll('.emoji-choice').forEach(n => n.remove());
+        list.reverse().forEach(e => {
             const btn = document.createElement('button');
             btn.className = 'emoji-choice';
-            btn.dataset.emoji = e;
-            btn.style.cssText = 'background: none; border: none; font-size: 28px; cursor: pointer; padding: 4px; transition: transform 0.1s;';
+            btn.style.cssText = 'background:none;border:none;font-size:26px;padding:4px;';
             btn.innerText = e;
-            btn.onclick = () => btn.style.transform = 'scale(1.2)';
-            bar.insertBefore(btn, plusBtn);
+            btn.onclick = () => { store.addReaction(this.selectedMsgId, e); this.trackEmojiUsage(e); document.getElementById('emoji-picker-container').style.display = 'none'; };
+            bar.insertBefore(btn, plus);
         });
     }
 }
