@@ -46,7 +46,6 @@ export class ChatView {
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
 
-                // Message Container Padding Update to match Input (10px effective)
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `
                                     <div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
@@ -94,7 +93,7 @@ export class ChatView {
                                 </div>
                             </div>
 
-                            <!-- ... rest of template ... key changes mostly in Padding above -->
+
 
                             ${isEvent ? '' : `
                                 <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding: 0 40px;">
@@ -379,6 +378,11 @@ export class ChatView {
 
                 modal.style.display = 'flex';
                 modal.style.pointerEvents = 'auto';
+
+                // FIX: Verstecke den Chat Input, damit er nicht durch das Sheet "durchscheint"
+                const chatInputContainer = document.getElementById('chat-input-container');
+                if (chatInputContainer) chatInputContainer.style.display = 'none';
+
                 setTimeout(() => {
                     modal.style.background = 'rgba(0,0,0,0.4)';
                     sheet.style.transform = 'translateY(0)';
@@ -391,6 +395,12 @@ export class ChatView {
                 modal.style.background = 'rgba(0,0,0,0)';
                 modal.style.pointerEvents = 'none';
                 sheet.style.transform = 'translateY(100%)';
+
+                // FIX: Input wieder anzeigen (nach kurzer Verzögerung)
+                setTimeout(() => {
+                    const chatInputContainer = document.getElementById('chat-input-container');
+                    if (chatInputContainer) chatInputContainer.style.display = 'block';
+                }, 300);
             }
         });
 
