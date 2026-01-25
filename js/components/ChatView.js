@@ -9,17 +9,15 @@ export class ChatView {
         this.sheetTouchStartY = 0;
         this.isSwipingSheet = false;
         this.lastMessageCount = 0;
+        this.selectedMsgId = null;
     }
 
     render() {
         const chat = store.state.chat.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const currentUser = store.state.currentUser;
 
-        // Check if we should scroll (only if a NEW message was added)
         this.shouldScroll = chat.length > this.lastMessageCount;
         this.lastMessageCount = chat.length;
-
-        const emojiList = ['😂', '🙏', '👍', '🙌', '❤️', '👏', '🤩', '🥳', '🔥', '😭', '😮', '🤔', '💯', '✨', '🐘', '🐱', '🚀', '💪', '👑', '🎉', '💡', '✅', '❌', '👀'];
 
         return `
             <div class="header">
@@ -29,7 +27,7 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 160px; overflow-x: hidden;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 15px; padding-bottom: 160px; overflow-x: hidden;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
@@ -48,7 +46,7 @@ export class ChatView {
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
 
-                            <div class="message-container" style="display: flex; align-items: flex-end; gap: 8px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 92%; padding: 0 10px; width: 100%; box-sizing: border-box;">
+                            <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 95%; padding: 0 5px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `
                                     <div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
                                         ${user.avatar}
@@ -59,10 +57,10 @@ export class ChatView {
                                     <div class="message-bubble" style="
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
-                                        padding: ${isEvent ? '6px 12px' : '9px 12px'}; 
+                                        padding: ${isEvent ? '6px 12px' : '8px 12px'}; 
                                         border-radius: ${isEvent ? '20px' : '18px'}; 
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                                        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
                                         font-size: ${isEvent ? '12px' : '15px'};
                                         cursor: pointer;
@@ -71,7 +69,7 @@ export class ChatView {
                                         touch-action: pan-y;
                                     ">
                                         ${replyMsg ? `
-                                            <div style="background: rgba(0,0,0,0.05); padding: 6px 8px; border-radius: 8px; font-size: 11px; margin-bottom: 6px; border-left: 3px solid ${isMe ? 'white' : 'var(--primary)'};">
+                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'};">
                                                 <strong>${store.state.users.find(u => u.id === replyMsg.user_id)?.name}</strong><br>
                                                 ${replyMsg.content.substring(0, 30)}...
                                             </div>
@@ -84,8 +82,8 @@ export class ChatView {
                                             display: flex; align-items: center; gap: 4px; 
                                             background: white; border: 1px solid #e2e8f0; 
                                             border-radius: 12px; padding: 2px 6px; 
-                                            margin-top: -10px; margin-${isMe ? 'right' : 'left'}: 10px;
-                                            box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 12px; cursor: pointer;
+                                            margin-top: -10px; margin-${isMe ? 'right' : 'left'}: 8px;
+                                            box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; cursor: pointer;
                                             z-index: 5;
                                         ">
                                             <span>${topEmojis.join('')}</span>
@@ -95,7 +93,7 @@ export class ChatView {
                                 </div>
                             </div>
                             ${isEvent ? '' : `
-                                <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; padding: 0 46px;">
+                                <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding: 0 40px;">
                                     ${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             `}
@@ -106,21 +104,17 @@ export class ChatView {
 
             <!-- Emoji Picker Popover -->
             <div id="emoji-picker-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000;">
-                <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.2);"></div>
-                <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: max-content; max-width: 90%; z-index: 3001;">
+                <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div> <!-- Almost transparent -->
+                <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 6px 10px; display: flex; align-items: center; gap: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: max-content; max-width: 95%; z-index: 3001;">
                     <!-- Will be filled dynamically -->
-                    ${['👍', '❤️', '😂', '😮', '😢', '🙏'].map(e => `
-                        <button class="emoji-choice" data-emoji="${e}" style="background: none; border: none; font-size: 28px; cursor: pointer; padding: 4px;">${e}</button>
-                    `).join('')}
-                    <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                    <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
                 
-                <!-- Full Emoji Grid (Keyboard Style) -->
-                <div id="full-emoji-keyboard" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); flex-direction: column; z-index: 3002;">
-                    <div style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 15px;"></div>
-                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; overflow-y: auto; max-height: 40vh; padding-bottom: 20px;">
-                        ${emojiList.map(e => `<button class="emoji-choice" data-emoji="${e}" style="background: none; border: none; font-size: 28px; cursor: pointer;">${e}</button>`).join('')}
-                    </div>
+                <!-- Single Emoji Input (Bottom Sheet Style) -->
+                <div id="single-emoji-input-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f2f5; border-radius: 16px 16px 0 0; padding: 15px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); z-index: 3002;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; text-align: center;">Wähle ein Emoji</h3>
+                    <input type="text" id="single-emoji-input" placeholder="Emoji hier..." 
+                        style="width: 100%; font-size: 30px; text-align: center; padding: 10px; border-radius: 12px; border: 1px solid #ddd; outline: none;">
                 </div>
             </div>
 
@@ -133,17 +127,17 @@ export class ChatView {
                 </div>
             </div>
 
-            <div style="position: fixed; bottom: var(--nav-height); left: 0; width: 100%; padding: 0 10px 10px 10px; pointer-events: none;">
-                <div style="max-width: 450px; margin: 0 auto; pointer-events: auto;">
-                    <div id="reply-preview" style="display: none; background: #f8fafc; padding: 10px 15px; border-radius: 15px 15px 0 0; border: 1px solid #e2e8f0; border-bottom: none; font-size: 13px; transform: translateY(5px); justify-content: space-between; align-items: center; margin: 0 10px;">
+            <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #f0f0f0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; z-index: 100;">
+                <div style="max-width: 450px; margin: 0 auto;">
+                    <div id="reply-preview" style="display: none; background: #f8fafc; padding: 8px 12px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none; font-size: 12px; margin: 0 5px;">
                         <span id="reply-text" style="color: var(--text-muted); font-weight: 500;">Antworten auf...</span>
-                        <button id="cancel-reply" style="background: #e2e8f0; border: none; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">&times;</button>
+                        <button id="cancel-reply" style="background: none; border: none; font-size: 16px; cursor: pointer;">&times;</button>
                     </div>
                     <div style="display: flex; align-items: flex-end; gap: 8px;">
-                        <textarea id="chat-input" placeholder="Nachricht schreiben..." rows="1"
-                            style="flex: 1; background: white; border: 1px solid #e2e8f0; color: var(--text-dark); padding: 12px 16px; border-radius: 20px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); resize: none; font-family: inherit; font-size: 15px; max-height: 120px;"></textarea>
-                        <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px var(--primary-glow); flex-shrink: 0;">
-                            <i class="ph-fill ph-paper-plane-right" style="font-size: 22px;"></i>
+                        <textarea id="chat-input" placeholder="Nachricht..." rows="1"
+                            style="flex: 1; background: #f1f5f9; border: none; color: var(--text-dark); padding: 10px 16px; border-radius: 20px; outline: none; resize: none; font-family: inherit; font-size: 16px; max-height: 100px;"></textarea>
+                        <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+                            <i class="ph-fill ph-paper-plane-right" style="font-size: 20px;"></i>
                         </button>
                     </div>
                 </div>
@@ -159,8 +153,7 @@ export class ChatView {
         const modal = document.getElementById('reaction-modal');
         const pickerContainer = document.getElementById('emoji-picker-container');
         const emojiBar = document.getElementById('emoji-bar');
-        const fullKeyboard = document.getElementById('full-emoji-keyboard');
-        let selectedMsgId = null;
+        const singleEmojiInput = document.getElementById('single-emoji-input');
 
         if (this.shouldScroll) {
             feedContainer.scrollTop = feedContainer.scrollHeight;
@@ -185,39 +178,30 @@ export class ChatView {
             bubble.addEventListener('touchstart', (e) => {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
-
                 this.longPressTimer = setTimeout(() => {
-                    selectedMsgId = msgId;
+                    this.selectedMsgId = msgId;
 
-                    // Berechne Position der Nachricht
                     const rect = bubble.getBoundingClientRect();
-                    const pickerHeight = 60; // Ca. Höhe des Pickers
-
-                    // Picker über der Nachricht platzieren (mit etwas Abstand)
-                    let top = rect.top - pickerHeight - 10;
-
-                    // Falls zu weit oben, dann unter der Nachricht
-                    if (top < 60) top = rect.bottom + 10;
+                    const pickerHeight = 50;
+                    let top = rect.top - pickerHeight - 8;
+                    if (top < 60) top = rect.bottom + 8;
 
                     pickerContainer.style.display = 'block';
                     emojiBar.style.display = 'flex';
                     emojiBar.style.top = `${top}px`;
-                    emojiBar.style.bottom = 'auto'; // Reset bottom
-                    fullKeyboard.style.display = 'none';
+                    document.getElementById('single-emoji-input-container').style.display = 'none';
 
-                    // Update Emoji List based on usage
+                    // Update Emoji List
                     this.renderSmartEmojiList();
 
                     if (window.navigator.vibrate) window.navigator.vibrate(50);
-                }, 500);
+                }, 400); // Schnellerer Longpress
             }, { passive: true });
 
             wrapper.addEventListener('touchmove', (e) => {
                 const diffX = e.touches[0].clientX - this.touchStartX;
                 const diffY = e.touches[0].clientY - this.touchStartY;
-
-                // If moving too much vertically, cancel long press
-                if (Math.abs(diffY) > 10 || Math.abs(diffX) > 10) clearTimeout(this.longPressTimer);
+                if (Math.abs(diffY) > 10) clearTimeout(this.longPressTimer);
 
                 if (diffX > 20 && Math.abs(diffY) < 20) {
                     clearTimeout(this.longPressTimer);
@@ -232,26 +216,22 @@ export class ChatView {
                     this.currentReplyId = msgId;
                     const preview = document.getElementById('reply-preview');
                     preview.style.display = 'flex';
-                    document.getElementById('reply-text').innerText = "Antworten auf: " + bubble.innerText.replace(/\n/g, ' ').substring(0, 30);
+                    // Fix für Zeilenumbrüche im Preview
+                    document.getElementById('reply-text').innerText = "Antworten auf: " + bubble.innerText.replace(/[\n\r]+/g, ' ').substring(0, 25) + "...";
                     input.focus();
                 }
                 wrapper.style.transform = '';
                 wrapper.querySelector('.swipe-indicator').style.opacity = 0;
             });
 
-            // Prevent Context Menu on Long Press
-            bubble.addEventListener('contextmenu', e => {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            });
+            bubble.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); return false; });
         });
 
-        // Emoji Selection tracking
+        // Emoji Selection
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('emoji-choice')) {
                 const emoji = e.target.dataset.emoji;
-                store.addReaction(selectedMsgId, emoji);
+                store.addReaction(this.selectedMsgId, emoji);
                 this.trackEmojiUsage(emoji);
                 pickerContainer.style.display = 'none';
             }
@@ -259,7 +239,31 @@ export class ChatView {
 
         document.getElementById('show-full-picker-btn').addEventListener('click', () => {
             emojiBar.style.display = 'none';
-            fullKeyboard.style.display = 'flex';
+            const container = document.getElementById('single-emoji-input-container');
+            container.style.display = 'block';
+            singleEmojiInput.value = '';
+            singleEmojiInput.focus();
+        });
+
+        // Single Emoji Input Logic
+        singleEmojiInput.addEventListener('input', (e) => {
+            const val = singleEmojiInput.value;
+            // Regex for Emoji detection (simplified)
+            const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+            const match = val.match(emojiRegex);
+
+            if (match) {
+                // Found an emoji! Send it immediately
+                const emoji = match[0];
+                store.addReaction(this.selectedMsgId, emoji);
+                this.trackEmojiUsage(emoji);
+                pickerContainer.style.display = 'none';
+                singleEmojiInput.value = '';
+                singleEmojiInput.blur();
+            } else {
+                // Not an emoji? Clear it.
+                if (val.length > 0) singleEmojiInput.value = '';
+            }
         });
 
         document.getElementById('emoji-picker-overlay').addEventListener('click', () => {
@@ -297,7 +301,8 @@ export class ChatView {
 
         // Open Sheet
         document.querySelectorAll('.reaction-pill').forEach(pill => {
-            pill.addEventListener('click', () => {
+            pill.addEventListener('click', (e) => {
+                e.stopPropagation(); // wichtig damit picker nicht aufgeht
                 const msg = store.state.chat.find(m => m.id === pill.dataset.id);
                 const reactions = msg.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktion${reactions.length > 1 ? 'en' : ''}`;
@@ -354,15 +359,18 @@ export class ChatView {
     }
 
     renderSmartEmojiList() {
+        // Get frequently used emojis
         const usage = JSON.parse(localStorage.getItem('emoji_usage') || '{}');
         const sorted = Object.keys(usage).sort((a, b) => usage[b] - usage[a]);
+
+        // Default set + popular ones (unique)
         const defaults = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-        const smartList = [...new Set([...sorted.slice(0, 3), ...defaults])].slice(0, 6);
+        const smartList = [...new Set([...sorted.slice(0, 3), ...defaults])].slice(0, 5);
 
         const bar = document.getElementById('emoji-bar');
-        const plusBtn = bar.lastElementChild;
+        const plusBtn = document.getElementById('show-full-picker-btn');
 
-        // Clear all except plus button
+        // Remove old buttons but keep plus btn
         while (bar.firstChild && bar.firstChild !== plusBtn) {
             bar.removeChild(bar.firstChild);
         }
@@ -371,8 +379,9 @@ export class ChatView {
             const btn = document.createElement('button');
             btn.className = 'emoji-choice';
             btn.dataset.emoji = e;
-            btn.style.cssText = 'background: none; border: none; font-size: 28px; cursor: pointer; padding: 4px;';
+            btn.style.cssText = 'background: none; border: none; font-size: 28px; cursor: pointer; padding: 4px; transition: transform 0.1s;';
             btn.innerText = e;
+            btn.onclick = () => btn.style.transform = 'scale(1.2)';
             bar.insertBefore(btn, plusBtn);
         });
     }
