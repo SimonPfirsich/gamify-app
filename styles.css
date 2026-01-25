@@ -1,26 +1,21 @@
 :root {
     /* --- Figma Replica Palette --- */
-    /* Die Farben aus deinem Screenshot */
     --bg-main: #ffffff;
     --bg-secondary: #f8f9fa;
     --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
     --challenge-red: #ff8a75;
-    /* PickUp 100 */
     --challenge-green: #90d3a7;
-    /* Warschau 1000 */
     --challenge-blue: #70ccf7;
-    /* Gym Challenge */
 
     --primary: #6366f1;
     --primary-glow: rgba(99, 102, 241, 0.3);
     --bg-card: #f8f9fa;
     --text-dark: #333333;
     --bg-dark: #333333;
-    /* Added for portrait lock overlay */
     --text-muted: #888888;
 
-    --nav-height: 80px;
+    --nav-height: 65px;
     --safe-area-bottom: env(safe-area-inset-bottom);
     --border-radius: 20px;
 }
@@ -52,14 +47,12 @@
 body {
     margin: 0;
     background-color: var(--bg-dark);
-    /* Desktop Hintergrund */
     color: var(--text-dark);
     font-family: 'Inter', sans-serif;
     height: 100vh;
     overflow: hidden;
     padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom));
     overflow-x: hidden;
-    /* Prevent Pull-to-Refresh on Mobile */
     overscroll-behavior-y: none;
 }
 
@@ -78,7 +71,6 @@ h4 {
     height: 100%;
     width: 100%;
     max-width: 450px;
-    /* Typisches Smartphone-Maß */
     margin: 0 auto;
     background-color: var(--bg-main);
     position: relative;
@@ -98,14 +90,15 @@ h4 {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: var(--nav-height);
+    height: calc(var(--nav-height) + var(--safe-area-bottom));
     background: #ffffff;
     border-top: 1px solid #eeeeee;
     display: flex;
     justify-content: space-around;
-    align-items: center;
-    z-index: 100;
-    padding-bottom: 20px;
+    align-items: flex-start;
+    padding-top: 12px;
+    z-index: 101;
+    padding-bottom: var(--safe-area-bottom);
 }
 
 .nav-item {
@@ -125,11 +118,11 @@ h4 {
 }
 
 .nav-item i {
-    font-size: 28px;
+    font-size: 26px;
 }
 
 .nav-item span {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
 }
 
@@ -142,7 +135,6 @@ h4 {
     border: 1px solid #f0f0f0;
     box-shadow: var(--card-shadow);
 }
-
 
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), #4f46e5);
@@ -168,6 +160,7 @@ h4 {
     font-size: 28px;
     background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -201,12 +194,9 @@ h4 {
 .reaction-pill {
     user-select: none;
     -webkit-user-select: none;
-    /* Safari/Chrome */
     -webkit-touch-callout: none;
-    /* iOS Menu unterdrücken */
 }
 
-/* Dynamische Positionierung für Emojis */
 #emoji-bar {
     transition: top 0.2s, opacity 0.2s;
 }

@@ -118,7 +118,7 @@ export class ChatView {
             </div>
 
             <!-- Chat Input (Fixed ABOVE Tabs) -->
-            <div style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 20%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 100; pointer-events: none;">
+            <div style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 0; width: 100%; background: linear-gradient(to top, white 20%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 102; pointer-events: none;">
                 <div style="max-width: 450px; margin: 0 auto; pointer-events: auto;">
                     <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #e2e8f0; border-bottom: none; font-size: 11px; margin: 0 5px;">
                         <span id="reply-text" style="color: var(--text-muted); font-weight: 500;">Antworten auf...</span>
@@ -331,10 +331,8 @@ export class ChatView {
                 list.querySelectorAll('.reaction-row').forEach(row => {
                     if (row.dataset.isMe === "true") {
                         row.addEventListener('click', () => {
-                            if (confirm("Deine Reaktion entfernen?")) {
-                                store.addReaction(msgId, row.dataset.emoji);
-                                modal.click();
-                            }
+                            store.addReaction(msgId, row.dataset.emoji);
+                            modal.click();
                         });
                     }
                 });
