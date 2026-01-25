@@ -20,6 +20,26 @@ class App {
     }
 
     init() {
+        const nav = document.querySelector('.bottom-nav');
+
+        // Global Keyboard Handling
+        const updateLayout = () => {
+            const isKeyboardOpen = window.innerHeight < window.outerHeight * 0.7;
+            const activeEl = document.activeElement;
+            const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
+
+            if (isKeyboardOpen && isInput) {
+                document.body.classList.add('keyboard-open');
+            } else {
+                document.body.classList.remove('keyboard-open');
+            }
+        };
+
+        window.visualViewport?.addEventListener('resize', updateLayout);
+        window.addEventListener('resize', updateLayout);
+        document.addEventListener('focusin', updateLayout);
+        document.addEventListener('focusout', () => setTimeout(updateLayout, 100));
+
         // Bind Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -31,7 +51,6 @@ class App {
         // Initial Render
         this.switchTab('actions');
 
-        // Subscribe to store updates to re-render
         store.subscribe(() => {
             this.render();
         });
@@ -40,7 +59,10 @@ class App {
     switchTab(tabName) {
         this.currentTab = tabName;
 
-        // Update Nav UI
+        // Force Show Nav on Tab Switch (Safety)
+        const nav = document.querySelector('.bottom-nav');
+        if (nav) nav.style.display = 'flex';
+
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
@@ -52,7 +74,7 @@ class App {
         const content = document.getElementById('content');
         const view = this.views[this.currentTab];
         content.innerHTML = view.render();
-        view.afterRender(); // Attach events
+        view.afterRender();
     }
 }
 
