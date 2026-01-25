@@ -11,28 +11,25 @@ export class ActionView {
                 <h1 style="font-size: 36px">Action tracken</h1>
             </div>
 
-            <div class="action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="action-list" style="display: flex; flex-direction: column; gap: 12px;">
                 ${challenge.actions.map(action => `
                     <button class="action-btn" data-id="${action.id}" 
                         style="
                             background: ${action.color}; 
                             border: none; 
                             border-radius: 20px; 
-                            aspect-ratio: 1; 
+                            width: 100%;
+                            padding: 20px;
                             display: flex; 
-                            flex-direction: column; 
                             align-items: center; 
                             justify-content: center;
                             color: white;
-                            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
                             position: relative;
-                            overflow: hidden;
+                            cursor: pointer;
                         "
                     >
-                        <i class="${action.icon} ph-fill" style="font-size: 48px; margin-bottom: 8px;"></i>
-                        <span style="font-size: 18px; font-weight: 700;">${action.name}</span>
-                        <span style="font-size: 12px; opacity: 0.8; margin-top: 4px;">+${action.points} pts</span>
-                        <div class="ripple-container"></div>
+                        <span style="font-size: 20px; font-weight: 600;">${action.name}</span>
                     </button>
                 `).join('')}
             </div>
