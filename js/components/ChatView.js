@@ -46,7 +46,8 @@ export class ChatView {
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
 
-                            <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 98%; padding: 0 5px; width: 100%; box-sizing: border-box;">
+                // Message Container Padding Update to match Input (10px effective)
+                            <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `
                                     <div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
                                         ${user.avatar}
@@ -92,6 +93,9 @@ export class ChatView {
                                     ` : ''}
                                 </div>
                             </div>
+
+                            <!-- ... rest of template ... key changes mostly in Padding above -->
+
                             ${isEvent ? '' : `
                                 <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; padding: 0 40px;">
                                     ${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -137,11 +141,16 @@ export class ChatView {
             </div>
 
             <!-- Reaction Detail Bottom Sheet -->
-            <div id="reaction-modal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.4); pointer-events: none; transition: background 0.3s; align-items: flex-end;">
-                <div id="reaction-sheet" style="background: white; width: 100%; border-radius: 24px 24px 0 0; padding: 20px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); pointer-events: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); max-height: 45vh;">
-                    <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; cursor: ns-resize;"></div>
-                    <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">X Reaktionen</h3>
-                    <div id="reaction-users-list" style="overflow-y: auto; max-height: 25vh; padding-bottom: 20px;"></div>
+            <div id="reaction-modal" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 3000; background: rgba(0,0,0,0.4); pointer-events: none; transition: background 0.3s; align-items: flex-end;">
+                <!-- Removing padding from container to make it flush -->
+                <div id="reaction-sheet" style="background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); pointer-events: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); max-height: 45vh;">
+                    
+                    <!-- Content inside gets the padding -->
+                    <div style="padding: 15px 20px 30px 20px;">
+                        <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; cursor: ns-resize;"></div>
+                        <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">X Reaktionen</h3>
+                        <div id="reaction-users-list" style="overflow-y: auto; max-height: 25vh;"></div>
+                    </div>
                 </div>
             </div>
         `;
