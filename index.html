@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gamify App</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Google Fonts: Inter & Outfit for Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Phosphor Icons - clean & modern) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Main Content Area -->
+        <main id="content" class="content-area">
+            <!-- Dynamic Content will be injected here -->
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Lade Gamify...</p>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="actions">
+                <i class="ph-fill ph-lightning"></i>
+                <span>Action</span>
+            </button>
+            <button class="nav-item" data-tab="leaderboard">
+                <i class="ph-fill ph-trophy"></i>
+                <span>Bestenliste</span>
+            </button>
+            <button class="nav-item" data-tab="analytics">
+                <i class="ph-fill ph-chart-line-up"></i>
+                <span>Analytics</span>
+            </button>
+            <button class="nav-item" data-tab="logbook">
+                <i class="ph-fill ph-notebook"></i>
+                <span>Logbuch</span>
+            </button>
+            <button class="nav-item" data-tab="chat">
+                <i class="ph-fill ph-chat-teardrop-text"></i>
+                <span>Chat</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
