@@ -48,7 +48,7 @@ class Store {
             if (messages) {
                 // ENSURE 11 REACTIONS
                 const testMsg = {
-                    id: 'test-11-reactions',
+                    id: 'test-11-reactions-permanent',
                     user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon
                     content: 'Dies ist eine Testnachricht mit 11 Reaktionen zum Prüfen der Ansicht! 🚀',
                     type: 'text',
@@ -61,7 +61,7 @@ class Store {
                     ]
                 };
 
-                const filtered = messages.filter(m => m.id !== 'test-11-reactions');
+                const filtered = messages.filter(m => m.id !== 'test-11-reactions-permanent');
                 this.state.chat = [...filtered, testMsg];
             }
 
@@ -100,6 +100,20 @@ class Store {
             return console.error(error);
         }
         await this.addMessage(`hat ${action ? action.name : 'eine Action'} ausgeführt!`, 'event', data[0].id);
+    }
+
+    async updateEvent(id, actionId, date) {
+        const { error } = await supabaseClient.from('events')
+            .update({ action_id: actionId, created_at: date })
+            .eq('id', id);
+        if (error) console.error(error);
+        await this.fetchData();
+    }
+
+    async deleteEvent(id) {
+        const { error } = await supabaseClient.from('events').delete().eq('id', id);
+        if (error) console.error(error);
+        await this.fetchData();
     }
 
     async addMessage(text, type = 'text', eventId = null, replyTo = null) {

@@ -9,7 +9,6 @@ export class ChatView {
         this.lastThreadLength = 0;
         this.selectedMsgId = null;
         this.forceScroll = false;
-        this.isSwiping = false;
     }
 
     render() {
@@ -38,15 +37,11 @@ export class ChatView {
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
 
-            // --- SMART EMOJI SORTING: My Emoji ALWAYS last (rightmost) ---
             let uniqueEmojis = Object.keys(emojiCounts);
             let displayEmojis = [];
-
-            // If I have a reaction, ensure it is in the TOP 4 and comes LAST
             if (myEmojis.length > 0) {
                 const myMainEmoji = myEmojis[0];
                 const others = uniqueEmojis.filter(e => e !== myMainEmoji);
-                // Take 3 others, then add mine at the end
                 displayEmojis = [...others.slice(0, 3), myMainEmoji];
             } else {
                 displayEmojis = uniqueEmojis.slice(0, 4);
@@ -80,17 +75,17 @@ export class ChatView {
                                         <div class="reaction-pill" data-id="${msg.id}" style="
                                             display: flex; align-items: center; gap: 0px; 
                                             background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 4px 2px 6px; margin-top: -10px; 
+                                            border-radius: 12px; padding: 2px 4px 2px 5px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
                                             font-size: 14px; cursor: pointer; z-index: 10;
                                         ">
                                             <div style="display: flex; align-items: center;">
                                                 ${displayEmojis.map(e => `
-                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 12px;">${e}</span>
+                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
                                                 `).join('')}
                                             </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px;">
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 1px;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -126,15 +121,17 @@ export class ChatView {
         const closePicker = () => {
             pickerContainer.classList.remove('active');
             document.getElementById('single-emoji-input-container').classList.remove('open');
+            if (emojiBar) emojiBar.style.display = 'flex'; // RESET
         };
 
         const closeReactionModal = (force = false) => {
             reactionModal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
-            sheet.style.transform = 'translateX(-50%) translateY(110%)';
+            sheet.style.transform = 'translate3d(-50%, 110%, 0)';
             const delay = force ? 0 : 300;
             setTimeout(() => {
                 reactionModal.classList.remove('active');
+                sheet.style.transform = ''; // RESET
             }, delay);
         }
 
@@ -142,37 +139,28 @@ export class ChatView {
         pickerOverlay.onclick = closePicker;
         reactionOverlay.onclick = () => closeReactionModal();
 
-        // SMOOTH SWIPE TO CLOSE logic
+        // SWIPE logic
         let sY = 0; let dY = 0;
         sheet.addEventListener('touchstart', (e) => {
             sY = e.touches[0].clientY;
             sheet.style.transition = 'none';
-            sheet.style.willChange = 'transform';
         }, { passive: true });
-
         sheet.addEventListener('touchmove', (e) => {
             dY = e.touches[0].clientY - sY;
             if (dY > 0) {
-                // Using requestAnimationFrame for better jitter reduction
                 window.requestAnimationFrame(() => {
                     sheet.style.transform = `translate3d(-50%, ${dY}px, 0)`;
                 });
             }
         }, { passive: true });
-
         sheet.addEventListener('touchend', () => {
-            sheet.style.willChange = 'auto';
             sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            if (dY > 80) {
-                closeReactionModal(true); // Skip further transition delay
-            } else {
-                sheet.classList.add('open');
-                sheet.style.transform = 'translate3d(-50%, 0, 0)';
-            }
+            if (dY > 80) closeReactionModal(true);
+            else { sheet.classList.add('open'); sheet.style.transform = 'translate3d(-50%, 0, 0)'; }
             dY = 0;
         });
 
-        // Messenger Interaction
+        // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -185,7 +173,7 @@ export class ChatView {
                         const rect = bubble.getBoundingClientRect();
                         pickerContainer.classList.add('active');
                         if (emojiBar) {
-                            emojiBar.style.display = 'flex';
+                            emojiBar.style.display = 'flex'; // FIX: ALWAYS ENSURE FLEX
                             emojiBar.style.top = `${rect.top < 150 ? rect.bottom + 10 : rect.top - 65}px`;
                         }
                         if (navigator.vibrate) navigator.vibrate(50);
@@ -210,7 +198,7 @@ export class ChatView {
                 const dY = e.changedTouches[0].clientY - this.touchStartY;
                 if (dX > 50 && Math.abs(dY) < 40) {
                     this.currentReplyId = wrapper.dataset.id;
-                    const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
+                    const msg = chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
                     document.getElementById('reply-text').innerText = `Antwort: ${msg.content.substring(0, 25)}...`;
                     input?.focus();
@@ -226,14 +214,14 @@ export class ChatView {
                 e.stopPropagation();
                 input?.blur();
                 const msgId = pill.dataset.id;
-                const msg = store.state.chat.find(m => m.id === msgId);
+                const msg = chat.find(m => m.id === msgId);
                 const reactions = msg?.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.5s;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
@@ -252,19 +240,55 @@ export class ChatView {
                         row.onclick = (ev) => {
                             ev.stopPropagation();
                             row.classList.add('deleting');
-                            // Start slide animation IMMEDIATELY
-                            closeReactionModal();
-                            // Wait for slide to be mostly done before modifying data (which causes re-render)
+                            // 1. Wait for fading
                             setTimeout(() => {
-                                store.addReaction(msgId, row.dataset.emoji);
-                            }, 350);
+                                // 2. Start slide
+                                closeReactionModal();
+                                // 3. Modifiy data after slide has a head start
+                                setTimeout(() => {
+                                    store.addReaction(msgId, row.dataset.emoji);
+                                }, 300);
+                            }, 500);
                         };
                     }
                 });
                 reactionModal.classList.add('active');
-                setTimeout(() => { reactionModal.style.background = 'rgba(0,0,0,0.4)'; sheet.classList.add('open'); }, 10);
+                setTimeout(() => {
+                    reactionModal.style.background = 'rgba(0,0,0,0.4)';
+                    sheet.classList.add('open');
+                    sheet.style.transform = 'translate3d(-50%, 0, 0)';
+                }, 10);
             });
         });
+
+        const updateQueue = (e) => {
+            let queue = JSON.parse(localStorage.getItem('emoji_queue_v6') || '[]');
+            queue = queue.filter(x => x !== e);
+            queue.unshift(e);
+            localStorage.setItem('emoji_queue_v6', JSON.stringify(queue.slice(0, 6)));
+        };
+
+        const applyEmoji = (e) => {
+            store.addReaction(this.selectedMsgId, e);
+            updateQueue(e);
+            closePicker();
+            this.renderSmartEmojiList();
+        };
+
+        document.getElementById('show-full-picker-btn').onclick = (e) => {
+            e.stopPropagation();
+            if (emojiBar) emojiBar.style.display = 'none';
+            document.getElementById('single-emoji-input-container').classList.add('open');
+            singleEmojiInput?.focus();
+        };
+
+        singleEmojiInput.oninput = () => {
+            const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+            if (m) {
+                applyEmoji(m[0]);
+                singleEmojiInput.value = '';
+            }
+        };
 
         document.getElementById('send-btn').onclick = () => {
             if (input.value.trim()) {
