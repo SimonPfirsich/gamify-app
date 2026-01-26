@@ -8,6 +8,7 @@ import { ChatView } from './components/ChatView.js';
 class App {
     constructor() {
         this.currentTab = 'actions';
+        this.initialHeight = window.innerHeight; // STORE INITIAL HEIGHT
         this.views = {
             actions: new ActionView(),
             leaderboard: new LeaderboardView(),
@@ -19,15 +20,18 @@ class App {
     }
 
     init() {
-        // Since interactive-widget=resizes-content is set,
-        // Chrome will now physically resize the viewport.
-        // We only need to toggle classes.
         const updateLayout = () => {
             const viewport = window.visualViewport;
             if (!viewport) return;
-            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
-            if (isKeyboardOpen) document.body.classList.add('keyboard-open');
-            else {
+
+            // COMPARE WITH INITIAL HEIGHT
+            // Since interactive-widget=resizes-content is set, the layout physically shrinks.
+            // visualViewport.height will be significantly smaller than initialHeight.
+            const isKeyboardOpen = viewport.height < this.initialHeight * 0.85;
+
+            if (isKeyboardOpen) {
+                document.body.classList.add('keyboard-open');
+            } else {
                 document.body.classList.remove('keyboard-open');
                 window.scrollTo(0, 0);
             }
@@ -35,6 +39,7 @@ class App {
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', updateLayout);
+            window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
         document.querySelectorAll('.nav-item').forEach(btn => {
@@ -47,8 +52,11 @@ class App {
 
     switchTab(tabName) {
         this.currentTab = tabName;
-        if (tabName === 'chat') document.body.classList.add('chat-active');
-        else document.body.classList.remove('chat-active', 'keyboard-open');
+        if (tabName === 'chat') {
+            document.body.classList.add('chat-active');
+        } else {
+            document.body.classList.remove('chat-active', 'keyboard-open');
+        }
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);

@@ -33,7 +33,6 @@ export class ChatView {
             const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
             const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-            // --- REACTION LOGIC ---
             const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
@@ -65,19 +64,19 @@ export class ChatView {
                                     </div>
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-id="${msg.id}" style="
-                                            display: flex; align-items: center; gap: 4px; 
+                                            display: flex; align-items: center; gap: 2px; 
                                             background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 6px; margin-top: -10px; 
+                                            border-radius: 12px; padding: 2px 5px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-                                            font-size: 15px; cursor: pointer; z-index: 10;
+                                            font-size: 14px; cursor: pointer; z-index: 10;
                                         ">
-                                            <div style="display: flex; align-items: center;">
+                                            <div style="display: flex; align-items: center; gap: 1px;">
                                                 ${topEmojis.map(e => `
-                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 12px; margin-right: 1px;">${e}</span>
+                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 12px;">${e}</span>
                                                 `).join('')}
                                             </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px;">
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 1px;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -105,6 +104,7 @@ export class ChatView {
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
         const sendBtn = document.getElementById('send-btn');
+        const cancelReply = document.getElementById('cancel-reply');
 
         if (this.shouldScrollNow) {
             setTimeout(() => feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }), 100);
@@ -119,13 +119,34 @@ export class ChatView {
         const closeReactionModal = () => {
             reactionModal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
-            setTimeout(() => reactionModal.classList.remove('active'), 300);
+            setTimeout(() => {
+                reactionModal.classList.remove('active');
+                sheet.style.transform = '';
+            }, 300);
         }
 
         this.renderSmartEmojiList();
         pickerOverlay.onclick = closePicker;
         reactionOverlay.onclick = closeReactionModal;
 
+        // SWIPE TO CLOSE FIX
+        let sY = 0; let dY = 0;
+        sheet.addEventListener('touchstart', (e) => {
+            sY = e.touches[0].clientY;
+            sheet.style.transition = 'none';
+        }, { passive: true });
+        sheet.addEventListener('touchmove', (e) => {
+            dY = e.touches[0].clientY - sY;
+            if (dY > 0) sheet.style.transform = `translateX(-50%) translateY(${dY}px)`;
+        }, { passive: true });
+        sheet.addEventListener('touchend', () => {
+            sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            if (dY > 80) closeReactionModal();
+            else { sheet.classList.add('open'); sheet.style.transform = 'translateX(-50%) translateY(0)'; }
+            dY = 0;
+        });
+
+        // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -163,7 +184,7 @@ export class ChatView {
                 const dY = e.changedTouches[0].clientY - this.touchStartY;
                 if (dX > 50 && Math.abs(dY) < 40) {
                     this.currentReplyId = wrapper.dataset.id;
-                    const msg = store.state.chat.find(m => m.id === this.currentReplyId);
+                    const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
                     document.getElementById('reply-text').innerText = `Antwort: ${msg.content.substring(0, 25)}...`;
                     input?.focus();
@@ -173,6 +194,7 @@ export class ChatView {
             });
         });
 
+        // Reaction Detail
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -254,7 +276,7 @@ export class ChatView {
             }
         };
 
-        document.getElementById('cancel-reply').onclick = () => {
+        cancelReply.onclick = () => {
             this.currentReplyId = null;
             document.getElementById('reply-preview').style.display = 'none';
         }

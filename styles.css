@@ -67,7 +67,7 @@ body {
     z-index: 2000;
 }
 
-/* Kill Nav on Keyboard */
+/* KILL NAV ON KEYBOARD */
 .keyboard-open .bottom-nav {
     display: none !important;
 }
@@ -132,10 +132,10 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* --- Chat Input: CLEAN DOCKING & SHIELD --- */
+/* --- Chat Input: DOCKING & SHIELD --- */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) - 10px);
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) - 13px);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -143,8 +143,8 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    /* Visibility shield gradient: slightly higher start */
-    background: linear-gradient(to bottom, transparent 0%, transparent 40%, white 40%, white 100%);
+    /* Visibility shield gradient: optimized for premium gap */
+    background: linear-gradient(to bottom, transparent 0%, transparent 45%, white 45%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
@@ -153,13 +153,12 @@ body {
 }
 
 .keyboard-open #chat-input-container {
-    bottom: -5px !important;
-    /* Move down to compensate margin */
+    bottom: -3px !important;
     background: white;
 }
 
 .keyboard-open #chat-input-container .input-wrapper {
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 .chat-active #chat-input-container {
@@ -173,9 +172,9 @@ body {
     -webkit-user-select: none;
 }
 
-/* User-specific reaction highlight circular background - LIGHTER and SMALLER */
+/* User-specific reaction highlight circular background - MINIMAL DARKER */
 .emoji-span.is-mine {
-    background: #f1f5f9;
+    background: #e2e8f1;
     border-radius: 50%;
     width: 20px;
     height: 20px;
