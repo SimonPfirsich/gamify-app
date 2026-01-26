@@ -46,7 +46,6 @@ class Store {
             if (events) this.state.events = events;
 
             if (messages) {
-                // ENSURE 11 REACTIONS
                 const testMsg = {
                     id: 'test-11-reactions-permanent',
                     user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon
@@ -60,7 +59,6 @@ class Store {
                         { u: '10', e: '✨' }, { u: this.state.currentUser.id, e: '💯' }
                     ]
                 };
-
                 const filtered = messages.filter(m => m.id !== 'test-11-reactions-permanent');
                 this.state.chat = [...filtered, testMsg];
             }
@@ -100,6 +98,14 @@ class Store {
             return console.error(error);
         }
         await this.addMessage(`hat ${action ? action.name : 'eine Action'} ausgeführt!`, 'event', data[0].id);
+    }
+
+    async addEventManual(challengeId, actionId, userId, date) {
+        const { error } = await supabaseClient.from('events').insert([
+            { user_id: userId, action_id: actionId, challenge_id: challengeId, created_at: date }
+        ]);
+        if (error) console.error(error);
+        await this.fetchData();
     }
 
     async updateEvent(id, actionId, date) {

@@ -25,7 +25,7 @@ export class ChatView {
                     Testen als: <strong>${currentUser.name}</strong> (Wechseln)
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; padding-top: 10px; overflow-x: hidden;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; padding-top: 10px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
@@ -72,20 +72,20 @@ export class ChatView {
                                         <div style="line-height: 1.4; white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
                                     </div>
                                     ${reactions.length > 0 ? `
-                                        <div class="reaction-pill" data-id="${msg.id}" style="
+                                        <div class="reaction-pill" data-msg-id="${msg.id}" style="
                                             display: flex; align-items: center; gap: 0px; 
                                             background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 4px 2px 5px; margin-top: -10px; 
+                                            border-radius: 12px; padding: 2px 4px 2px 6px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
                                             font-size: 14px; cursor: pointer; z-index: 10;
                                         ">
-                                            <div style="display: flex; align-items: center;">
+                                            <div style="display: flex; align-items: center; pointer-events: none;">
                                                 ${displayEmojis.map(e => `
                                                     <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
                                                 `).join('')}
                                             </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 1px;">
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px; pointer-events: none;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -114,53 +114,54 @@ export class ChatView {
         const feedContainer = document.querySelector('.content-area');
 
         if (this.shouldScrollNow) {
-            setTimeout(() => feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }), 100);
+            setTimeout(() => { if (feedContainer) feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }) }, 100);
             this.shouldScrollNow = false;
         }
 
         const closePicker = () => {
             pickerContainer.classList.remove('active');
             document.getElementById('single-emoji-input-container').classList.remove('open');
-            if (emojiBar) emojiBar.style.display = 'flex'; // RESET
+            if (emojiBar) emojiBar.style.display = 'flex';
         };
 
         const closeReactionModal = (force = false) => {
             reactionModal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
             sheet.style.transform = 'translate3d(-50%, 110%, 0)';
-            const delay = force ? 0 : 300;
             setTimeout(() => {
                 reactionModal.classList.remove('active');
-                sheet.style.transform = ''; // RESET
-            }, delay);
+                sheet.style.transform = '';
+            }, force ? 0 : 300);
         }
 
         this.renderSmartEmojiList();
-        pickerOverlay.onclick = closePicker;
-        reactionOverlay.onclick = () => closeReactionModal();
+        if (pickerOverlay) pickerOverlay.onclick = closePicker;
+        if (reactionOverlay) reactionOverlay.onclick = () => closeReactionModal();
 
         // SWIPE logic
         let sY = 0; let dY = 0;
-        sheet.addEventListener('touchstart', (e) => {
-            sY = e.touches[0].clientY;
-            sheet.style.transition = 'none';
-        }, { passive: true });
-        sheet.addEventListener('touchmove', (e) => {
-            dY = e.touches[0].clientY - sY;
-            if (dY > 0) {
-                window.requestAnimationFrame(() => {
-                    sheet.style.transform = `translate3d(-50%, ${dY}px, 0)`;
-                });
-            }
-        }, { passive: true });
-        sheet.addEventListener('touchend', () => {
-            sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            if (dY > 80) closeReactionModal(true);
-            else { sheet.classList.add('open'); sheet.style.transform = 'translate3d(-50%, 0, 0)'; }
-            dY = 0;
-        });
+        if (sheet) {
+            sheet.addEventListener('touchstart', (e) => {
+                sY = e.touches[0].clientY;
+                sheet.style.transition = 'none';
+            }, { passive: true });
+            sheet.addEventListener('touchmove', (e) => {
+                dY = e.touches[0].clientY - sY;
+                if (dY > 0) {
+                    window.requestAnimationFrame(() => {
+                        sheet.style.transform = `translate3d(-50%, ${dY}px, 0)`;
+                    });
+                }
+            }, { passive: true });
+            sheet.addEventListener('touchend', () => {
+                sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                if (dY > 80) closeReactionModal(true);
+                else { sheet.classList.add('open'); sheet.style.transform = 'translate3d(-50%, 0, 0)'; }
+                dY = 0;
+            });
+        }
 
-        // Interaction
+        // Messenger Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -173,7 +174,7 @@ export class ChatView {
                         const rect = bubble.getBoundingClientRect();
                         pickerContainer.classList.add('active');
                         if (emojiBar) {
-                            emojiBar.style.display = 'flex'; // FIX: ALWAYS ENSURE FLEX
+                            emojiBar.style.display = 'flex';
                             emojiBar.style.top = `${rect.top < 150 ? rect.bottom + 10 : rect.top - 65}px`;
                         }
                         if (navigator.vibrate) navigator.vibrate(50);
@@ -198,7 +199,7 @@ export class ChatView {
                 const dY = e.changedTouches[0].clientY - this.touchStartY;
                 if (dX > 50 && Math.abs(dY) < 40) {
                     this.currentReplyId = wrapper.dataset.id;
-                    const msg = chat.find(m => m.id === wrapper.dataset.id);
+                    const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
                     document.getElementById('reply-text').innerText = `Antwort: ${msg.content.substring(0, 25)}...`;
                     input?.focus();
@@ -211,11 +212,15 @@ export class ChatView {
         // Reaction Detail
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 input?.blur();
-                const msgId = pill.dataset.id;
-                const msg = chat.find(m => m.id === msgId);
-                const reactions = msg?.reactions || [];
+
+                const msgId = pill.getAttribute('data-msg-id');
+                const msg = store.state.chat.find(m => m.id === msgId);
+                if (!msg) return;
+
+                const reactions = msg.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
@@ -240,18 +245,16 @@ export class ChatView {
                         row.onclick = (ev) => {
                             ev.stopPropagation();
                             row.classList.add('deleting');
-                            // 1. Wait for fading
+                            // Delay to see the fade before sliding down
                             setTimeout(() => {
-                                // 2. Start slide
                                 closeReactionModal();
-                                // 3. Modifiy data after slide has a head start
-                                setTimeout(() => {
-                                    store.addReaction(msgId, row.dataset.emoji);
-                                }, 300);
+                                // Store update happens AFTER the modal starts closing
+                                setTimeout(() => store.addReaction(msgId, row.dataset.emoji), 350);
                             }, 500);
                         };
                     }
                 });
+
                 reactionModal.classList.add('active');
                 setTimeout(() => {
                     reactionModal.style.background = 'rgba(0,0,0,0.4)';
@@ -275,41 +278,55 @@ export class ChatView {
             this.renderSmartEmojiList();
         };
 
-        document.getElementById('show-full-picker-btn').onclick = (e) => {
-            e.stopPropagation();
-            if (emojiBar) emojiBar.style.display = 'none';
-            document.getElementById('single-emoji-input-container').classList.add('open');
-            singleEmojiInput?.focus();
-        };
-
-        singleEmojiInput.oninput = () => {
-            const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-            if (m) {
-                applyEmoji(m[0]);
-                singleEmojiInput.value = '';
-            }
-        };
-
-        document.getElementById('send-btn').onclick = () => {
-            if (input.value.trim()) {
-                this.forceScroll = true;
-                store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
-                input.value = '';
-                document.getElementById('reply-preview').style.display = 'none';
-                this.currentReplyId = null;
-            }
-        };
-
-        document.getElementById('cancel-reply').onclick = () => {
-            this.currentReplyId = null;
-            document.getElementById('reply-preview').style.display = 'none';
+        const plusBtn = document.getElementById('show-full-picker-btn');
+        if (plusBtn) {
+            plusBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (emojiBar) emojiBar.style.display = 'none';
+                document.getElementById('single-emoji-input-container').classList.add('open');
+                singleEmojiInput?.focus();
+            };
         }
 
-        document.getElementById('test-user-switch').onclick = () => {
-            if (store.state.currentUser.name === 'Julius') store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
-            else store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
-            location.reload();
-        };
+        if (singleEmojiInput) {
+            singleEmojiInput.oninput = () => {
+                const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+                if (m) {
+                    applyEmoji(m[0]);
+                    singleEmojiInput.value = '';
+                }
+            };
+        }
+
+        const sendBtn = document.getElementById('send-btn');
+        if (sendBtn) {
+            sendBtn.onclick = () => {
+                if (input.value.trim()) {
+                    this.forceScroll = true;
+                    store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
+                    input.value = '';
+                    document.getElementById('reply-preview').style.display = 'none';
+                    this.currentReplyId = null;
+                }
+            };
+        }
+
+        const cancelReplyBtn = document.getElementById('cancel-reply');
+        if (cancelReplyBtn) {
+            cancelReplyBtn.onclick = () => {
+                this.currentReplyId = null;
+                document.getElementById('reply-preview').style.display = 'none';
+            };
+        }
+
+        const switcher = document.getElementById('test-user-switch');
+        if (switcher) {
+            switcher.onclick = () => {
+                if (store.state.currentUser.name === 'Julius') store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
+                else store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
+                location.reload();
+            };
+        }
     }
 
     renderSmartEmojiList() {
