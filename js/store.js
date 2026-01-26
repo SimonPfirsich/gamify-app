@@ -5,18 +5,21 @@ const initialState = {
     users: [],
     challenges: [],
     events: [],
-    chat: []
+    chat: [],
+    language: 'de'
 };
 
 class Store {
     constructor() {
         const savedUser = localStorage.getItem('gamify_user');
+        const savedLang = localStorage.getItem('gamify_lang') || 'de';
         this.state = {
             currentUser: savedUser ? JSON.parse(savedUser) : initialState.currentUser,
             users: [],
             challenges: [],
             events: [],
-            chat: []
+            chat: [],
+            language: savedLang
         };
         this.listeners = [];
         this.init();
@@ -26,6 +29,12 @@ class Store {
         const newUser = { id, name, avatar };
         this.state.currentUser = newUser;
         localStorage.setItem('gamify_user', JSON.stringify(newUser));
+        this.notify();
+    }
+
+    setLanguage(lang) {
+        this.state.language = lang;
+        localStorage.setItem('gamify_lang', lang);
         this.notify();
     }
 

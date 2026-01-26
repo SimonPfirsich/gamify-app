@@ -4,6 +4,7 @@ import { LeaderboardView } from './components/LeaderboardView.js';
 import { AnalyticsView } from './components/AnalyticsView.js';
 import { LogbookView } from './components/LogbookView.js';
 import { ChatView } from './components/ChatView.js';
+import { translations } from './translations.js';
 
 class App {
     constructor() {
@@ -19,16 +20,16 @@ class App {
         this.init();
     }
 
+    t(key) {
+        return translations[store.state.language][key] || key;
+    }
+
     init() {
         const updateLayout = () => {
             const viewport = window.visualViewport;
             if (!viewport) return;
-
-            // Fast detection
             const isKeyboardOpen = viewport.height < this.initialHeight * 0.85;
-
             if (isKeyboardOpen) {
-                // Apply immediately to sync with browser's physical resize
                 document.body.classList.add('keyboard-open');
             } else {
                 document.body.classList.remove('keyboard-open');
@@ -45,7 +46,19 @@ class App {
         });
 
         this.switchTab('actions');
-        store.subscribe(() => this.render());
+        store.subscribe(() => {
+            this.updateNavLabels();
+            this.render();
+        });
+        this.updateNavLabels();
+    }
+
+    updateNavLabels() {
+        document.querySelector('[data-tab="actions"] span').innerText = this.t('actions');
+        document.querySelector('[data-tab="leaderboard"] span').innerText = this.t('bestenliste') || 'Bestenliste'; // Fallback
+        document.querySelector('[data-tab="analytics"] span').innerText = this.t('analytics');
+        document.querySelector('[data-tab="logbook"] span').innerText = this.t('logbook');
+        document.querySelector('[data-tab="chat"] span').innerText = this.t('chat');
     }
 
     switchTab(tabName) {
