@@ -20,13 +20,13 @@ class App {
     }
 
     init() {
-        // Global Keyboard Handling using VisualViewport
+        // Global Keyboard Handling
         const updateLayout = () => {
             const viewport = window.visualViewport;
             if (!viewport) return;
 
-            // When the viewport height is significantly less than the screen height, keyboard is likely open
-            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
+            // Height threshold for keyboard detection
+            const isKeyboardOpen = viewport.height < window.innerHeight * 0.8;
             const activeEl = document.activeElement;
             const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
 
@@ -34,6 +34,8 @@ class App {
                 document.body.classList.add('keyboard-open');
             } else {
                 document.body.classList.remove('keyboard-open');
+                // Ensure no scroll on body
+                window.scrollTo(0, 0);
             }
         };
 
@@ -41,18 +43,6 @@ class App {
             window.visualViewport.addEventListener('resize', updateLayout);
             window.visualViewport.addEventListener('scroll', updateLayout);
         }
-
-        // Additional Focus listeners as backup
-        document.addEventListener('focusin', (e) => {
-            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
-                // Short delay to let keyboard animation start
-                setTimeout(updateLayout, 100);
-            }
-        });
-
-        document.addEventListener('focusout', () => {
-            setTimeout(updateLayout, 300);
-        });
 
         // Bind Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
@@ -73,8 +63,13 @@ class App {
     switchTab(tabName) {
         this.currentTab = tabName;
 
-        // Reset visibility just in case
-        document.body.classList.remove('keyboard-open');
+        // Manage global UI state based on tab
+        if (tabName === 'chat') {
+            document.body.classList.add('chat-active');
+        } else {
+            document.body.classList.remove('chat-active');
+            document.body.classList.remove('keyboard-open');
+        }
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);

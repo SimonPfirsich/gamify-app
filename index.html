@@ -3,17 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Gamify App</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Google Fonts: Inter & Outfit for Premium Typography -->
+    <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700&display=swap"
         rel="stylesheet">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -21,13 +20,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-title" content="Gamify">
-    <title>Gamify App</title>
-    <link rel="stylesheet" href="styles.css">
 
-    <!-- Icons (Phosphor Icons - clean & modern) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         if ('serviceWorker' in navigator) {
@@ -38,16 +32,13 @@
 
 <body>
     <div id="app">
-        <!-- Main Content Area -->
         <main id="content" class="content-area">
-            <!-- Dynamic Content will be injected here -->
             <div class="loading-spinner">
                 <div class="spinner"></div>
                 <p>Lade Gamify...</p>
             </div>
         </main>
 
-        <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-tab="actions">
                 <i class="ph-fill ph-lightning"></i>
@@ -72,7 +63,64 @@
         </nav>
     </div>
 
-    <!-- Application Logic -->
+    <!-- GLOBAL COMPONENTS (Outside #app to avoid scroll-parent issues) -->
+
+    <!-- Emoji Picker Layer -->
+    <div id="emoji-picker-container" class="modal-layer">
+        <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: transparent;">
+        </div>
+        <div id="emoji-bar"
+            style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content;">
+            <button id="show-full-picker-btn"
+                style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer;">+</button>
+        </div>
+        <div id="single-emoji-input-container" class="bottom-sheet"
+            style="padding: 15px; background: #f8f9fa; z-index: 10002;">
+            <div style="background: white; padding: 5px; border-radius: 25px; border: 1px solid #eee;">
+                <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..."
+                    style="width: 100%; background: transparent; border: none; padding: 10px; text-align: center; font-size: 18px; outline: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Reaction Menu Layer -->
+    <div id="reaction-modal" class="modal-layer">
+        <div id="reaction-sheet" class="bottom-sheet">
+            <div style="padding: 20px 20px 40px 20px;">
+                <div id="sheet-handle"
+                    style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; cursor: pointer;">
+                </div>
+                <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">Reaktionen</h3>
+                <div id="reaction-users-list" style="overflow-y: auto; max-height: 40vh;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Chat Input (Only visible when chat tab active) -->
+    <div id="chat-input-container">
+        <div style="width: 100%; max-width: 450px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom);">
+            <div
+                style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 10px; overflow: hidden;">
+                <div id="reply-preview"
+                    style="display: none; background: #f8fafc; padding: 8px 15px; border-radius: 20px 20px 0 0; border-bottom: 1px solid #eee; font-size: 11px; align-items: center; justify-content: space-between;">
+                    <span id="reply-text"
+                        style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Antworten
+                        auf...</span>
+                    <button id="cancel-reply"
+                        style="border: none; background: none; font-size: 20px; cursor: pointer; color: #999; line-height: 1;">&times;</button>
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 8px;">
+                    <textarea id="chat-input" placeholder="Nachricht..." rows="1"
+                        style="flex: 1; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit; max-height: 100px;"></textarea>
+                    <button id="send-btn"
+                        style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin-right: 2px; margin-bottom: 2px;">
+                        <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="js/app.js"></script>
 </body>
 
