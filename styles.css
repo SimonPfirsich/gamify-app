@@ -34,7 +34,6 @@ body {
     margin: 0 auto;
     position: relative;
     background: #fff;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
 }
 
 .content-area {
@@ -46,8 +45,8 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 140px;
-    /* Strong clearance for floating input */
+    padding-bottom: 200px;
+    /* Large safe zone for floating input */
 }
 
 /* --- Navigation --- */
@@ -103,7 +102,7 @@ body {
     font-weight: 500;
 }
 
-/* --- Modals --- */
+/* --- Global Modals --- */
 .modal-layer {
     position: fixed;
     top: 0;
@@ -113,6 +112,8 @@ body {
     z-index: 10000;
     pointer-events: none;
     display: none;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.3s;
 }
 
 .modal-layer.active {
@@ -129,7 +130,7 @@ body {
     width: 100%;
     max-width: 450px;
     background: white;
-    border-radius: 25px 25px 0 0;
+    border-radius: 30px 30px 0 0;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10001;
 }
@@ -138,18 +139,17 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* --- Chat Input STABILITY --- */
+/* --- Chat Input: THE BEAST --- */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 450px;
     z-index: 5000;
-    transition: bottom 0.1s ease-out;
     pointer-events: none;
     display: none;
+    /* Bottom will be set via VisualViewport JS to stay rock solid */
 }
 
 .chat-active #chat-input-container {
@@ -160,26 +160,21 @@ body {
     pointer-events: auto;
 }
 
-/* Keyboard override */
-.keyboard-open #chat-input-container {
-    bottom: 0 !important;
-}
-
-/* UI Fix: Prevent marking */
 .message-bubble,
 .reaction-pill,
-.nav-item,
-#sheet-handle {
+.nav-item {
     user-select: none;
     -webkit-user-select: none;
 }
 
-/* Utility */
-.header h1 {
-    font-size: 28px;
-    font-family: 'Outfit';
-    background: linear-gradient(to right, #333, #888);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+.reaction-row.deleting {
+    opacity: 0.3;
+    pointer-events: none;
+    transition: opacity 0.4s;
+}
+
+/* Scrollbar hide */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
 }

@@ -19,21 +19,30 @@ class App {
     }
 
     init() {
+        const inputContainer = document.getElementById('chat-input-container');
+
         const updateLayout = () => {
             const viewport = window.visualViewport;
             if (!viewport) return;
 
-            // Robust keyboard detection: if viewport is > 15% smaller than the window, assume keyboard
             const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
             const activeEl = document.activeElement;
             const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
 
             if (isKeyboardOpen && isInput) {
                 document.body.classList.add('keyboard-open');
-                // Ensure the focused input is actually the chat input or similar
-                // We keep it open as long as any input is focused and space is tight
+                // FORCE repositioning using top instead of bottom for absolute screen stability
+                const keyboardHeight = window.innerHeight - viewport.height;
+                // Place it exactly ABOVE the keyboard
+                if (inputContainer) {
+                    inputContainer.style.bottom = `${keyboardHeight}px`;
+                }
             } else {
                 document.body.classList.remove('keyboard-open');
+                if (inputContainer) {
+                    // Back to standard position (above nav)
+                    inputContainer.style.bottom = '65px';
+                }
                 window.scrollTo(0, 0);
             }
         };
@@ -43,7 +52,7 @@ class App {
             window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
-        // Global Navigation Events
+        // Global Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tab = btn.closest('.nav-item').dataset.tab;
@@ -52,27 +61,19 @@ class App {
         });
 
         this.switchTab('actions');
-
-        store.subscribe(() => {
-            this.render();
-        });
+        store.subscribe(() => this.render());
     }
 
     switchTab(tabName) {
         this.currentTab = tabName;
-
-        // Visual state based on tab
-        if (tabName === 'chat') {
-            document.body.classList.add('chat-active');
-        } else {
+        if (tabName === 'chat') document.body.classList.add('chat-active');
+        else {
             document.body.classList.remove('chat-active');
             document.body.classList.remove('keyboard-open');
         }
-
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
-
         this.render();
     }
 
