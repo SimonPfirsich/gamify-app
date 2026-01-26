@@ -46,19 +46,22 @@ class App {
         });
 
         this.switchTab('actions');
-        store.subscribe(() => {
-            this.updateNavLabels();
-            this.render();
-        });
-        this.updateNavLabels();
+        store.subscribe(() => this.render());
     }
 
     updateNavLabels() {
-        document.querySelector('[data-tab="actions"] span').innerText = this.t('actions');
-        document.querySelector('[data-tab="leaderboard"] span').innerText = this.t('bestenliste') || 'Bestenliste'; // Fallback
-        document.querySelector('[data-tab="analytics"] span').innerText = this.t('analytics');
-        document.querySelector('[data-tab="logbook"] span').innerText = this.t('logbook');
-        document.querySelector('[data-tab="chat"] span').innerText = this.t('chat');
+        const navItems = {
+            'actions': this.t('actions'),
+            'leaderboard': this.t('leaderboard'),
+            'analytics': this.t('analytics'),
+            'logbook': this.t('logbook'),
+            'chat': this.t('chat')
+        };
+
+        Object.entries(navItems).forEach(([tab, label]) => {
+            const span = document.querySelector(`[data-tab="${tab}"] span`);
+            if (span) span.innerText = label;
+        });
     }
 
     switchTab(tabName) {
@@ -73,6 +76,7 @@ class App {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
         this.render();
+        this.updateNavLabels();
     }
 
     render() {
