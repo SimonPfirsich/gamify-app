@@ -33,7 +33,8 @@ export class ChatView {
             const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
             const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-            const hasMyReaction = reactions.some(r => r.u === currentUser.id);
+            // --- REACTION LOGIC ---
+            const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
             const topEmojis = Object.keys(emojiCounts).slice(0, 4);
@@ -69,10 +70,14 @@ export class ChatView {
                                             border-radius: 12px; padding: 2px 6px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-                                            font-size: 12px; cursor: pointer; z-index: 10;
+                                            font-size: 15px; cursor: pointer; z-index: 10;
                                         ">
-                                            <span>${topEmojis.join('')}</span>
-                                            <span style="color: var(--text-muted); font-weight: ${hasMyReaction ? '800' : '500'}; font-size: 10px; margin-left: 2px;">
+                                            <div style="display: flex; align-items: center;">
+                                                ${topEmojis.map(e => `
+                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 12px; margin-right: 1px;">${e}</span>
+                                                `).join('')}
+                                            </div>
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -121,7 +126,6 @@ export class ChatView {
         pickerOverlay.onclick = closePicker;
         reactionOverlay.onclick = closeReactionModal;
 
-        // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -169,7 +173,6 @@ export class ChatView {
             });
         });
 
-        // Reaction Detail
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();

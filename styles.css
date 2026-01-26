@@ -67,7 +67,9 @@ body {
     z-index: 2000;
 }
 
-/* Removed display:none to allow nav to move with keyboard (standard behavior with widget resize) */
+.keyboard-open .bottom-nav {
+    display: none !important;
+}
 
 .nav-item {
     background: none !important;
@@ -129,7 +131,7 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* --- Chat Input: WITH VISIBILITY SHIELD --- */
+/* --- Chat Input: CLEAN DOCKING & SHIELD --- */
 #chat-input-container {
     position: fixed;
     bottom: calc(var(--nav-height) + var(--safe-area-bottom));
@@ -140,23 +142,27 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    background: linear-gradient(to bottom, transparent 0%, transparent 50%, white 50%, white 100%);
-    padding-bottom: 20px;
+    /* Visibility shield gradient */
+    background: linear-gradient(to bottom, transparent 0%, transparent 60%, white 60%, white 100%);
+}
+
+#chat-input-container .input-wrapper {
+    margin: 0 10px 10px 10px;
+    pointer-events: auto;
 }
 
 .keyboard-open #chat-input-container {
     bottom: 0px !important;
-    padding-bottom: 5px;
     background: white;
-    /* Full white background when on keyboard */
+}
+
+.keyboard-open #chat-input-container .input-wrapper {
+    margin-bottom: 5px;
+    /* Tighter on keyboard */
 }
 
 .chat-active #chat-input-container {
     display: block;
-}
-
-#chat-input-container>* {
-    pointer-events: auto;
 }
 
 .message-bubble,
@@ -164,6 +170,17 @@ body {
 .nav-item {
     user-select: none;
     -webkit-user-select: none;
+}
+
+/* User-specific reaction highlight circular background */
+.emoji-span.is-mine {
+    background: #e2e8f1;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .reaction-row.deleting {
