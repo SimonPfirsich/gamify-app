@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- THE FIX: interactive-widget=resizes-content tells Chrome to physically SHRINK the layout, not PAN it. -->
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Gamify App</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -19,15 +19,9 @@
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ffffff">
-    <meta name="apple-mobile-web-app-title" content="Gamify">
 
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
 </head>
 
 <body>
@@ -63,28 +57,26 @@
         </nav>
     </div>
 
-    <!-- GLOBAL COMPONENTS (Outside #app to avoid scroll-parent issues) -->
-
-    <!-- Emoji Picker Layer -->
+    <!-- GLOBAL LAYERS -->
     <div id="emoji-picker-container" class="modal-layer">
-        <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: transparent;">
-        </div>
+        <div id="emoji-picker-overlay" style="position: absolute; width:100%; height:100%; cursor:pointer;"></div>
         <div id="emoji-bar"
-            style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content;">
+            style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: none; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content; z-index: 10005;">
             <button id="show-full-picker-btn"
                 style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer;">+</button>
         </div>
-        <div id="single-emoji-input-container" class="bottom-sheet"
-            style="padding: 15px; background: #f8f9fa; z-index: 10002;">
-            <div style="background: white; padding: 5px; border-radius: 25px; border: 1px solid #eee;">
-                <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..."
-                    style="width: 100%; background: transparent; border: none; padding: 10px; text-align: center; font-size: 18px; outline: none;">
+        <div id="single-emoji-input-container" class="bottom-sheet" style="z-index: 10006;">
+            <div style="padding: 15px; background: #f8f9fa;">
+                <div style="background: white; padding: 5px; border-radius: 25px; border: 1px solid #eee;">
+                    <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..."
+                        style="width: 100%; background: transparent; border: none; padding: 10px; text-align: center; font-size: 18px; outline: none;">
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Reaction Menu Layer -->
     <div id="reaction-modal" class="modal-layer">
+        <div id="reaction-modal-overlay" style="position: absolute; width:100%; height:100%; cursor:pointer;"></div>
         <div id="reaction-sheet" class="bottom-sheet">
             <div style="padding: 20px 20px 40px 20px;">
                 <div id="sheet-handle"
@@ -96,24 +88,23 @@
         </div>
     </div>
 
-    <!-- Global Chat Input (Only visible when chat tab active) -->
     <div id="chat-input-container">
-        <div style="width: 100%; max-width: 450px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom);">
+        <div style="width: 100%; max-width: 450px; margin: 0 auto;">
             <div
-                style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 10px; overflow: hidden;">
+                style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 10px 10px 10px; overflow: hidden;">
                 <div id="reply-preview"
                     style="display: none; background: #f8fafc; padding: 8px 15px; border-radius: 20px 20px 0 0; border-bottom: 1px solid #eee; font-size: 11px; align-items: center; justify-content: space-between;">
                     <span id="reply-text"
                         style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Antworten
                         auf...</span>
                     <button id="cancel-reply"
-                        style="border: none; background: none; font-size: 20px; cursor: pointer; color: #999; line-height: 1;">&times;</button>
+                        style="border: none; background: none; font-size: 20px; cursor: pointer; color: #999;">&times;</button>
                 </div>
                 <div style="display: flex; align-items: flex-end; gap: 8px;">
                     <textarea id="chat-input" placeholder="Nachricht..." rows="1"
                         style="flex: 1; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit; max-height: 100px;"></textarea>
                     <button id="send-btn"
-                        style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin-right: 2px; margin-bottom: 2px;">
+                        style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin: 2px;">
                         <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
                     </button>
                 </div>
