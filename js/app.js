@@ -23,26 +23,30 @@ class App {
 
         const updateLayout = () => {
             const viewport = window.visualViewport;
-            if (!viewport) return;
+            if (!viewport || !inputContainer) return;
 
-            // Accurate keyboard height detection
-            const keyboardHeight = window.innerHeight - viewport.height;
-            const isKeyboardOpen = keyboardHeight > 60; // Threshold
+            // Difference between full window and current visual area
+            const keyboardOpen = viewport.height < window.innerHeight * 0.85;
 
-            if (isKeyboardOpen) {
+            if (keyboardOpen) {
                 document.body.classList.add('keyboard-open');
-                if (inputContainer) {
-                    // Lock to the exact top edge of the keyboard
-                    // We use translateY to prevent layout thrashing and keep it 'magnetic'
-                    inputContainer.style.bottom = '0px';
-                    inputContainer.style.transform = `translateX(-50%) translateY(-${keyboardHeight}px)`;
-                }
+
+                // ABSOLUTE ANCHOR:
+                // We position the container using TOP relative to the viewport's visual bottom.
+                // This is the only way to prevent it from escaping during scroll shifts.
+                const visualBottom = viewport.offsetTop + viewport.height;
+                const containerHeight = inputContainer.offsetHeight;
+
+                // Anchor the container so its bottom matches the visual bottom
+                inputContainer.style.bottom = 'auto'; // Disable bottom based CSS
+                inputContainer.style.top = `${visualBottom - containerHeight}px`;
+                inputContainer.style.transform = `translateX(-50%)`;
             } else {
                 document.body.classList.remove('keyboard-open');
-                if (inputContainer) {
-                    inputContainer.style.bottom = 'calc(var(--nav-height) + var(--safe-area-bottom))';
-                    inputContainer.style.transform = 'translateX(-50%) translateY(0)';
-                }
+                // RESTORE default position
+                inputContainer.style.top = 'auto';
+                inputContainer.style.bottom = 'calc(var(--nav-height) + var(--safe-area-bottom))';
+                inputContainer.style.transform = `translateX(-50%)`;
                 window.scrollTo(0, 0);
             }
         };
@@ -52,6 +56,7 @@ class App {
             window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
+        // Global Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
@@ -63,10 +68,8 @@ class App {
     switchTab(tabName) {
         this.currentTab = tabName;
         if (tabName === 'chat') document.body.classList.add('chat-active');
-        else {
-            document.body.classList.remove('chat-active');
-            document.body.classList.remove('keyboard-open');
-        }
+        else document.body.classList.remove('chat-active', 'keyboard-open');
+
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });

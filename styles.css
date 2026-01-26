@@ -18,22 +18,24 @@ body {
     background-color: #ffffff;
     color: var(--text-dark);
     font-family: 'Inter', sans-serif;
-    height: 100dvh;
+    height: 100%;
     width: 100vw;
     overflow: hidden;
-    position: fixed;
     overscroll-behavior: none;
+    position: fixed;
+    /* Root anchor */
 }
 
 #app {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100dvh;
     width: 100%;
     max-width: 450px;
     margin: 0 auto;
     position: relative;
     background: #fff;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
 }
 
 .content-area {
@@ -45,8 +47,7 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 200px;
-    /* Large safe zone for floating input */
+    padding-bottom: 140px;
 }
 
 /* --- Navigation --- */
@@ -66,12 +67,10 @@ body {
     padding-top: 12px;
     padding-bottom: var(--safe-area-bottom);
     z-index: 2000;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .keyboard-open .bottom-nav {
-    transform: translateY(110%);
-    pointer-events: none;
+    display: none !important;
 }
 
 .nav-item {
@@ -102,7 +101,7 @@ body {
     font-weight: 500;
 }
 
-/* --- Global Modals --- */
+/* --- Modals --- */
 .modal-layer {
     position: fixed;
     top: 0;
@@ -112,8 +111,6 @@ body {
     z-index: 10000;
     pointer-events: none;
     display: none;
-    background: rgba(0, 0, 0, 0);
-    transition: background 0.3s;
 }
 
 .modal-layer.active {
@@ -139,17 +136,16 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* --- Chat Input: THE BEAST --- */
+/* --- Chat Input --- */
 #chat-input-container {
     position: fixed;
     left: 50%;
-    transform: translateX(-50%);
     width: 100%;
     max-width: 450px;
-    z-index: 5000;
+    z-index: 3000;
     pointer-events: none;
     display: none;
-    /* Bottom will be set via VisualViewport JS to stay rock solid */
+    /* We use JS to position this via style.top or style.bottom relative to visualViewport */
 }
 
 .chat-active #chat-input-container {
@@ -168,12 +164,12 @@ body {
 }
 
 .reaction-row.deleting {
-    opacity: 0.3;
+    opacity: 0;
+    /* Fully invisible at end */
     pointer-events: none;
-    transition: opacity 0.4s;
+    transition: opacity 0.3s;
 }
 
-/* Scrollbar hide */
 ::-webkit-scrollbar {
     width: 0px;
     background: transparent;

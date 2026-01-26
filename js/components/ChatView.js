@@ -86,6 +86,7 @@ export class ChatView {
         const modal = document.getElementById('reaction-modal');
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
+        const sendBtn = document.getElementById('send-btn');
 
         if (this.shouldScrollNow) {
             setTimeout(() => feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }), 100);
@@ -94,15 +95,15 @@ export class ChatView {
 
         this.renderSmartEmojiList();
 
-        // Interaction
+        // Messenger Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
                 this.longPressTimer = setTimeout(() => {
-                    if (Math.abs(e.touches[0].clientX - this.touchStartX) < 10) {
-                        input.blur();
+                    if (Math.abs(e.touches[0].clientX - this.touchStartX) < 15) {
+                        input?.blur();
                         this.selectedMsgId = wrapper.dataset.id;
                         const rect = bubble.getBoundingClientRect();
                         pickerContainer.classList.add('active');
@@ -132,7 +133,7 @@ export class ChatView {
                     const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
                     document.getElementById('reply-text').innerText = `Antwort: ${msg.content.substring(0, 25)}...`;
-                    input.focus();
+                    input?.focus();
                 }
                 wrapper.style.transform = '';
                 wrapper.querySelector('.swipe-indicator').style.opacity = 0;
@@ -142,22 +143,26 @@ export class ChatView {
         const closeModal = () => {
             modal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
-            setTimeout(() => { modal.classList.remove('active'); sheet.style.transform = ''; }, 300);
+            setTimeout(() => {
+                modal.classList.remove('active');
+                sheet.style.transform = '';
+            }, 300);
         };
 
         // Reaction Detail
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
-                input.blur();
-                const msg = store.state.chat.find(m => m.id === pill.dataset.id);
+                input?.blur();
+                const msgId = pill.dataset.id;
+                const msg = store.state.chat.find(m => m.id === msgId);
                 const reactions = msg?.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; position: relative;">
+                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
@@ -175,11 +180,11 @@ export class ChatView {
                     if (delBtn) {
                         row.onclick = () => {
                             row.classList.add('deleting');
-                            // Start closing early to keep 'deleting' visible during transition
-                            setTimeout(closeModal, 300);
+                            // Delay actual store update until panel is gone/closed
                             setTimeout(() => {
-                                store.addReaction(pill.dataset.id, row.dataset.emoji);
-                            }, 500);
+                                store.addReaction(msgId, row.dataset.emoji);
+                                closeModal();
+                            }, 400);
                         };
                     }
                 });
@@ -190,19 +195,17 @@ export class ChatView {
 
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 
-        // Swipe Sheet
-        let sY = 0; let dY = 0;
-        sheet.addEventListener('touchstart', (e) => { sY = e.touches[0].clientY; sheet.style.transition = 'none'; }, { passive: true });
-        sheet.addEventListener('touchmove', (e) => {
-            dY = e.touches[0].clientY - sY;
-            if (dY > 0) sheet.style.transform = `translateX(-50%) translateY(${dY}px)`;
-        }, { passive: true });
-        sheet.addEventListener('touchend', () => {
-            sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            if (dY > 100) closeModal();
-            else { sheet.classList.add('open'); sheet.style.transform = ''; }
-            dY = 0;
-        });
+        // Emoji FIFO Logic
+        const applyEmoji = (e) => {
+            store.addReaction(this.selectedMsgId, e);
+            let queue = JSON.parse(localStorage.getItem('emoji_queue_last') || '[]');
+            queue = queue.filter(x => x !== e);
+            queue.unshift(e); // Add to front (left)
+            localStorage.setItem('emoji_queue_last', JSON.stringify(queue.slice(0, 6)));
+            pickerContainer.classList.remove('active');
+            document.getElementById('single-emoji-input-container').classList.remove('open');
+            this.renderSmartEmojiList();
+        };
 
         document.getElementById('show-full-picker-btn').onclick = (e) => {
             e.stopPropagation();
@@ -212,24 +215,14 @@ export class ChatView {
         };
 
         singleEmojiInput.oninput = () => {
-            const match = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-            if (match) {
-                const em = match[0];
-                store.addReaction(this.selectedMsgId, em);
-                this.trackEmojiUsage(em);
-                pickerContainer.classList.remove('active');
-                document.getElementById('single-emoji-input-container').classList.remove('open');
+            const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+            if (m) {
+                applyEmoji(m[0]);
                 singleEmojiInput.value = '';
-                this.renderSmartEmojiList();
             }
         };
 
-        document.getElementById('emoji-picker-overlay').onclick = () => {
-            pickerContainer.classList.remove('active');
-            document.getElementById('single-emoji-input-container').classList.remove('open');
-        };
-
-        document.getElementById('send-btn').onclick = () => {
+        sendBtn.onclick = () => {
             if (input.value.trim()) {
                 this.forceScroll = true;
                 store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
@@ -251,31 +244,14 @@ export class ChatView {
         };
     }
 
-    trackEmojiUsage(emoji) {
-        // FIFO Queue logic for smart emojis
-        let queue = JSON.parse(localStorage.getItem('emoji_queue_v5') || '[]');
-        // Remove if exists
-        queue = queue.filter(e => e !== emoji);
-        // Add to front (left side)
-        queue.unshift(emoji);
-        // Limit to 6
-        queue = queue.slice(0, 6);
-        localStorage.setItem('emoji_queue_v5', JSON.stringify(queue));
-    }
-
     renderSmartEmojiList() {
-        const queue = JSON.parse(localStorage.getItem('emoji_queue_v5') || '[]');
+        const queue = JSON.parse(localStorage.getItem('emoji_queue_last') || '[]');
         const defaults = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-
-        // Final list: Take queue, fill remaining with defaults
         const list = [...new Set([...queue, ...defaults])].slice(0, 6);
-
         const bar = document.getElementById('emoji-bar');
         if (!bar) return;
-        const plus = document.getElementById('show-full-picker-btn');
         bar.querySelectorAll('.emoji-choice').forEach(n => n.remove());
-
-        // We render left-to-right (FIFO)
+        const plus = document.getElementById('show-full-picker-btn');
         list.forEach(e => {
             const btn = document.createElement('button');
             btn.className = 'emoji-choice';
@@ -284,12 +260,13 @@ export class ChatView {
             btn.onclick = (ev) => {
                 ev.stopPropagation();
                 store.addReaction(this.selectedMsgId, e);
-                this.trackEmojiUsage(e);
+                let q = JSON.parse(localStorage.getItem('emoji_queue_last') || '[]');
+                q = q.filter(x => x !== e); q.unshift(e);
+                localStorage.setItem('emoji_queue_last', JSON.stringify(q.slice(0, 6)));
                 document.getElementById('emoji-picker-container').classList.remove('active');
-                this.renderSmartEmojiList(); // Re-render for next time
+                this.renderSmartEmojiList();
             };
             bar.insertBefore(btn, plus);
         });
-        bar.style.display = 'flex';
     }
 }
