@@ -8,7 +8,7 @@ import { ChatView } from './components/ChatView.js';
 class App {
     constructor() {
         this.currentTab = 'actions';
-        this.initialHeight = window.innerHeight; // STORE INITIAL HEIGHT
+        this.initialHeight = window.innerHeight;
         this.views = {
             actions: new ActionView(),
             leaderboard: new LeaderboardView(),
@@ -24,12 +24,11 @@ class App {
             const viewport = window.visualViewport;
             if (!viewport) return;
 
-            // COMPARE WITH INITIAL HEIGHT
-            // Since interactive-widget=resizes-content is set, the layout physically shrinks.
-            // visualViewport.height will be significantly smaller than initialHeight.
+            // Fast detection
             const isKeyboardOpen = viewport.height < this.initialHeight * 0.85;
 
             if (isKeyboardOpen) {
+                // Apply immediately to sync with browser's physical resize
                 document.body.classList.add('keyboard-open');
             } else {
                 document.body.classList.remove('keyboard-open');
@@ -39,7 +38,6 @@ class App {
 
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', updateLayout);
-            window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
         document.querySelectorAll('.nav-item').forEach(btn => {

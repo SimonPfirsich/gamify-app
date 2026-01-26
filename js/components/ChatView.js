@@ -64,19 +64,19 @@ export class ChatView {
                                     </div>
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-id="${msg.id}" style="
-                                            display: flex; align-items: center; gap: 2px; 
+                                            display: flex; align-items: center; gap: 1px; 
                                             background: white; border: 1px solid #e2e8f0; 
                                             border-radius: 12px; padding: 2px 5px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
                                             font-size: 14px; cursor: pointer; z-index: 10;
                                         ">
-                                            <div style="display: flex; align-items: center; gap: 1px;">
+                                            <div style="display: flex; align-items: center; gap: 0px;">
                                                 ${topEmojis.map(e => `
-                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 12px;">${e}</span>
+                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
                                                 `).join('')}
                                             </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 1px;">
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 0px;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -129,7 +129,7 @@ export class ChatView {
         pickerOverlay.onclick = closePicker;
         reactionOverlay.onclick = closeReactionModal;
 
-        // SWIPE TO CLOSE FIX
+        // SWIPE TO CLOSE logic
         let sY = 0; let dY = 0;
         sheet.addEventListener('touchstart', (e) => {
             sY = e.touches[0].clientY;
@@ -225,10 +225,12 @@ export class ChatView {
                     if (delBtn) {
                         row.onclick = () => {
                             row.classList.add('deleting');
+                            // FIRST start the slide down animation
+                            closeReactionModal();
+                            // THEN update the store after animation has a head start
                             setTimeout(() => {
                                 store.addReaction(msgId, row.dataset.emoji);
-                                closeReactionModal();
-                            }, 500);
+                            }, 150);
                         };
                     }
                 });
@@ -276,7 +278,7 @@ export class ChatView {
             }
         };
 
-        cancelReply.onclick = () => {
+        document.getElementById('cancel-reply').onclick = () => {
             this.currentReplyId = null;
             document.getElementById('reply-preview').style.display = 'none';
         }

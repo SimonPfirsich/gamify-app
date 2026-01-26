@@ -45,24 +45,24 @@ class Store {
             if (profiles) this.state.users = profiles;
             if (events) this.state.events = events;
 
-            // --- TEST MESSAGE INJECTION ---
-            const testMsg = {
-                id: 'test-7-reactions-fixed',
-                user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon
-                content: 'Dies ist eine Testnachricht mit 7 Reaktionen zum Prüfen der Ansicht! 🚀',
-                type: 'text',
-                created_at: new Date().toISOString(), // ENSURE IT IS NEWEST
-                reactions: [
-                    { u: '1', e: '👍' }, { u: '2', e: '❤️' }, { u: '3', e: '😂' },
-                    { u: '4', e: '😮' }, { u: '5', e: '😢' }, { u: '6', e: '🙏' },
-                    { u: this.state.currentUser.id, e: '🎉' }
-                ]
-            };
-
             if (messages) {
-                this.state.chat = [...messages, testMsg];
-            } else {
-                this.state.chat = [testMsg];
+                // Ensure the 7-reaction test message is ALWAYS at the bottom and has a valid user (Simon)
+                const testMsg = {
+                    id: 'test-7-reactions-ultimate',
+                    user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon's ID
+                    content: 'Dies ist eine Testnachricht mit 7 Reaktionen zum Prüfen der Ansicht! 🚀',
+                    type: 'text',
+                    created_at: new Date(Date.now() + 5000).toISOString(), // Slight future to stay bottom
+                    reactions: [
+                        { u: '1', e: '👍' }, { u: '2', e: '❤️' }, { u: '3', e: '😂' },
+                        { u: '4', e: '😮' }, { u: '5', e: '😢' }, { u: '6', e: '🙏' },
+                        { u: this.state.currentUser.id, e: '🎉' }
+                    ]
+                };
+
+                // Avoid duplicates if fetchData is called again
+                const filtered = messages.filter(m => m.id !== 'test-7-reactions-ultimate');
+                this.state.chat = [...filtered, testMsg];
             }
 
             this.notify();
