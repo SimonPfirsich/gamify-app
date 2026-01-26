@@ -46,22 +46,22 @@ class Store {
             if (events) this.state.events = events;
 
             if (messages) {
-                // Ensure the 7-reaction test message is ALWAYS at the bottom and has a valid user (Simon)
+                // ENSURE 11 REACTIONS
                 const testMsg = {
-                    id: 'test-7-reactions-ultimate',
-                    user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon's ID
-                    content: 'Dies ist eine Testnachricht mit 7 Reaktionen zum Prüfen der Ansicht! 🚀',
+                    id: 'test-11-reactions',
+                    user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon
+                    content: 'Dies ist eine Testnachricht mit 11 Reaktionen zum Prüfen der Ansicht! 🚀',
                     type: 'text',
-                    created_at: new Date(Date.now() + 5000).toISOString(), // Slight future to stay bottom
+                    created_at: new Date(Date.now() + 5000).toISOString(),
                     reactions: [
                         { u: '1', e: '👍' }, { u: '2', e: '❤️' }, { u: '3', e: '😂' },
                         { u: '4', e: '😮' }, { u: '5', e: '😢' }, { u: '6', e: '🙏' },
-                        { u: this.state.currentUser.id, e: '🎉' }
+                        { u: '7', e: '🔥' }, { u: '8', e: '👏' }, { u: '9', e: '🎉' },
+                        { u: '10', e: '✨' }, { u: this.state.currentUser.id, e: '💯' }
                     ]
                 };
 
-                // Avoid duplicates if fetchData is called again
-                const filtered = messages.filter(m => m.id !== 'test-7-reactions-ultimate');
+                const filtered = messages.filter(m => m.id !== 'test-11-reactions');
                 this.state.chat = [...filtered, testMsg];
             }
 

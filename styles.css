@@ -134,7 +134,7 @@ body {
 /* --- Chat Input: PREMIUM DOCKING & SHIELD --- */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) - 13px);
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 7px);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -142,25 +142,25 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    /* Soft transition to stop jumping */
-    transition: bottom 0.15s ease-out;
     /* Static Shield: starts exactly where it needs to cover the background */
     background: linear-gradient(to bottom, transparent 0%, transparent 40%, white 40%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
-    margin: 0 10px;
+    margin: 0 10px 10px 10px;
     pointer-events: auto;
 }
 
 .keyboard-open #chat-input-container {
-    bottom: 5px !important;
-    /* Premium small gap restored */
+    bottom: 7px !important;
+    /* Premium 7px gap over keyboard */
     background: white;
+    transition: none;
+    /* INSTANT docking to keyboard to prevent covering it */
 }
 
 .keyboard-open #chat-input-container .input-wrapper {
-    margin-bottom: 5px;
+    margin-bottom: 0px;
 }
 
 .chat-active #chat-input-container {
@@ -176,11 +176,10 @@ body {
 
 /* User-specific reaction highlight circular background */
 .emoji-span.is-mine {
-    background: #e9eef5;
-    /* Minimal darker than light blue */
+    background: #dde5f0;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
