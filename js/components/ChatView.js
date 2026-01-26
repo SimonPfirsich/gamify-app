@@ -8,14 +8,19 @@ export class ChatView {
         this.touchStartY = 0;
         this.sheetTouchStartY = 0;
         this.isSwipingSheet = false;
-        this.lastMessageCount = 0;
+        this.lastThreadLength = 0;
         this.selectedMsgId = null;
+        this.forceScroll = false;
     }
 
     render() {
         const chat = store.state.chat.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const currentUser = store.state.currentUser;
-        this.lastMessageCount = chat.length;
+
+        // Scroll logic: if message count increased, we scroll. Reactions don't increase count.
+        this.shouldScrollNow = (chat.length > this.lastThreadLength) || this.forceScroll;
+        this.lastThreadLength = chat.length;
+        this.forceScroll = false;
 
         return `
             <div class="header">
@@ -45,7 +50,7 @@ export class ChatView {
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
                                         padding: ${isEvent ? '4px 10px' : '8px 12px'}; 
-                                        border-radius: ${isEvent ? '20px' : '18px'}; 
+                                        border-radius: 18px; 
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
                                         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
@@ -55,7 +60,7 @@ export class ChatView {
                                     ">
                                         ${replyMsg ? `
                                             <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
-                                                <strong>${replyMsg.user_id === currentUser.id ? 'Du' : store.state.users.find(u => u.id === replyMsg.user_id)?.name}</strong><br>
+                                                <strong>${replyMsg.user_id === currentUser.id ? 'Du' : (store.state.users.find(u => u.id === replyMsg.user_id)?.name || 'User')}</strong><br>
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
@@ -101,18 +106,20 @@ export class ChatView {
                 </div>
             </div>
 
-            <!-- Chat Input (Back to Bubble-contained Send Button) -->
-            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 1500; transition: bottom 0.2s; pointer-events: none;">
+            <!-- Chat Input (Fixed ABOVE Tabs, Quote inside Bubble) -->
+            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 5000; transition: bottom 0.2s; pointer-events: none;">
                 <div style="pointer-events: auto;">
-                    <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px; margin: 0 5px;">
-                        <span id="reply-text" style="color: var(--text-muted);">Antworten auf...</span>
-                        <button id="cancel-reply" style="float: right; border: none; background: none; font-size: 16px; cursor: pointer; color: #999;">&times;</button>
-                    </div>
-                    <div style="display: flex; align-items: flex-end; gap: 8px; background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 5px;">
-                        <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="flex: 1; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit; max-height: 100px;"></textarea>
-                        <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin-right: 2px; margin-bottom: 2px;">
-                            <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
-                        </button>
+                    <div style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 5px; overflow: hidden;">
+                        <div id="reply-preview" style="display: none; background: #f8fafc; padding: 8px 15px; border-radius: 20px 20px 0 0; border-bottom: 1px solid #eee; font-size: 11px; align-items: center; justify-content: space-between;">
+                            <span id="reply-text" style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Antworten auf...</span>
+                            <button id="cancel-reply" style="border: none; background: none; font-size: 20px; cursor: pointer; color: #999; line-height: 1;">&times;</button>
+                        </div>
+                        <div style="display: flex; align-items: flex-end; gap: 8px;">
+                            <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="flex: 1; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit; max-height: 100px;"></textarea>
+                            <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin-right: 2px; margin-bottom: 2px;">
+                                <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,16 +135,25 @@ export class ChatView {
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
 
-        if (this.shouldScroll) feedContainer.scrollTop = feedContainer.scrollHeight;
+        // Automatic scroll ONLY if text message added/send button pressed
+        if (this.shouldScrollNow) {
+            // Instant scroll to bottom
+            setTimeout(() => {
+                feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' });
+            }, 10);
+            this.shouldScrollNow = false;
+        }
 
         // Long Press Emoji
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
+            const msgId = wrapper.dataset.id;
+
             bubble.addEventListener('touchstart', (e) => {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
                 this.longPressTimer = setTimeout(() => {
-                    this.selectedMsgId = wrapper.dataset.id;
+                    this.selectedMsgId = msgId;
                     const rect = bubble.getBoundingClientRect();
                     pickerContainer.classList.add('active');
                     emojiBar.style.top = `${rect.top < 150 ? rect.bottom + 10 : rect.top - 65}px`;
@@ -159,9 +175,13 @@ export class ChatView {
             wrapper.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
                 if (e.changedTouches[0].clientX - this.touchStartX > 50) {
-                    this.currentReplyId = wrapper.dataset.id;
+                    // FIX: Replying to B quotes B
+                    this.currentReplyId = msgId;
+                    const msg = store.state.chat.find(m => m.id === msgId);
+                    const user = store.state.users.find(u => u.id === msg.user_id);
                     document.getElementById('reply-preview').style.display = 'flex';
-                    document.getElementById('reply-text').innerText = "Antworten auf: " + bubble.innerText.substring(0, 20) + "...";
+                    const cleanText = msg.content.substring(0, 25);
+                    document.getElementById('reply-text').innerText = `${user?.name || 'User'}: ${cleanText}...`;
                     input.focus();
                 }
                 wrapper.style.transform = '';
@@ -238,6 +258,7 @@ export class ChatView {
 
         document.getElementById('send-btn').onclick = () => {
             if (input.value.trim()) {
+                this.forceScroll = true;
                 store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
                 input.value = '';
                 document.getElementById('reply-preview').style.display = 'none';

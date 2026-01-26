@@ -50,11 +50,10 @@ body {
     color: var(--text-dark);
     font-family: 'Inter', sans-serif;
     height: 100dvh;
-    /* Dynamic Viewport Height */
     width: 100vw;
     overflow: hidden;
     position: fixed;
-    /* Prevent accidental scrolling/bouncing of the whole page */
+    overscroll-behavior: none;
 }
 
 h1,
@@ -187,8 +186,13 @@ h4 {
     transform: translateX(-50%);
     width: 100%;
     max-width: 450px;
-    z-index: 1500;
+    z-index: 5000;
     transition: bottom 0.2s ease;
+    pointer-events: none;
+}
+
+#chat-input-container>* {
+    pointer-events: auto;
 }
 
 .keyboard-open #chat-input-container {
