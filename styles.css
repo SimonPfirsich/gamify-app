@@ -40,20 +40,21 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER + FILTER COMBINED */
+/* STICKY HEADER */
 .header {
     padding: 20px 16px 10px;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     background: white;
-    z-index: 100;
+    z-index: 101;
+    /* Higher than filter */
     border-bottom: 1px solid #f8fafc;
 }
 
-/* FILTER BAR - PART OF STICKY HEADER GROUP */
+/* FILTER BAR - Sticks BELOW header */
 .filter-bar {
-    padding: 0 16px 16px;
+    padding: 10px 16px 16px;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -61,13 +62,11 @@ body {
     flex-wrap: wrap;
     position: -webkit-sticky;
     position: sticky;
-    top: 0;
-    /* Same as header so they stick together */
+    top: 80px;
+    /* Sticks below header (header height ~80px) */
     z-index: 100;
-    /* Same z-index as header */
-    padding-top: 10px;
-    margin-top: -1px;
-    /* Overlap border */
+    /* Lower than header */
+    border-bottom: 1px solid #f8fafc;
 }
 
 .content-area {
@@ -357,7 +356,7 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- RESTORED ORIGINAL + 7px TOP FIX */
+/* --- Chat Input --- SHIELD: 7px shorter at TOP, same bottom position */
 #chat-input-container {
     position: fixed;
     bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 7px);
@@ -368,8 +367,10 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    /* REDUCED gradient start from 20% to 13% (7px visual reduction at top) */
-    background: linear-gradient(to bottom, transparent 0%, transparent 13%, white 13%, white 100%);
+    /* Shield starts 7px lower (27% instead of 20%) but container position unchanged */
+    background: linear-gradient(to bottom, transparent 0%, transparent 27%, white 27%, white 100%);
+    padding-top: 7px;
+    /* Add 7px padding at top to compensate */
 }
 
 #chat-input-container .input-wrapper {
@@ -382,6 +383,7 @@ body {
     bottom: 0px !important;
     background: white;
     transition: none;
+    padding-top: 0;
 }
 
 .keyboard-open #chat-input-container .input-wrapper {
