@@ -40,7 +40,7 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER */
+/* STICKY HEADER - Centered title */
 .header {
     padding: 20px 16px 10px;
     position: -webkit-sticky;
@@ -48,11 +48,21 @@ body {
     top: 0;
     background: white;
     z-index: 101;
-    /* Higher than filter */
     border-bottom: 1px solid #f8fafc;
 }
 
-/* FILTER BAR - Sticks BELOW header */
+.header h1 {
+    font-size: 20px;
+    text-align: center;
+    margin: 0 0 4px 0;
+}
+
+.header p {
+    text-align: center;
+    margin: 0;
+}
+
+/* FILTER BAR - Sticks BELOW header with same z-index */
 .filter-bar {
     padding: 10px 16px 16px;
     display: flex;
@@ -63,9 +73,8 @@ body {
     position: -webkit-sticky;
     position: sticky;
     top: 80px;
-    /* Sticks below header (header height ~80px) */
-    z-index: 100;
-    /* Lower than header */
+    z-index: 101;
+    /* SAME as header so they stick together */
     border-bottom: 1px solid #f8fafc;
 }
 
@@ -356,7 +365,7 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- SHIELD: 7px shorter at TOP, same bottom position */
+/* --- Chat Input --- SHIELD: starts at vertical middle of input field */
 #chat-input-container {
     position: fixed;
     bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 7px);
@@ -367,10 +376,8 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    /* Shield starts 7px lower (27% instead of 20%) but container position unchanged */
-    background: linear-gradient(to bottom, transparent 0%, transparent 27%, white 27%, white 100%);
-    padding-top: 7px;
-    /* Add 7px padding at top to compensate */
+    /* Shield starts at 50% (middle of container) */
+    background: linear-gradient(to bottom, transparent 0%, transparent 50%, white 50%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
@@ -383,7 +390,6 @@ body {
     bottom: 0px !important;
     background: white;
     transition: none;
-    padding-top: 0;
 }
 
 .keyboard-open #chat-input-container .input-wrapper {
