@@ -25,7 +25,7 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 120px; padding-top: 10px;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 200px;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
@@ -37,7 +37,7 @@ export class ChatView {
             const topEmojis = Object.keys(emojiCounts).slice(0, 4);
 
             return `
-                        <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; transition: transform 0.2s; width: 100%;">
+                        <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
                                 <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: 100%;">
@@ -53,7 +53,7 @@ export class ChatView {
                                         cursor: pointer;
                                     ">
                                         ${replyMsg ? `
-                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
+                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'};">
                                                 <strong>${replyMsg.user_id === currentUser.id ? 'Du' : store.state.users.find(u => u.id === replyMsg.user_id)?.name}</strong><br>
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
@@ -76,7 +76,7 @@ export class ChatView {
         }).join('')}
             </div>
 
-            <!-- GLOBAL MODALS (Outside #app context via Global CSS classes) -->
+            <!-- Global Modals (Using strict fixed 100vw from CSS) -->
             <div id="emoji-picker-container">
                 <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div>
                 <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content;">
@@ -92,6 +92,7 @@ export class ChatView {
 
             <div id="reaction-modal">
                 <div id="reaction-sheet" class="bottom-sheet">
+                    <!-- Ensure no inner padding on sheet itself for flush edge-to-edge -->
                     <div style="padding: 20px 20px 40px 20px;">
                         <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px;"></div>
                         <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">Reaktionen</h3>
@@ -100,13 +101,13 @@ export class ChatView {
                 </div>
             </div>
 
-            <!-- Chat Input (Sticky bottom of #app) -->
-            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0; z-index: 1000; transition: bottom 0.1s;">
+            <!-- Chat Input Container (Uses CSS bottom transition) -->
+            <div id="chat-input-container" style="background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0;">
                 <div style="display: flex; align-items: flex-end; gap: 8px; padding: 0 10px;">
                     <div style="flex: 1; position: relative;">
                         <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px;">
                             <span id="reply-text" style="color: var(--text-muted);">Antworten auf...</span>
-                            <button id="cancel-reply" style="float: right; border: none; background: none; font-size: 16px; cursor: pointer; color: #999;">&times;</button>
+                            <button id="cancel-reply" style="float: right; border: none; background: none; font-size: 16px; cursor: pointer;">&times;</button>
                         </div>
                         <div style="background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                             <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="width: 100%; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit;"></textarea>

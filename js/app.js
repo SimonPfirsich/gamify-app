@@ -20,11 +20,13 @@ class App {
     }
 
     init() {
-        const nav = document.querySelector('.bottom-nav');
-
-        // Global Keyboard Handling
+        // Global Keyboard Handling using VisualViewport
         const updateLayout = () => {
-            const isKeyboardOpen = window.innerHeight < window.outerHeight * 0.7;
+            const viewport = window.visualViewport;
+            if (!viewport) return;
+
+            // When the viewport height is significantly less than the screen height, keyboard is likely open
+            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
             const activeEl = document.activeElement;
             const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
 
@@ -35,10 +37,22 @@ class App {
             }
         };
 
-        window.visualViewport?.addEventListener('resize', updateLayout);
-        window.addEventListener('resize', updateLayout);
-        document.addEventListener('focusin', updateLayout);
-        document.addEventListener('focusout', () => setTimeout(updateLayout, 100));
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateLayout);
+            window.visualViewport.addEventListener('scroll', updateLayout);
+        }
+
+        // Additional Focus listeners as backup
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+                // Short delay to let keyboard animation start
+                setTimeout(updateLayout, 100);
+            }
+        });
+
+        document.addEventListener('focusout', () => {
+            setTimeout(updateLayout, 300);
+        });
 
         // Bind Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
@@ -59,9 +73,8 @@ class App {
     switchTab(tabName) {
         this.currentTab = tabName;
 
-        // Force Show Nav on Tab Switch (Safety)
-        const nav = document.querySelector('.bottom-nav');
-        if (nav) nav.style.display = 'flex';
+        // Reset visibility just in case
+        document.body.classList.remove('keyboard-open');
 
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
