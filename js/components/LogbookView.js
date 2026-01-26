@@ -4,7 +4,9 @@ export class LogbookView {
     constructor() {
         this.filterUser = 'all';
         this.filterAction = 'all';
-        this.filterTime = 'all'; // TODAY, WEEK, MONTH, ALL
+        this.filterTime = 'all'; // today, week, month, year, custom
+        this.customStart = '';
+        this.customEnd = '';
     }
 
     render() {
@@ -21,10 +23,21 @@ export class LogbookView {
             if (this.filterTime !== 'all') {
                 const date = new Date(e.created_at);
                 const now = new Date();
-                const diff = (now - date) / (1000 * 60 * 60 * 24);
-                if (this.filterTime === 'today') timeMatch = diff < 1;
-                if (this.filterTime === 'week') timeMatch = diff < 7;
-                if (this.filterTime === 'month') timeMatch = diff < 30;
+
+                if (this.filterTime === 'today') {
+                    timeMatch = date.toDateString() === now.toDateString();
+                } else if (this.filterTime === 'week') {
+                    const firstDay = new Date(now.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)));
+                    firstDay.setHours(0, 0, 0, 0);
+                    timeMatch = date >= firstDay;
+                } else if (this.filterTime === 'month') {
+                    timeMatch = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                } else if (this.filterTime === 'year') {
+                    timeMatch = date.getFullYear() === now.getFullYear();
+                } else if (this.filterTime === 'custom') {
+                    if (this.customStart) timeMatch = timeMatch && date >= new Date(this.customStart);
+                    if (this.customEnd) timeMatch = timeMatch && date <= new Date(this.customEnd + 'T23:59:59');
+                }
             }
             return userMatch && actionMatch && timeMatch;
         });
@@ -35,7 +48,6 @@ export class LogbookView {
                 <p style="font-size: 13px; color: var(--text-muted); opacity: 0.8;">${filteredEvents.length} Aktivitäten insgesamt</p>
             </div>
 
-            <!-- PREMIUM FILTER BAR -->
             <div class="filter-bar">
                 <select id="filter-user" class="filter-pill">
                     <option value="all">Teammitglieder</option>
@@ -45,23 +57,29 @@ export class LogbookView {
                     <option value="all">Actions</option>
                     ${allActions.map(a => `<option value="${a.id}" ${this.filterAction === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
-                <select id="filter-time" class="filter-pill" style="flex: 0.8;">
+                <select id="filter-time" class="filter-pill">
                     <option value="all">Zeitraum</option>
                     <option value="today" ${this.filterTime === 'today' ? 'selected' : ''}>Heute</option>
-                    <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>7 Tage</option>
-                    <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>30 Tage</option>
+                    <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>Diese Woche</option>
+                    <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>Dieser Monat</option>
+                    <option value="year" ${this.filterTime === 'year' ? 'selected' : ''}>Dieses Jahr</option>
+                    <option value="custom" ${this.filterTime === 'custom' ? 'selected' : ''}>Benutzerdefiniert</option>
                 </select>
                 <button id="add-log-trigger" class="add-log-btn">
                     <i class="ph ph-plus"></i>
                 </button>
             </div>
 
+            ${this.filterTime === 'custom' ? `
+                <div class="filter-bar" style="padding-top: 0;">
+                    <input type="date" id="custom-start" class="date-pill" value="${this.customStart}">
+                    <input type="date" id="custom-end" class="date-pill" value="${this.customEnd}">
+                </div>
+            ` : ''}
+
             <div id="log-list" style="padding-bottom: 20px;">
                 ${filteredEvents.length === 0 ? `
-                    <div style="padding: 60px 40px; text-align: center;">
-                        <i class="ph ph-magnifying-glass" style="font-size: 40px; color: #e2e8f0; margin-bottom: 10px;"></i>
-                        <p style="color: var(--text-muted); font-size: 14px;">Keine Einträge gefunden.</p>
-                    </div>
+                    <div style="padding: 60px 40px; text-align: center; color: var(--text-muted); font-size: 14px;">Keine Einträge gefunden.</div>
                 ` : ''}
                 
                 ${filteredEvents.map(event => {
@@ -71,15 +89,14 @@ export class LogbookView {
             const isMe = event.user_id === currentUser.id;
             const date = new Date(event.created_at);
 
-            // DATE FORMAT TT.MM.JJJJ
-            const formattedDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const fDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const fTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             return `
                         <div class="log-item">
                             <div class="log-left">
                                 <div class="log-icon-box" style="background: ${action.color}15; color: ${action.color};">
-                                    <i class="${action.icon || 'ph ph-activity'}"></i>
+                                    <i class="${action.icon}"></i>
                                 </div>
                                 <div class="log-info-main">
                                     <span class="log-title">${action.name}</span>
@@ -89,14 +106,14 @@ export class LogbookView {
                             <div class="log-right">
                                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                                     <span class="log-score">+${action.points}</span>
-                                    <span class="log-ts">${formattedTime} • ${formattedDate}</span>
+                                    <span class="log-ts">${fTime} • ${fDate}</span>
                                 </div>
                                 ${isMe ? `
                                     <div class="log-actions">
-                                        <button class="edit-log-btn" data-id="${event.id}">
+                                        <button class="action-btn edit-log-btn" data-id="${event.id}">
                                             <i class="ph ph-pencil-simple"></i>
                                         </button>
-                                        <button class="delete-log-btn" data-id="${event.id}" style="color: #ef4444; background: #fee2e2;">
+                                        <button class="action-btn delete delete-log-btn" data-id="${event.id}">
                                             <i class="ph ph-trash"></i>
                                         </button>
                                     </div>
@@ -117,25 +134,25 @@ export class LogbookView {
                         
                         <div class="form-group" id="user-select-group" style="display: none;">
                             <label>Teammitglied (Admin-Only)</label>
-                            <select id="log-user-select" class="form-control">
+                            <select id="log-user-select" class="form-control-pill select-pill">
                                 ${users.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label>Aktion auswählen</label>
-                            <select id="log-action-select" class="form-control">
+                            <select id="log-action-select" class="form-control-pill select-pill">
                                 ${allActions.map(a => `<option value="${a.id}">${a.name} (${a.points} Pkt)</option>`).join('')}
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label>Datum & Uhrzeit</label>
-                            <input type="datetime-local" id="log-date-input" class="form-control">
+                            <input type="datetime-local" id="log-date-input" class="form-control-pill">
                         </div>
 
                         <div style="display: flex; gap: 12px; margin-top: 10px;">
-                            <button id="close-log-modal" style="flex: 1; padding: 14px; border-radius: 16px; border: 1px solid #e2e8f0; background: white; font-weight: 600; font-size: 15px; color: var(--text-dark);">Abbrechen</button>
+                            <button id="close-log-modal" style="flex: 1; padding: 14px; border-radius: 16px; border: 1px solid #e2e8f0; background: white; font-weight: 600; font-size: 15px;">Abbrechen</button>
                             <button id="submit-log-btn" style="flex: 1; padding: 14px; border-radius: 16px; border: none; background: var(--primary); color: white; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px var(--primary-glow);">Bestätigen</button>
                         </div>
                     </div>
@@ -148,13 +165,15 @@ export class LogbookView {
         const userSelect = document.getElementById('filter-user');
         const actionSelect = document.getElementById('filter-action');
         const timeSelect = document.getElementById('filter-time');
+        const customStart = document.getElementById('custom-start');
+        const customEnd = document.getElementById('custom-end');
+
         const triggerAdd = document.getElementById('add-log-trigger');
         const modal = document.getElementById('log-modal');
         const sheet = document.getElementById('log-sheet');
         const overlay = document.getElementById('log-modal-overlay');
         const submitBtn = document.getElementById('submit-log-btn');
         const closeBtn = document.getElementById('close-log-modal');
-        const titleEl = document.getElementById('modal-title');
 
         const logUserSelect = document.getElementById('log-user-select');
         const logActionSelect = document.getElementById('log-action-select');
@@ -163,7 +182,6 @@ export class LogbookView {
 
         const currentUser = store.state.currentUser;
         const isAdmin = currentUser.name === 'Julius';
-
         let currentId = null;
 
         const openModal = (id = null) => {
@@ -171,30 +189,24 @@ export class LogbookView {
             if (id) {
                 const ev = store.state.events.find(e => e.id === id);
                 if (!ev) return;
-                titleEl.innerText = "Eintrag bearbeiten";
+                document.getElementById('modal-title').innerText = "Eintrag bearbeiten";
                 logActionSelect.value = ev.action_id;
                 logUserSelect.value = ev.user_id;
                 userGroup.style.display = 'none';
-
                 const d = new Date(ev.created_at);
                 const offset = d.getTimezoneOffset() * 60000;
                 logDateInput.value = (new Date(d - offset)).toISOString().slice(0, 16);
             } else {
-                titleEl.innerText = "Aktivität hinzufügen";
+                document.getElementById('modal-title').innerText = "Aktivität hinzufügen";
                 logActionSelect.selectedIndex = 0;
                 logUserSelect.value = currentUser.id;
                 userGroup.style.display = isAdmin ? 'block' : 'none';
-
                 const now = new Date();
                 const offset = now.getTimezoneOffset() * 60000;
                 logDateInput.value = (new Date(now - offset)).toISOString().slice(0, 16);
             }
-
             modal.classList.add('active');
-            setTimeout(() => {
-                modal.style.background = 'rgba(0,0,0,0.4)';
-                sheet.classList.add('open');
-            }, 10);
+            setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.classList.add('open'); }, 10);
         };
 
         const closeModal = () => {
@@ -206,21 +218,17 @@ export class LogbookView {
         if (userSelect) userSelect.onchange = () => { this.filterUser = userSelect.value; this.renderUpdate(); };
         if (actionSelect) actionSelect.onchange = () => { this.filterAction = actionSelect.value; this.renderUpdate(); };
         if (timeSelect) timeSelect.onchange = () => { this.filterTime = timeSelect.value; this.renderUpdate(); };
+        if (customStart) customStart.onchange = () => { this.customStart = customStart.value; this.renderUpdate(); };
+        if (customEnd) customEnd.onchange = () => { this.customEnd = customEnd.value; this.renderUpdate(); };
+
         if (triggerAdd) triggerAdd.onclick = () => openModal();
         if (overlay) overlay.onclick = closeModal;
         if (closeBtn) closeBtn.onclick = closeModal;
 
-        document.querySelectorAll('.edit-log-btn').forEach(btn => {
-            btn.onclick = (e) => { e.stopPropagation(); openModal(btn.dataset.id); };
-        });
-
-        document.querySelectorAll('.delete-log-btn').forEach(btn => {
-            btn.onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm('Eintrag wirklich löschen?')) {
-                    await store.deleteEvent(btn.dataset.id);
-                }
-            };
+        document.querySelectorAll('.edit-log-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(btn.dataset.id); });
+        document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm('Diesen Eintrag wirklich unwiderruflich löschen?')) await store.deleteEvent(btn.dataset.id);
         });
 
         if (submitBtn) {
@@ -228,10 +236,8 @@ export class LogbookView {
                 const actionId = logActionSelect.value;
                 const userId = logUserSelect.value;
                 const date = new Date(logDateInput.value).toISOString();
-
-                if (currentId) {
-                    await store.updateEvent(currentId, actionId, date);
-                } else {
+                if (currentId) await store.updateEvent(currentId, actionId, date);
+                else {
                     const challenge = store.state.challenges.find(c => c.actions.some(a => a.id === actionId));
                     await store.addEventManual(challenge.id, actionId, userId, date);
                 }
@@ -242,9 +248,6 @@ export class LogbookView {
 
     renderUpdate() {
         const content = document.getElementById('content');
-        if (content) {
-            content.innerHTML = this.render();
-            this.afterRender();
-        }
+        if (content) { content.innerHTML = this.render(); this.afterRender(); }
     }
 }

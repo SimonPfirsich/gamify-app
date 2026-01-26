@@ -75,7 +75,7 @@ export class ChatView {
                                         <div class="reaction-pill" data-msg-id="${msg.id}" style="
                                             display: flex; align-items: center; gap: 0px; 
                                             background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 4px 2px 6px; margin-top: -10px; 
+                                            border-radius: 12px; padding: 2px 4px 2px 5px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
                                             box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
                                             font-size: 14px; cursor: pointer; z-index: 10;
@@ -85,7 +85,7 @@ export class ChatView {
                                                     <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
                                                 `).join('')}
                                             </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px; pointer-events: none;">
+                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 1px; pointer-events: none;">
                                                 ${reactions.length}
                                             </span>
                                         </div>
@@ -137,29 +137,6 @@ export class ChatView {
         this.renderSmartEmojiList();
         if (pickerOverlay) pickerOverlay.onclick = closePicker;
         if (reactionOverlay) reactionOverlay.onclick = () => closeReactionModal();
-
-        // SWIPE logic
-        let sY = 0; let dY = 0;
-        if (sheet) {
-            sheet.addEventListener('touchstart', (e) => {
-                sY = e.touches[0].clientY;
-                sheet.style.transition = 'none';
-            }, { passive: true });
-            sheet.addEventListener('touchmove', (e) => {
-                dY = e.touches[0].clientY - sY;
-                if (dY > 0) {
-                    window.requestAnimationFrame(() => {
-                        sheet.style.transform = `translate3d(-50%, ${dY}px, 0)`;
-                    });
-                }
-            }, { passive: true });
-            sheet.addEventListener('touchend', () => {
-                sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                if (dY > 80) closeReactionModal(true);
-                else { sheet.classList.add('open'); sheet.style.transform = 'translate3d(-50%, 0, 0)'; }
-                dY = 0;
-            });
-        }
 
         // Messenger Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
@@ -226,7 +203,7 @@ export class ChatView {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.5s;">
+                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.4s ease-out;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
@@ -245,12 +222,11 @@ export class ChatView {
                         row.onclick = (ev) => {
                             ev.stopPropagation();
                             row.classList.add('deleting');
-                            // Delay to see the fade before sliding down
+                            // Increased delay: 400ms to see the fade, then slide
                             setTimeout(() => {
                                 closeReactionModal();
-                                // Store update happens AFTER the modal starts closing
-                                setTimeout(() => store.addReaction(msgId, row.dataset.emoji), 350);
-                            }, 500);
+                                setTimeout(() => store.addReaction(msgId, row.dataset.emoji), 300);
+                            }, 450);
                         };
                     }
                 });
@@ -264,40 +240,6 @@ export class ChatView {
             });
         });
 
-        const updateQueue = (e) => {
-            let queue = JSON.parse(localStorage.getItem('emoji_queue_v6') || '[]');
-            queue = queue.filter(x => x !== e);
-            queue.unshift(e);
-            localStorage.setItem('emoji_queue_v6', JSON.stringify(queue.slice(0, 6)));
-        };
-
-        const applyEmoji = (e) => {
-            store.addReaction(this.selectedMsgId, e);
-            updateQueue(e);
-            closePicker();
-            this.renderSmartEmojiList();
-        };
-
-        const plusBtn = document.getElementById('show-full-picker-btn');
-        if (plusBtn) {
-            plusBtn.onclick = (e) => {
-                e.stopPropagation();
-                if (emojiBar) emojiBar.style.display = 'none';
-                document.getElementById('single-emoji-input-container').classList.add('open');
-                singleEmojiInput?.focus();
-            };
-        }
-
-        if (singleEmojiInput) {
-            singleEmojiInput.oninput = () => {
-                const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-                if (m) {
-                    applyEmoji(m[0]);
-                    singleEmojiInput.value = '';
-                }
-            };
-        }
-
         const sendBtn = document.getElementById('send-btn');
         if (sendBtn) {
             sendBtn.onclick = () => {
@@ -308,14 +250,6 @@ export class ChatView {
                     document.getElementById('reply-preview').style.display = 'none';
                     this.currentReplyId = null;
                 }
-            };
-        }
-
-        const cancelReplyBtn = document.getElementById('cancel-reply');
-        if (cancelReplyBtn) {
-            cancelReplyBtn.onclick = () => {
-                this.currentReplyId = null;
-                document.getElementById('reply-preview').style.display = 'none';
             };
         }
 
