@@ -32,6 +32,9 @@ export class ChatView {
             const isEvent = msg.type === 'event';
             const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
             const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
+
+            // --- REACTION INDICATOR LOGIC ---
+            const hasMyReaction = reactions.some(r => r.u === currentUser.id);
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
             const topEmojis = Object.keys(emojiCounts).slice(0, 4);
@@ -61,9 +64,20 @@ export class ChatView {
                                         <div style="line-height: 1.4; white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
                                     </div>
                                     ${reactions.length > 0 ? `
-                                        <div class="reaction-pill" data-id="${msg.id}" style="display: flex; align-items: center; gap: 4px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 2px 6px; margin-top: -10px; margin-${isMe ? 'right' : 'left'}: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; cursor: pointer; z-index: 10;">
+                                        <div class="reaction-pill" data-id="${msg.id}" style="
+                                            display: flex; align-items: center; gap: 4px; 
+                                            background: ${hasMyReaction ? '#eef2ff' : 'white'}; 
+                                            border: 1px solid ${hasMyReaction ? 'var(--primary)' : '#e2e8f0'}; 
+                                            border-radius: 12px; padding: 2px 6px; margin-top: -10px; 
+                                            margin-${isMe ? 'right' : 'left'}: 8px; 
+                                            box-shadow: 0 2px 8px rgba(99, 102, 241, ${hasMyReaction ? '0.15' : '0.05'}); 
+                                            font-size: 12px; cursor: pointer; z-index: 10;
+                                            transition: all 0.2s;
+                                        ">
                                             <span>${topEmojis.join('')}</span>
-                                            <span style="color: var(--text-muted); font-weight: 600; font-size: 10px; margin-left: 2px;">${reactions.length}</span>
+                                            <span style="color: ${hasMyReaction ? 'var(--primary)' : 'var(--text-muted)'}; font-weight: 700; font-size: 10px; margin-left: 2px;">
+                                                ${reactions.length}${hasMyReaction ? ' •' : ''}
+                                            </span>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -108,12 +122,10 @@ export class ChatView {
         }
 
         this.renderSmartEmojiList();
-
-        // Listeners for closing modals on overlay click
         pickerOverlay.onclick = closePicker;
         reactionOverlay.onclick = closeReactionModal;
 
-        // Message Interaktion
+        // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -192,7 +204,6 @@ export class ChatView {
                     if (delBtn) {
                         row.onclick = () => {
                             row.classList.add('deleting');
-                            // Delay data change until UI is hidden, but keep visually deleting visible
                             setTimeout(() => {
                                 store.addReaction(msgId, row.dataset.emoji);
                                 closeReactionModal();
@@ -208,7 +219,7 @@ export class ChatView {
         const updateQueue = (e) => {
             let queue = JSON.parse(localStorage.getItem('emoji_queue_v6') || '[]');
             queue = queue.filter(x => x !== e);
-            queue.unshift(e); // ADD LEFT
+            queue.unshift(e);
             localStorage.setItem('emoji_queue_v6', JSON.stringify(queue.slice(0, 6)));
         };
 
@@ -272,7 +283,6 @@ export class ChatView {
             btn.onclick = (ev) => {
                 ev.stopPropagation();
                 store.addReaction(this.selectedMsgId, e);
-                // UPDATE FIFO on click too
                 let q = JSON.parse(localStorage.getItem('emoji_queue_v6') || '[]');
                 q = q.filter(x => x !== e); q.unshift(e);
                 localStorage.setItem('emoji_queue_v6', JSON.stringify(q.slice(0, 6)));
