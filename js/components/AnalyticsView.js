@@ -19,20 +19,40 @@ export class AnalyticsView {
         const lang = store.state.language;
 
         if (lang === 'de') {
-            // German complex pluralization
+            // German pluralization - specific rules
+            const lowerWord = word.toLowerCase();
+
+            // Exact matches first
+            if (lowerWord === 'termin') return 'Termine';
+            if (lowerWord === 'anruf') return 'Anrufe';
+            if (lowerWord === 'sale') return 'Sales';
+            if (lowerWord === 'lead') return 'Leads';
+            if (lowerWord === 'kontakt' || lowerWord === 'erstkontakt') return word + 'e';
+
+            // Pattern-based rules
             if (word.endsWith('e')) return word + 'n';
-            if (word.endsWith('Termin')) return word + 'e';
-            if (word.endsWith('Anruf')) return word + 'e';
-            if (word.endsWith('Sale')) return word + 's';
-            if (word.endsWith('kontakt')) return word + 'e';
-            if (word.endsWith('Lead')) return word + 's';
             if (word.endsWith('r') || word.endsWith('l')) return word + 'n';
             if (word.endsWith('ng')) return word + 'en';
-            return word + 's';
+
+            return word + 's'; // Default
         } else {
             // English pluralization
-            if (word.endsWith('y')) return word.slice(0, -1) + 'ies';
-            if (word.endsWith('s') || word.endsWith('x') || word.endsWith('ch')) return word + 'es';
+            const lowerWord = word.toLowerCase();
+
+            // Irregular plurals
+            if (lowerWord === 'sale') return 'Sales';
+            if (lowerWord === 'lead') return 'Leads';
+            if (lowerWord === 'call') return 'Calls';
+            if (lowerWord === 'contact') return 'Contacts';
+
+            // Pattern-based rules
+            if (word.endsWith('y') && !'aeiou'.includes(word[word.length - 2])) {
+                return word.slice(0, -1) + 'ies';
+            }
+            if (word.endsWith('s') || word.endsWith('x') || word.endsWith('ch') || word.endsWith('sh')) {
+                return word + 'es';
+            }
+
             return word + 's';
         }
     }

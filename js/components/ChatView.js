@@ -235,21 +235,58 @@ export class ChatView {
             });
         });
 
-        document.getElementById('send-btn').onclick = () => {
-            if (input.value.trim()) {
-                this.forceScroll = true;
-                store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
-                input.value = '';
-                document.getElementById('reply-preview').style.display = 'none';
-                this.currentReplyId = null;
-            }
-        };
+        const sendBtn = document.getElementById('send-btn');
+        if (sendBtn) {
+            sendBtn.onclick = () => {
+                if (input.value.trim()) {
+                    this.forceScroll = true;
+                    store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
+                    input.value = '';
+                    document.getElementById('reply-preview').style.display = 'none';
+                    this.currentReplyId = null;
+                }
+            };
+        }
 
-        document.getElementById('test-user-switch').onclick = () => {
-            if (store.state.currentUser.name === 'Julius') store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
-            else store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
-            location.reload();
-        };
+        const cancelReplyBtn = document.getElementById('cancel-reply');
+        if (cancelReplyBtn) {
+            cancelReplyBtn.onclick = () => {
+                this.currentReplyId = null;
+                document.getElementById('reply-preview').style.display = 'none';
+            };
+        }
+
+        const switcher = document.getElementById('test-user-switch');
+        if (switcher) {
+            switcher.onclick = () => {
+                if (store.state.currentUser.name === 'Julius') store.switchUser('8fcb9560-f435-430c-8090-e4b2d41a7986', 'Simon', '🚀');
+                else store.switchUser('7fcb9560-f435-430c-8090-e4b2d41a7985', 'Julius', '👨‍🚀');
+                location.reload();
+            };
+        }
+
+        // FIX: Emoji picker + button
+        const plusBtn = document.getElementById('show-full-picker-btn');
+        if (plusBtn) {
+            plusBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (emojiBar) emojiBar.style.display = 'none';
+                document.getElementById('single-emoji-input-container').classList.add('open');
+                singleEmojiInput?.focus();
+            };
+        }
+
+        if (singleEmojiInput) {
+            singleEmojiInput.oninput = () => {
+                const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+                if (m) {
+                    store.addReaction(this.selectedMsgId, m[0]);
+                    singleEmojiInput.value = '';
+                    closePicker();
+                    this.renderSmartEmojiList();
+                }
+            };
+        }
 
         // LANGUAGE SWITCHER IN HEADER (for testing)
         const header = document.querySelector('.header');

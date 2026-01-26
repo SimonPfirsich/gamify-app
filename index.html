@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- THE FIX: interactive-widget=resizes-content tells Chrome to physically SHRINK the layout, not PAN it. -->
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Gamify App</title>
@@ -18,7 +17,17 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- PWA Display Mode -->
+    <style>
+        /* Hide browser chrome when in standalone mode */
+        @media all and (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+    </style>
 
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
