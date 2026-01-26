@@ -15,26 +15,25 @@ class App {
             logbook: new LogbookView(),
             chat: new ChatView()
         };
-
         this.init();
     }
 
     init() {
-        // Global Keyboard Handling
         const updateLayout = () => {
             const viewport = window.visualViewport;
             if (!viewport) return;
 
-            // Height threshold for keyboard detection
-            const isKeyboardOpen = viewport.height < window.innerHeight * 0.8;
+            // Robust keyboard detection: if viewport is > 15% smaller than the window, assume keyboard
+            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
             const activeEl = document.activeElement;
             const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
 
             if (isKeyboardOpen && isInput) {
                 document.body.classList.add('keyboard-open');
+                // Ensure the focused input is actually the chat input or similar
+                // We keep it open as long as any input is focused and space is tight
             } else {
                 document.body.classList.remove('keyboard-open');
-                // Ensure no scroll on body
                 window.scrollTo(0, 0);
             }
         };
@@ -44,7 +43,7 @@ class App {
             window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
-        // Bind Nav
+        // Global Navigation Events
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tab = btn.closest('.nav-item').dataset.tab;
@@ -52,7 +51,6 @@ class App {
             });
         });
 
-        // Initial Render
         this.switchTab('actions');
 
         store.subscribe(() => {
@@ -63,7 +61,7 @@ class App {
     switchTab(tabName) {
         this.currentTab = tabName;
 
-        // Manage global UI state based on tab
+        // Visual state based on tab
         if (tabName === 'chat') {
             document.body.classList.add('chat-active');
         } else {
@@ -86,5 +84,4 @@ class App {
     }
 }
 
-// Start App
 new App();
