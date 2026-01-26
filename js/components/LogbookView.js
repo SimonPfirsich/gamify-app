@@ -4,6 +4,7 @@ export class LogbookView {
     constructor() {
         this.filterUser = 'all';
         this.filterAction = 'all';
+        this.filterTime = 'all'; // TODAY, WEEK, MONTH, ALL
     }
 
     render() {
@@ -15,11 +16,21 @@ export class LogbookView {
         const filteredEvents = events.filter(e => {
             const userMatch = this.filterUser === 'all' || e.user_id === this.filterUser;
             const actionMatch = this.filterAction === 'all' || e.action_id === this.filterAction;
-            return userMatch && actionMatch;
+
+            let timeMatch = true;
+            if (this.filterTime !== 'all') {
+                const date = new Date(e.created_at);
+                const now = new Date();
+                const diff = (now - date) / (1000 * 60 * 60 * 24);
+                if (this.filterTime === 'today') timeMatch = diff < 1;
+                if (this.filterTime === 'week') timeMatch = diff < 7;
+                if (this.filterTime === 'month') timeMatch = diff < 30;
+            }
+            return userMatch && actionMatch && timeMatch;
         });
 
         return `
-            <div class="header" style="padding-bottom: 5px;">
+            <div class="header">
                 <h1>Logbuch</h1>
                 <p style="font-size: 13px; color: var(--text-muted); opacity: 0.8;">${filteredEvents.length} Aktivitäten insgesamt</p>
             </div>
@@ -27,38 +38,48 @@ export class LogbookView {
             <!-- PREMIUM FILTER BAR -->
             <div class="filter-bar">
                 <select id="filter-user" class="filter-pill">
-                    <option value="all">Alle Teammitglieder</option>
+                    <option value="all">Teammitglieder</option>
                     ${users.map(u => `<option value="${u.id}" ${this.filterUser === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
                 </select>
                 <select id="filter-action" class="filter-pill">
-                    <option value="all">Alle Actions</option>
+                    <option value="all">Actions</option>
                     ${allActions.map(a => `<option value="${a.id}" ${this.filterAction === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
-                <button id="add-log-trigger" class="add-log-btn" title="Eintrag hinzufügen">
-                    <i class="ph-bold ph-plus" style="font-size: 20px;"></i>
+                <select id="filter-time" class="filter-pill" style="flex: 0.8;">
+                    <option value="all">Zeitraum</option>
+                    <option value="today" ${this.filterTime === 'today' ? 'selected' : ''}>Heute</option>
+                    <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>7 Tage</option>
+                    <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>30 Tage</option>
+                </select>
+                <button id="add-log-trigger" class="add-log-btn">
+                    <i class="ph ph-plus"></i>
                 </button>
             </div>
 
-            <div id="log-list" style="margin-top: 5px; padding-bottom: 100px;">
+            <div id="log-list" style="padding-bottom: 20px;">
                 ${filteredEvents.length === 0 ? `
                     <div style="padding: 60px 40px; text-align: center;">
                         <i class="ph ph-magnifying-glass" style="font-size: 40px; color: #e2e8f0; margin-bottom: 10px;"></i>
-                        <p style="color: var(--text-muted); font-size: 14px;">Keine Einträge für diese Filter gefunden.</p>
+                        <p style="color: var(--text-muted); font-size: 14px;">Keine Einträge gefunden.</p>
                     </div>
                 ` : ''}
                 
                 ${filteredEvents.map(event => {
             const user = users.find(u => u.id === event.user_id) || { name: 'Unbekannt', avatar: '👤' };
             const challenge = store.state.challenges.find(c => c.id === event.challenge_id);
-            const action = challenge?.actions.find(a => a.id === event.action_id) || { name: 'Unbekannte Action', points: 0, icon: '❓', color: '#ccc' };
+            const action = challenge?.actions.find(a => a.id === event.action_id) || { name: 'Action', points: 0, icon: '❓', color: '#ccc' };
             const isMe = event.user_id === currentUser.id;
             const date = new Date(event.created_at);
+
+            // DATE FORMAT TT.MM.JJJJ
+            const formattedDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             return `
                         <div class="log-item">
                             <div class="log-left">
                                 <div class="log-icon-box" style="background: ${action.color}15; color: ${action.color};">
-                                    ${action.icon}
+                                    <i class="${action.icon || 'ph ph-activity'}"></i>
                                 </div>
                                 <div class="log-info-main">
                                     <span class="log-title">${action.name}</span>
@@ -68,15 +89,15 @@ export class LogbookView {
                             <div class="log-right">
                                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                                     <span class="log-score">+${action.points}</span>
-                                    <span class="log-ts">${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${date.toLocaleDateString([], { day: '2-digit', month: '2-digit' })}</span>
+                                    <span class="log-ts">${formattedTime} • ${formattedDate}</span>
                                 </div>
                                 ${isMe ? `
                                     <div class="log-actions">
                                         <button class="edit-log-btn" data-id="${event.id}">
-                                            <i class="ph-bold ph-pencil-simple"></i>
+                                            <i class="ph ph-pencil-simple"></i>
                                         </button>
                                         <button class="delete-log-btn" data-id="${event.id}" style="color: #ef4444; background: #fee2e2;">
-                                            <i class="ph-bold ph-trash"></i>
+                                            <i class="ph ph-trash"></i>
                                         </button>
                                     </div>
                                 ` : ''}
@@ -104,7 +125,7 @@ export class LogbookView {
                         <div class="form-group">
                             <label>Aktion auswählen</label>
                             <select id="log-action-select" class="form-control">
-                                ${allActions.map(a => `<option value="${a.id}">${a.icon} ${a.name} (${a.points} Pkt)</option>`).join('')}
+                                ${allActions.map(a => `<option value="${a.id}">${a.name} (${a.points} Pkt)</option>`).join('')}
                             </select>
                         </div>
 
@@ -126,6 +147,7 @@ export class LogbookView {
     afterRender() {
         const userSelect = document.getElementById('filter-user');
         const actionSelect = document.getElementById('filter-action');
+        const timeSelect = document.getElementById('filter-time');
         const triggerAdd = document.getElementById('add-log-trigger');
         const modal = document.getElementById('log-modal');
         const sheet = document.getElementById('log-sheet');
@@ -172,19 +194,18 @@ export class LogbookView {
             setTimeout(() => {
                 modal.style.background = 'rgba(0,0,0,0.4)';
                 sheet.classList.add('open');
-                sheet.style.transform = 'translate3d(-50%, 0, 0)';
             }, 10);
         };
 
         const closeModal = () => {
             modal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
-            sheet.style.transform = 'translate3d(-50%, 110%, 0)';
             setTimeout(() => modal.classList.remove('active'), 300);
         };
 
         if (userSelect) userSelect.onchange = () => { this.filterUser = userSelect.value; this.renderUpdate(); };
         if (actionSelect) actionSelect.onchange = () => { this.filterAction = actionSelect.value; this.renderUpdate(); };
+        if (timeSelect) timeSelect.onchange = () => { this.filterTime = timeSelect.value; this.renderUpdate(); };
         if (triggerAdd) triggerAdd.onclick = () => openModal();
         if (overlay) overlay.onclick = closeModal;
         if (closeBtn) closeBtn.onclick = closeModal;
@@ -196,7 +217,7 @@ export class LogbookView {
         document.querySelectorAll('.delete-log-btn').forEach(btn => {
             btn.onclick = async (e) => {
                 e.stopPropagation();
-                if (confirm('Diesen Eintrag wirklich unwiderruflich löschen?')) {
+                if (confirm('Eintrag wirklich löschen?')) {
                     await store.deleteEvent(btn.dataset.id);
                 }
             };
