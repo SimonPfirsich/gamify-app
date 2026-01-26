@@ -42,14 +42,14 @@ body {
 
 /* STICKY HEADER - Centered title */
 .header {
-    padding: 20px 16px 10px;
+    padding: 20px 16px 0;
+    /* Removed bottom padding */
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     background: white;
     z-index: 101;
     border-bottom: none;
-    /* Remove border to eliminate gap */
 }
 
 .header h1 {
@@ -60,7 +60,8 @@ body {
 
 .header p {
     text-align: center;
-    margin: 0;
+    margin: 0 0 10px 0;
+    /* Bottom margin instead of padding */
 }
 
 /* FILTER BAR - Sticks BELOW header seamlessly */
@@ -73,7 +74,8 @@ body {
     flex-wrap: wrap;
     position: -webkit-sticky;
     position: sticky;
-    top: 80px;
+    top: 70px;
+    /* Adjusted for new header height */
     z-index: 101;
     border-bottom: 1px solid #f8fafc;
 }
@@ -365,10 +367,10 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- MOVED DOWN: 15px from nav instead of 7px */
+/* --- Chat Input --- CLOSER to nav: 3px instead of 15px */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 15px);
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 3px);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
