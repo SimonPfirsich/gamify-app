@@ -68,7 +68,6 @@ export class ChatView {
                                     ` : ''}
                                 </div>
                             </div>
-                            ${isEvent ? '' : `<span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; padding: 0 44px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`}
                             <div class="swipe-indicator" style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
@@ -87,17 +86,15 @@ export class ChatView {
         const modal = document.getElementById('reaction-modal');
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
-        const sendBtn = document.getElementById('send-btn');
-        const cancelReplyBtn = document.getElementById('cancel-reply');
 
         if (this.shouldScrollNow) {
             setTimeout(() => feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }), 100);
             this.shouldScrollNow = false;
         }
 
-        this.renderSmartEmojiList(); // Always sync on render
+        this.renderSmartEmojiList();
 
-        // --- Interaction Logic ---
+        // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
             bubble.addEventListener('touchstart', (e) => {
@@ -116,21 +113,21 @@ export class ChatView {
             }, { passive: true });
 
             wrapper.addEventListener('touchmove', (e) => {
-                const diffX = e.touches[0].clientX - this.touchStartX;
-                const diffY = e.touches[0].clientY - this.touchStartY;
-                if (Math.abs(diffY) > 20 || diffX < -10) clearTimeout(this.longPressTimer);
-                if (diffX > 20 && Math.abs(diffY) < 30) {
+                const dX = e.touches[0].clientX - this.touchStartX;
+                const dY = e.touches[0].clientY - this.touchStartY;
+                if (Math.abs(dY) > 20 || dX < -10) clearTimeout(this.longPressTimer);
+                if (dX > 20 && Math.abs(dY) < 30) {
                     clearTimeout(this.longPressTimer);
-                    wrapper.style.transform = `translateX(${Math.min(diffX, 60)}px)`;
-                    wrapper.querySelector('.swipe-indicator').style.opacity = Math.min(diffX / 60, 1);
+                    wrapper.style.transform = `translateX(${Math.min(dX, 60)}px)`;
+                    wrapper.querySelector('.swipe-indicator').style.opacity = Math.min(dX / 60, 1);
                 }
             }, { passive: true });
 
             wrapper.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
-                const diffX = e.changedTouches[0].clientX - this.touchStartX;
-                const diffY = e.changedTouches[0].clientY - this.touchStartY;
-                if (diffX > 50 && Math.abs(diffY) < 40) {
+                const dX = e.changedTouches[0].clientX - this.touchStartX;
+                const dY = e.changedTouches[0].clientY - this.touchStartY;
+                if (dX > 50 && Math.abs(dY) < 40) {
                     this.currentReplyId = wrapper.dataset.id;
                     const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
@@ -153,20 +150,21 @@ export class ChatView {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
                 input.blur();
-                const reactions = (store.state.chat.find(m => m.id === pill.dataset.id))?.reactions || [];
+                const msg = store.state.chat.find(m => m.id === pill.dataset.id);
+                const reactions = msg?.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; position: relative;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="font-size: 20px;">${r.e}</span>
-                                ${isMe ? '<span class="delete-x" style="font-size: 14px; color: #ef4444; font-weight: bold; cursor: pointer;">✕</span>' : ''}
+                                ${isMe ? '<span class="delete-x" style="font-size: 14px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 10px;">✕</span>' : ''}
                             </div>
                         </div>
                     `;
@@ -177,9 +175,10 @@ export class ChatView {
                     if (delBtn) {
                         row.onclick = () => {
                             row.classList.add('deleting');
+                            // Start closing early to keep 'deleting' visible during transition
+                            setTimeout(closeModal, 300);
                             setTimeout(() => {
                                 store.addReaction(pill.dataset.id, row.dataset.emoji);
-                                closeModal();
                             }, 500);
                         };
                     }
@@ -191,7 +190,7 @@ export class ChatView {
 
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 
-        // Swipe Sheet Fix
+        // Swipe Sheet
         let sY = 0; let dY = 0;
         sheet.addEventListener('touchstart', (e) => { sY = e.touches[0].clientY; sheet.style.transition = 'none'; }, { passive: true });
         sheet.addEventListener('touchmove', (e) => {
@@ -221,7 +220,7 @@ export class ChatView {
                 pickerContainer.classList.remove('active');
                 document.getElementById('single-emoji-input-container').classList.remove('open');
                 singleEmojiInput.value = '';
-                this.renderSmartEmojiList(); // Direct refresh
+                this.renderSmartEmojiList();
             }
         };
 
@@ -230,7 +229,7 @@ export class ChatView {
             document.getElementById('single-emoji-input-container').classList.remove('open');
         };
 
-        sendBtn.onclick = () => {
+        document.getElementById('send-btn').onclick = () => {
             if (input.value.trim()) {
                 this.forceScroll = true;
                 store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
@@ -240,7 +239,7 @@ export class ChatView {
             }
         };
 
-        cancelReplyBtn.onclick = () => {
+        document.getElementById('cancel-reply').onclick = () => {
             this.currentReplyId = null;
             document.getElementById('reply-preview').style.display = 'none';
         };
@@ -253,21 +252,31 @@ export class ChatView {
     }
 
     trackEmojiUsage(emoji) {
-        let usage = JSON.parse(localStorage.getItem('emoji_usage_v4') || '{}');
-        usage[emoji] = (usage[emoji] || 0) + 1;
-        localStorage.setItem('emoji_usage_v4', JSON.stringify(usage));
+        // FIFO Queue logic for smart emojis
+        let queue = JSON.parse(localStorage.getItem('emoji_queue_v5') || '[]');
+        // Remove if exists
+        queue = queue.filter(e => e !== emoji);
+        // Add to front (left side)
+        queue.unshift(emoji);
+        // Limit to 6
+        queue = queue.slice(0, 6);
+        localStorage.setItem('emoji_queue_v5', JSON.stringify(queue));
     }
 
     renderSmartEmojiList() {
-        const usage = JSON.parse(localStorage.getItem('emoji_usage_v4') || '{}');
-        const sorted = Object.keys(usage).sort((a, b) => usage[b] - usage[a]);
+        const queue = JSON.parse(localStorage.getItem('emoji_queue_v5') || '[]');
         const defaults = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-        const list = [...new Set([...sorted.slice(0, 3), ...defaults])].slice(0, 6);
+
+        // Final list: Take queue, fill remaining with defaults
+        const list = [...new Set([...queue, ...defaults])].slice(0, 6);
+
         const bar = document.getElementById('emoji-bar');
         if (!bar) return;
         const plus = document.getElementById('show-full-picker-btn');
         bar.querySelectorAll('.emoji-choice').forEach(n => n.remove());
-        list.reverse().forEach(e => {
+
+        // We render left-to-right (FIFO)
+        list.forEach(e => {
             const btn = document.createElement('button');
             btn.className = 'emoji-choice';
             btn.style.cssText = 'background:none;border:none;font-size:26px;padding:4px;cursor:pointer;';
@@ -277,6 +286,7 @@ export class ChatView {
                 store.addReaction(this.selectedMsgId, e);
                 this.trackEmojiUsage(e);
                 document.getElementById('emoji-picker-container').classList.remove('active');
+                this.renderSmartEmojiList(); // Re-render for next time
             };
             bar.insertBefore(btn, plus);
         });

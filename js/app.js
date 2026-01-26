@@ -25,23 +25,23 @@ class App {
             const viewport = window.visualViewport;
             if (!viewport) return;
 
-            const isKeyboardOpen = viewport.height < window.innerHeight * 0.85;
-            const activeEl = document.activeElement;
-            const isInput = activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT');
+            // Accurate keyboard height detection
+            const keyboardHeight = window.innerHeight - viewport.height;
+            const isKeyboardOpen = keyboardHeight > 60; // Threshold
 
-            if (isKeyboardOpen && isInput) {
+            if (isKeyboardOpen) {
                 document.body.classList.add('keyboard-open');
-                // FORCE repositioning using top instead of bottom for absolute screen stability
-                const keyboardHeight = window.innerHeight - viewport.height;
-                // Place it exactly ABOVE the keyboard
                 if (inputContainer) {
-                    inputContainer.style.bottom = `${keyboardHeight}px`;
+                    // Lock to the exact top edge of the keyboard
+                    // We use translateY to prevent layout thrashing and keep it 'magnetic'
+                    inputContainer.style.bottom = '0px';
+                    inputContainer.style.transform = `translateX(-50%) translateY(-${keyboardHeight}px)`;
                 }
             } else {
                 document.body.classList.remove('keyboard-open');
                 if (inputContainer) {
-                    // Back to standard position (above nav)
-                    inputContainer.style.bottom = '65px';
+                    inputContainer.style.bottom = 'calc(var(--nav-height) + var(--safe-area-bottom))';
+                    inputContainer.style.transform = 'translateX(-50%) translateY(0)';
                 }
                 window.scrollTo(0, 0);
             }
@@ -52,12 +52,8 @@ class App {
             window.visualViewport.addEventListener('scroll', updateLayout);
         }
 
-        // Global Nav
         document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const tab = btn.closest('.nav-item').dataset.tab;
-                this.switchTab(tab);
-            });
+            btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
 
         this.switchTab('actions');
