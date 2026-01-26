@@ -49,7 +49,22 @@ class Store {
             if (challenges) this.state.challenges = challenges;
             if (profiles) this.state.users = profiles;
             if (events) this.state.events = events;
-            if (messages) this.state.chat = messages;
+            if (messages) {
+                // ADD TEST MESSAGE WITH 7 REACTIONS
+                const testMsg = {
+                    id: 'test-7-reactions',
+                    user_id: this.state.currentUser.id,
+                    content: 'Dies ist eine Testnachricht mit 7 Reaktionen zum Prüfen der Ansicht! 🚀',
+                    type: 'text',
+                    created_at: new Date().toISOString(),
+                    reactions: [
+                        { u: '1', e: '👍' }, { u: '2', e: '❤️' }, { u: '3', e: '😂' },
+                        { u: '4', e: '😮' }, { u: '5', e: '😢' }, { u: '6', e: '🙏' },
+                        { u: this.state.currentUser.id, e: '🎉' }
+                    ]
+                };
+                this.state.chat = [...messages, testMsg];
+            }
 
             this.notify();
         } catch (e) {

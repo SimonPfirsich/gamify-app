@@ -45,7 +45,7 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 120px;
+    padding-bottom: 110px;
 }
 
 /* --- Navigation --- */
@@ -67,6 +67,7 @@ body {
     z-index: 2000;
 }
 
+/* Kill Nav on Keyboard */
 .keyboard-open .bottom-nav {
     display: none !important;
 }
@@ -134,7 +135,7 @@ body {
 /* --- Chat Input: CLEAN DOCKING & SHIELD --- */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom));
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) - 10px);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
@@ -142,23 +143,23 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
-    /* Visibility shield gradient */
-    background: linear-gradient(to bottom, transparent 0%, transparent 60%, white 60%, white 100%);
+    /* Visibility shield gradient: slightly higher start */
+    background: linear-gradient(to bottom, transparent 0%, transparent 40%, white 40%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
-    margin: 0 10px 10px 10px;
+    margin: 0 10px;
     pointer-events: auto;
 }
 
 .keyboard-open #chat-input-container {
-    bottom: 0px !important;
+    bottom: -5px !important;
+    /* Move down to compensate margin */
     background: white;
 }
 
 .keyboard-open #chat-input-container .input-wrapper {
-    margin-bottom: 5px;
-    /* Tighter on keyboard */
+    margin-bottom: 2px;
 }
 
 .chat-active #chat-input-container {
@@ -172,12 +173,12 @@ body {
     -webkit-user-select: none;
 }
 
-/* User-specific reaction highlight circular background */
+/* User-specific reaction highlight circular background - LIGHTER and SMALLER */
 .emoji-span.is-mine {
-    background: #e2e8f1;
+    background: #f1f5f9;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
