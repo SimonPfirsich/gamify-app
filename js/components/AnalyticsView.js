@@ -13,30 +13,32 @@ export class AnalyticsView {
         return translations[store.state.language][key] || key;
     }
 
-    // Improved Pluralization for German & English
+    // Language-aware pluralization
     pluralize(word) {
         if (!word) return '';
-        const lang = store.state.language;
 
-        if (lang === 'de') {
-            // German pluralization - specific rules
+        // Detect word language by checking for German-specific patterns
+        const isGermanWord = this.isGermanWord(word);
+
+        if (isGermanWord) {
+            // German pluralization rules
             const lowerWord = word.toLowerCase();
 
-            // Exact matches first
+            // Exact matches
             if (lowerWord === 'termin') return 'Termine';
             if (lowerWord === 'anruf') return 'Anrufe';
             if (lowerWord === 'sale') return 'Sales';
             if (lowerWord === 'lead') return 'Leads';
             if (lowerWord === 'kontakt' || lowerWord === 'erstkontakt') return word + 'e';
 
-            // Pattern-based rules
+            // Pattern-based
             if (word.endsWith('e')) return word + 'n';
             if (word.endsWith('r') || word.endsWith('l')) return word + 'n';
             if (word.endsWith('ng')) return word + 'en';
 
-            return word + 's'; // Default
+            return word + 's';
         } else {
-            // English pluralization
+            // English pluralization rules
             const lowerWord = word.toLowerCase();
 
             // Irregular plurals
@@ -45,7 +47,7 @@ export class AnalyticsView {
             if (lowerWord === 'call') return 'Calls';
             if (lowerWord === 'contact') return 'Contacts';
 
-            // Pattern-based rules
+            // Pattern-based
             if (word.endsWith('y') && !'aeiou'.includes(word[word.length - 2])) {
                 return word.slice(0, -1) + 'ies';
             }
@@ -55,6 +57,28 @@ export class AnalyticsView {
 
             return word + 's';
         }
+    }
+
+    // Detect if a word is likely German based on patterns
+    isGermanWord(word) {
+        const lowerWord = word.toLowerCase();
+
+        // Common German endings
+        const germanEndings = ['termin', 'anruf', 'kontakt', 'ung', 'heit', 'keit', 'schaft'];
+        if (germanEndings.some(ending => lowerWord.endsWith(ending))) return true;
+
+        // German compound words often have capital letters in the middle
+        if (/[a-z][A-Z]/.test(word)) return true;
+
+        // German umlauts
+        if (/[äöüÄÖÜß]/.test(word)) return true;
+
+        // Common English words (if it's not one of these, assume German in German context)
+        const commonEnglishWords = ['sale', 'lead', 'call', 'contact', 'meeting', 'email', 'demo'];
+        if (commonEnglishWords.includes(lowerWord)) return false;
+
+        // Default: if UI language is German, assume word is German
+        return store.state.language === 'de';
     }
 
     render() {
