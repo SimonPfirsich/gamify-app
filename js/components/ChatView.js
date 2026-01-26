@@ -17,7 +17,7 @@ export class ChatView {
         const chat = store.state.chat.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const currentUser = store.state.currentUser;
 
-        // Scroll logic: if message count increased, we scroll. Reactions don't increase count.
+        // Scroll logic: pulse forceScroll on send
         this.shouldScrollNow = (chat.length > this.lastThreadLength) || this.forceScroll;
         this.lastThreadLength = chat.length;
         this.forceScroll = false;
@@ -30,7 +30,7 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 120px; padding-top: 10px;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 140px; padding-top: 10px; overflow-x: hidden;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
@@ -45,7 +45,7 @@ export class ChatView {
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
-                                <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: ${isEvent ? '90%' : '100%'};">
+                                <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: ${isEvent ? '85%' : '100%'};">
                                     <div class="message-bubble" style="
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
@@ -54,7 +54,7 @@ export class ChatView {
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
                                         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
-                                        font-size: ${isEvent ? '12px' : '15px'};
+                                        font-size: ${isEvent ? '11px' : '15px'};
                                         cursor: pointer;
                                         user-select: none; -webkit-user-select: none;
                                     ">
@@ -74,7 +74,6 @@ export class ChatView {
                                     ` : ''}
                                 </div>
                             </div>
-                            ${isEvent ? '' : `<span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; padding: 0 44px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`}
                             <div class="swipe-indicator" style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
@@ -83,8 +82,8 @@ export class ChatView {
         }).join('')}
             </div>
 
-            <!-- Modals -->
-            <div id="emoji-picker-container">
+            <!-- Global Modals (Outside #app context) -->
+            <div id="emoji-picker-container" class="modal-layer">
                 <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div>
                 <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content;">
                     <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer;">+</button>
@@ -96,10 +95,10 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="reaction-modal">
+            <div id="reaction-modal" class="modal-layer">
                 <div id="reaction-sheet" class="bottom-sheet">
                     <div style="padding: 20px 20px 40px 20px;">
-                        <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px;"></div>
+                        <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px; cursor: pointer;"></div>
                         <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">Reaktionen</h3>
                         <div id="reaction-users-list" style="overflow-y: auto; max-height: 40vh;"></div>
                     </div>
@@ -107,9 +106,9 @@ export class ChatView {
             </div>
 
             <!-- Chat Input (Fixed ABOVE Tabs, Quote inside Bubble) -->
-            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 5000; transition: bottom 0.2s; pointer-events: none;">
-                <div style="pointer-events: auto;">
-                    <div style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 5px; overflow: hidden;">
+            <div id="chat-input-container">
+                <div style="width: 100%; max-width: 450px; margin: 0 auto;">
+                    <div style="display: flex; flex-direction: column; background: white; border: 1px solid #eee; border-radius: 25px; padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 10px; overflow: hidden;">
                         <div id="reply-preview" style="display: none; background: #f8fafc; padding: 8px 15px; border-radius: 20px 20px 0 0; border-bottom: 1px solid #eee; font-size: 11px; align-items: center; justify-content: space-between;">
                             <span id="reply-text" style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">Antworten auf...</span>
                             <button id="cancel-reply" style="border: none; background: none; font-size: 20px; cursor: pointer; color: #999; line-height: 1;">&times;</button>
@@ -135,12 +134,10 @@ export class ChatView {
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
 
-        // Automatic scroll ONLY if text message added/send button pressed
         if (this.shouldScrollNow) {
-            // Instant scroll to bottom
             setTimeout(() => {
                 feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' });
-            }, 10);
+            }, 50);
             this.shouldScrollNow = false;
         }
 
@@ -153,6 +150,7 @@ export class ChatView {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
                 this.longPressTimer = setTimeout(() => {
+                    document.activeElement?.blur(); // Prevent keyboard glitch
                     this.selectedMsgId = msgId;
                     const rect = bubble.getBoundingClientRect();
                     pickerContainer.classList.add('active');
@@ -175,7 +173,6 @@ export class ChatView {
             wrapper.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
                 if (e.changedTouches[0].clientX - this.touchStartX > 50) {
-                    // FIX: Replying to B quotes B
                     this.currentReplyId = msgId;
                     const msg = store.state.chat.find(m => m.id === msgId);
                     const user = store.state.users.find(u => u.id === msg.user_id);
@@ -190,10 +187,17 @@ export class ChatView {
             bubble.addEventListener('contextmenu', e => e.preventDefault());
         });
 
+        const closeModal = () => {
+            modal.style.background = 'rgba(0,0,0,0)';
+            sheet.classList.remove('open');
+            setTimeout(() => modal.classList.remove('active'), 300);
+        };
+
         // Reaction Detail
         document.querySelectorAll('.reaction-pill').forEach(pill => {
             pill.addEventListener('click', (e) => {
                 e.stopPropagation();
+                document.activeElement?.blur(); // Prevent keyboard glitch
                 const reactions = (store.state.chat.find(m => m.id === pill.dataset.id))?.reactions || [];
                 document.getElementById('reaction-count-title').innerText = `${reactions.length} Reaktionen`;
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
@@ -225,12 +229,33 @@ export class ChatView {
             });
         });
 
-        const closeModal = () => {
-            modal.style.background = 'rgba(0,0,0,0)';
-            sheet.classList.remove('open');
-            setTimeout(() => modal.classList.remove('active'), 300);
-        };
         modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+        // Swipe down to close sheet
+        let startY = 0;
+        let sheetOffset = 0;
+        sheet.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            sheet.style.transition = 'none';
+        }, { passive: true });
+
+        sheet.addEventListener('touchmove', (e) => {
+            const diff = e.touches[0].clientY - startY;
+            if (diff > 0) {
+                sheetOffset = diff;
+                sheet.style.transform = `translateY(${diff}px)`;
+            }
+        }, { passive: true });
+
+        sheet.addEventListener('touchend', () => {
+            sheet.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            if (sheetOffset > 100) {
+                closeModal();
+            } else {
+                sheet.style.transform = 'translateY(0)';
+            }
+            sheetOffset = 0;
+        });
 
         // Custom Emoji Picker
         document.getElementById('show-full-picker-btn').onclick = () => {
@@ -242,12 +267,15 @@ export class ChatView {
         singleEmojiInput.oninput = () => {
             const match = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
             if (match) {
-                store.addReaction(this.selectedMsgId, match[0]);
-                this.trackEmojiUsage(match[0]);
+                const usedEmoji = match[0];
+                store.addReaction(this.selectedMsgId, usedEmoji);
+                this.trackEmojiUsage(usedEmoji);
+
+                // Close and refresh
                 pickerContainer.classList.remove('active');
                 document.getElementById('single-emoji-input-container').classList.remove('open');
                 singleEmojiInput.value = '';
-                singleEmojiInput.blur();
+                this.renderSmartEmojiList(); // Refresh list immediately
             }
         };
 
@@ -303,6 +331,6 @@ export class ChatView {
             };
             bar.insertBefore(btn, plus);
         });
-        emojiBar.style.display = 'flex';
+        bar.style.display = 'flex';
     }
 }
