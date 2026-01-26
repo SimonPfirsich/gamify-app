@@ -45,7 +45,7 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 100px;
+    padding-bottom: 120px;
 }
 
 /* --- Navigation --- */
@@ -67,9 +67,7 @@ body {
     z-index: 2000;
 }
 
-.keyboard-open .bottom-nav {
-    display: none !important;
-}
+/* Removed display:none to allow nav to move with keyboard (standard behavior with widget resize) */
 
 .nav-item {
     background: none !important;
@@ -131,7 +129,7 @@ body {
     transform: translateX(-50%) translateY(0);
 }
 
-/* --- Chat Input: RESTORED & ANCHORED --- */
+/* --- Chat Input: WITH VISIBILITY SHIELD --- */
 #chat-input-container {
     position: fixed;
     bottom: calc(var(--nav-height) + var(--safe-area-bottom));
@@ -142,11 +140,15 @@ body {
     z-index: 3000;
     pointer-events: none;
     display: none;
+    background: linear-gradient(to bottom, transparent 0%, transparent 50%, white 50%, white 100%);
+    padding-bottom: 20px;
 }
 
 .keyboard-open #chat-input-container {
-    bottom: 5px !important;
-    /* Tiny gap for premium feel on keyboard */
+    bottom: 0px !important;
+    padding-bottom: 5px;
+    background: white;
+    /* Full white background when on keyboard */
 }
 
 .chat-active #chat-input-container {

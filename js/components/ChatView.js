@@ -33,7 +33,6 @@ export class ChatView {
             const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
             const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-            // --- REACTION INDICATOR LOGIC ---
             const hasMyReaction = reactions.some(r => r.u === currentUser.id);
             const emojiCounts = {};
             reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
@@ -66,17 +65,15 @@ export class ChatView {
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-id="${msg.id}" style="
                                             display: flex; align-items: center; gap: 4px; 
-                                            background: ${hasMyReaction ? '#eef2ff' : 'white'}; 
-                                            border: 1px solid ${hasMyReaction ? 'var(--primary)' : '#e2e8f0'}; 
+                                            background: white; border: 1px solid #e2e8f0; 
                                             border-radius: 12px; padding: 2px 6px; margin-top: -10px; 
                                             margin-${isMe ? 'right' : 'left'}: 8px; 
-                                            box-shadow: 0 2px 8px rgba(99, 102, 241, ${hasMyReaction ? '0.15' : '0.05'}); 
+                                            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
                                             font-size: 12px; cursor: pointer; z-index: 10;
-                                            transition: all 0.2s;
                                         ">
                                             <span>${topEmojis.join('')}</span>
-                                            <span style="color: ${hasMyReaction ? 'var(--primary)' : 'var(--text-muted)'}; font-weight: 700; font-size: 10px; margin-left: 2px;">
-                                                ${reactions.length}${hasMyReaction ? ' •' : ''}
+                                            <span style="color: var(--text-muted); font-weight: ${hasMyReaction ? '800' : '500'}; font-size: 10px; margin-left: 2px;">
+                                                ${reactions.length}
                                             </span>
                                         </div>
                                     ` : ''}
@@ -103,7 +100,6 @@ export class ChatView {
         const singleEmojiInput = document.getElementById('single-emoji-input');
         const feedContainer = document.querySelector('.content-area');
         const sendBtn = document.getElementById('send-btn');
-        const cancelReply = document.getElementById('cancel-reply');
 
         if (this.shouldScrollNow) {
             setTimeout(() => feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'auto' }), 100);
@@ -255,7 +251,7 @@ export class ChatView {
             }
         };
 
-        cancelReply.onclick = () => {
+        document.getElementById('cancel-reply').onclick = () => {
             this.currentReplyId = null;
             document.getElementById('reply-preview').style.display = 'none';
         }
