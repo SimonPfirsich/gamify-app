@@ -25,7 +25,7 @@ export class ChatView {
                 </div>
             </div>
 
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 200px;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 120px; padding-top: 10px;">
                 ${chat.map(msg => {
             const isMe = msg.user_id === currentUser.id;
             const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
@@ -40,20 +40,21 @@ export class ChatView {
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
-                                <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: 100%;">
+                                <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: ${isEvent ? '90%' : '100%'};">
                                     <div class="message-bubble" style="
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
-                                        padding: 8px 12px; 
-                                        border-radius: 18px; 
+                                        padding: ${isEvent ? '4px 10px' : '8px 12px'}; 
+                                        border-radius: ${isEvent ? '20px' : '18px'}; 
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
                                         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
-                                        font-size: 15px;
+                                        font-size: ${isEvent ? '12px' : '15px'};
                                         cursor: pointer;
+                                        user-select: none; -webkit-user-select: none;
                                     ">
                                         ${replyMsg ? `
-                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'};">
+                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
                                                 <strong>${replyMsg.user_id === currentUser.id ? 'Du' : store.state.users.find(u => u.id === replyMsg.user_id)?.name}</strong><br>
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
@@ -68,6 +69,7 @@ export class ChatView {
                                     ` : ''}
                                 </div>
                             </div>
+                            ${isEvent ? '' : `<span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; padding: 0 44px;">${new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`}
                             <div class="swipe-indicator" style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
                                 <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
                             </div>
@@ -76,13 +78,12 @@ export class ChatView {
         }).join('')}
             </div>
 
-            <!-- Global Modals (Using strict fixed 100vw from CSS) -->
+            <!-- Modals -->
             <div id="emoji-picker-container">
                 <div id="emoji-picker-overlay" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.01);"></div>
                 <div id="emoji-bar" style="position: absolute; left: 50%; transform: translateX(-50%); background: white; border-radius: 40px; padding: 8px 12px; display: flex; align-items: center; gap: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: max-content;">
                     <button id="show-full-picker-btn" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; color: #64748b; cursor: pointer;">+</button>
                 </div>
-                <!-- Custom Emoji Picker -->
                 <div id="single-emoji-input-container" class="bottom-sheet" style="padding: 15px; background: #f8f9fa;">
                     <div style="background: white; padding: 5px; border-radius: 25px; border: 1px solid #eee;">
                         <input type="text" id="single-emoji-input" placeholder="Wähle ein Emoji..." style="width: 100%; background: transparent; border: none; padding: 10px; text-align: center; font-size: 18px; outline: none;">
@@ -92,7 +93,6 @@ export class ChatView {
 
             <div id="reaction-modal">
                 <div id="reaction-sheet" class="bottom-sheet">
-                    <!-- Ensure no inner padding on sheet itself for flush edge-to-edge -->
                     <div style="padding: 20px 20px 40px 20px;">
                         <div id="sheet-handle" style="width: 40px; height: 5px; background: #ddd; border-radius: 10px; margin: 0 auto 20px;"></div>
                         <h3 id="reaction-count-title" style="margin-bottom: 20px; font-size: 16px;">Reaktionen</h3>
@@ -101,21 +101,19 @@ export class ChatView {
                 </div>
             </div>
 
-            <!-- Chat Input Container (Uses CSS bottom transition) -->
-            <div id="chat-input-container" style="background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 0;">
-                <div style="display: flex; align-items: flex-end; gap: 8px; padding: 0 10px;">
-                    <div style="flex: 1; position: relative;">
-                        <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px;">
-                            <span id="reply-text" style="color: var(--text-muted);">Antworten auf...</span>
-                            <button id="cancel-reply" style="float: right; border: none; background: none; font-size: 16px; cursor: pointer;">&times;</button>
-                        </div>
-                        <div style="background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                            <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="width: 100%; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit;"></textarea>
-                        </div>
+            <!-- Chat Input (Back to Bubble-contained Send Button) -->
+            <div id="chat-input-container" style="position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom)); left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: linear-gradient(to top, white 50%, rgba(255,255,255,0)); padding: 10px 5px; z-index: 1500; transition: bottom 0.2s; pointer-events: none;">
+                <div style="pointer-events: auto;">
+                    <div id="reply-preview" style="display: none; background: #f8fafc; padding: 6px 12px; border-radius: 12px 12px 0 0; border: 1px solid #eee; border-bottom: none; font-size: 11px; margin: 0 5px;">
+                        <span id="reply-text" style="color: var(--text-muted);">Antworten auf...</span>
+                        <button id="cancel-reply" style="float: right; border: none; background: none; font-size: 16px; cursor: pointer; color: #999;">&times;</button>
                     </div>
-                    <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center;">
-                        <i class="ph-fill ph-paper-plane-right" style="font-size: 20px;"></i>
-                    </button>
+                    <div style="display: flex; align-items: flex-end; gap: 8px; background: white; border: 1px solid #eee; border-radius: 25px; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 0 5px;">
+                        <textarea id="chat-input" placeholder="Nachricht..." rows="1" style="flex: 1; background: transparent; border: none; padding: 10px 15px; outline: none; resize: none; font-size: 16px; font-family: inherit; max-height: 100px;"></textarea>
+                        <button id="send-btn" style="background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 4px 12px var(--primary-glow); display: flex; align-items: center; justify-content: center; margin-right: 2px; margin-bottom: 2px;">
+                            <i class="ph-fill ph-paper-plane-right" style="font-size: 18px;"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -182,12 +180,15 @@ export class ChatView {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-is-me="${isMe}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <div class="reaction-row" data-emoji="${r.e}" data-is-me="${isMe}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: ${isMe ? 'pointer' : 'default'};">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? '(Du)' : ''}</span>
                             </div>
-                            <span style="font-size: 22px;">${r.e}</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 20px;">${r.e}</span>
+                                ${isMe ? '<span style="font-size: 14px; color: #ef4444; font-weight: bold;">✕</span>' : ''}
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -195,8 +196,7 @@ export class ChatView {
                 document.querySelectorAll('.reaction-row').forEach(row => {
                     if (row.dataset.isMe === 'true') row.onclick = () => {
                         store.addReaction(pill.dataset.id, row.dataset.emoji);
-                        pickerContainer.classList.remove('active');
-                        modal.classList.remove('active');
+                        closeModal();
                     };
                 });
 

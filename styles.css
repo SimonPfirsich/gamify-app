@@ -97,7 +97,7 @@ h4 {
 
 /* --- Navigation --- */
 .bottom-nav {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
@@ -109,13 +109,11 @@ h4 {
     align-items: center;
     padding-bottom: var(--safe-area-bottom);
     z-index: 2000;
-    /* Over everything except modals */
-    transition: transform 0.2s ease-in-out;
+    transition: opacity 0.1s;
 }
 
-/* We hide by translating, which is more reliable than display:none for many browsers */
 .keyboard-open .bottom-nav {
-    transform: translateY(100%);
+    display: none !important;
 }
 
 .nav-item {
@@ -128,6 +126,8 @@ h4 {
     gap: 4px;
     cursor: pointer;
     width: 20%;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .nav-item.active {
