@@ -40,16 +40,16 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER - Centered title */
+/* STICKY HEADER - No gap */
 .header {
-    padding: 20px 16px 0;
-    /* Removed bottom padding */
+    padding: 20px 16px 10px;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     background: white;
     z-index: 101;
-    border-bottom: none;
+    margin-bottom: 0;
+    /* Ensure no margin */
 }
 
 .header h1 {
@@ -60,13 +60,12 @@ body {
 
 .header p {
     text-align: center;
-    margin: 0 0 10px 0;
-    /* Bottom margin instead of padding */
+    margin: 0;
 }
 
-/* FILTER BAR - Sticks BELOW header seamlessly */
+/* FILTER BAR - Directly attached to header */
 .filter-bar {
-    padding: 10px 16px 16px;
+    padding: 0 16px 16px;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -74,10 +73,14 @@ body {
     flex-wrap: wrap;
     position: -webkit-sticky;
     position: sticky;
-    top: 70px;
-    /* Adjusted for new header height */
+    top: 68px;
+    /* Exact header height */
     z-index: 101;
     border-bottom: 1px solid #f8fafc;
+    margin-top: 0;
+    /* No margin */
+    padding-top: 0;
+    /* No top padding */
 }
 
 .content-area {
@@ -367,10 +370,10 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- CLOSER to nav: 3px instead of 15px */
+/* --- Chat Input --- VERY CLOSE to nav */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 3px);
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
