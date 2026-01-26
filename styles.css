@@ -8,7 +8,6 @@
     --safe-area-bottom: env(safe-area-inset-bottom);
     --card-bg: #fdfdfe;
     --border-color: #f1f5f9;
-    --header-height: 80px;
 }
 
 * {
@@ -41,7 +40,7 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER */
+/* STICKY HEADER - Must be inside scrolling container */
 .header {
     padding: 20px 16px 10px;
     position: sticky;
@@ -51,7 +50,7 @@ body {
     border-bottom: 1px solid #f8fafc;
 }
 
-/* STICKY FILTER BAR */
+/* STICKY FILTER BAR - Must stick below header */
 .filter-bar {
     padding: 0 16px 16px;
     display: flex;
@@ -60,17 +59,21 @@ body {
     background: white;
     flex-wrap: wrap;
     position: sticky;
-    top: var(--header-height);
+    top: 80px;
+    /* Height of header */
     z-index: 99;
     border-bottom: 1px solid #f8fafc;
+    padding-top: 10px;
 }
 
 .content-area {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 10px);
     -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 
 /* --- Navigation --- */
@@ -163,6 +166,7 @@ body {
     border: 1px solid #edf2f7;
     font-size: 18px;
     line-height: 1;
+    cursor: pointer;
 }
 
 .log-item {
