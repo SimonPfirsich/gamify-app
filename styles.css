@@ -435,11 +435,11 @@ body {
     }
 
     25% {
-        transform: rotate(0.5deg);
+        transform: rotate(0.4deg);
     }
 
     75% {
-        transform: rotate(-0.5deg);
+        transform: rotate(-0.4deg);
     }
 
     100% {
@@ -450,10 +450,14 @@ body {
 .action-card .edit-controls {
     display: none;
     position: absolute;
-    top: -8px;
-    right: -8px;
-    z-index: 10;
-    gap: 5px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+    pointer-events: none;
 }
 
 .edit-mode .action-card .edit-controls {
@@ -467,7 +471,12 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 130px;
+    padding-bottom: 110px;
+    transition: padding-bottom 0.1s ease-out;
+}
+
+body.keyboard-open.chat-active .content-area {
+    padding-bottom: 30px;
 }
 
 #chat-input-container::after {

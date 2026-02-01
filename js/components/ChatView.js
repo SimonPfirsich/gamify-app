@@ -165,6 +165,7 @@ export class ChatView {
             if (pickerContainer) pickerContainer.classList.remove('active');
             const container = document.getElementById('single-emoji-input-container');
             if (container) container.classList.remove('open');
+            if (emojiBar) emojiBar.style.display = 'none';
         };
 
         const closeReactionModal = (force = false) => {
@@ -191,23 +192,22 @@ export class ChatView {
                 this.touchStartY = e.touches[0].clientY;
 
                 this.longPressTimer = setTimeout(() => {
-                    // Check if we didn't move much
-                    if (Math.abs(e.touches[0].clientX - this.touchStartX) < 15) {
-                        // Don't blur input if keyboard is open, just keep it
+                    const currentX = this.lastTouchX || e.touches[0].clientX;
+                    if (Math.abs(currentX - this.touchStartX) < 15) {
                         this.selectedMsgId = wrapper.dataset.id;
-
-                        // Fresh measurement
                         const currentRect = bubble.getBoundingClientRect();
 
                         if (emojiBar) {
                             emojiBar.style.display = 'flex';
-                            // Positioning: Below if near top, else above
                             const topPos = currentRect.top < 150 ? currentRect.bottom + 10 : currentRect.top - 65;
                             emojiBar.style.top = `${Math.max(10, topPos)}px`;
                         }
 
                         pickerContainer.classList.add('active');
-                        if (navigator.vibrate) navigator.vibrate(50);
+                        // Push history state to allow back button to close this
+                        window.history.pushState({ picker: 'open' }, '');
+
+                        if (navigator.vibrate) navigator.vibrate(40);
                     }
                 }, 400);
             };
@@ -215,6 +215,7 @@ export class ChatView {
             bubble.addEventListener('touchstart', handleTouchStart, { passive: true });
 
             wrapper.addEventListener('touchmove', (e) => {
+                this.lastTouchX = e.touches[0].clientX;
                 const dX = e.touches[0].clientX - this.touchStartX;
                 const dY = e.touches[0].clientY - this.touchStartY;
                 if (Math.abs(dY) > 20 || dX < -10) clearTimeout(this.longPressTimer);

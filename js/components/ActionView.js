@@ -82,15 +82,6 @@ export class ActionView {
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark);">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
                                         </div>
-
-                                        ${count > 0 ? `
-                                            <div style="
-                                                ${this.currentView === 'tile' ? 'position: absolute; top: 8px; right: 8px;' : 'margin-left: 10px;'}
-                                                background: var(--primary); color: white; border-radius: 50%; width: 18px; height: 18px; 
-                                                display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800;
-                                                box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
-                                            ">${count}</div>
-                                        ` : ''}
                                     </div>
                                 `;
             }).join('')}
@@ -296,6 +287,7 @@ export class ActionView {
         }
 
         modal.classList.add('active');
+        history.pushState({ modal: 'open' }, '');
         setTimeout(() => sheet.classList.add('open'), 10);
     }
 

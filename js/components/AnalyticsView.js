@@ -218,9 +218,9 @@ export class AnalyticsView {
                     <span class="ratio-value">${percentage}%</span>
                     <span class="ratio-details">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
-                <div class="edit-controls" style="display: ${this.isEditMode ? 'flex' : 'none'}; gap: 8px;">
-                    <button class="action-btn edit-ratio-btn" data-index="${index}"><i class="ph ph-pencil-simple"></i></button>
-                    <button class="action-btn delete delete-ratio-btn" data-index="${index}"><i class="ph ph-trash"></i></button>
+                <div class="edit-controls" style="display: ${this.isEditMode ? 'flex' : 'none'}; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100%; justify-content:center; gap:12px; z-index:20; pointer-events:none;">
+                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto;"><i class="ph ph-pencil-simple"></i></button>
+                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto;"><i class="ph ph-trash"></i></button>
                 </div>
             </div>
         `;
@@ -255,6 +255,7 @@ export class AnalyticsView {
                 act2Select.selectedIndex = 1;
             }
             modal.classList.add('active');
+            history.pushState({ modal: 'open' }, '');
             setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.classList.add('open'); }, 10);
         };
 
