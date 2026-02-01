@@ -40,16 +40,16 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER - No gap */
+/* STICKY HEADER - Absolute zero gap */
 .header {
-    padding: 20px 16px 10px;
+    padding: 20px 16px 0px;
+    /* No bottom padding */
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     background: white;
     z-index: 101;
-    margin-bottom: 0;
-    /* Ensure no margin */
+    margin: 0;
 }
 
 .header h1 {
@@ -60,10 +60,11 @@ body {
 
 .header p {
     text-align: center;
-    margin: 0;
+    margin: 0 0 10px 0;
+    /* Margin used for spacing instead of padding */
 }
 
-/* FILTER BAR - Directly attached to header */
+/* FILTER BAR - Seamlessly integrated */
 .filter-bar {
     padding: 0 16px 16px;
     display: flex;
@@ -73,14 +74,11 @@ body {
     flex-wrap: wrap;
     position: -webkit-sticky;
     position: sticky;
-    top: 68px;
-    /* Exact header height */
+    top: 65px;
+    /* Adjusting top to perfectly meet the header */
     z-index: 101;
     border-bottom: 1px solid #f8fafc;
-    margin-top: 0;
-    /* No margin */
-    padding-top: 0;
-    /* No top padding */
+    margin: 0;
 }
 
 .content-area {
@@ -88,7 +86,7 @@ body {
     overflow-y: scroll;
     overflow-x: hidden;
     padding: 0;
-    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 10px);
+    padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
     -webkit-overflow-scrolling: touch;
     position: relative;
 }
@@ -109,7 +107,8 @@ body {
     align-items: flex-start;
     padding-top: 12px;
     padding-bottom: var(--safe-area-bottom);
-    z-index: 2000;
+    z-index: 4000;
+    /* Higher than chat to prevent overlap */
 }
 
 .keyboard-open .bottom-nav {
@@ -370,18 +369,19 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- VERY CLOSE to nav */
+/* --- Chat Input --- Safety margin from nav */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom));
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 1px);
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 450px;
     z-index: 3000;
+    /* Stays below nav (4000) */
     pointer-events: none;
     display: none;
-    background: linear-gradient(to bottom, transparent 0%, transparent 50%, white 50%, white 100%);
+    background: linear-gradient(to bottom, transparent 0%, transparent 60%, white 60%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
