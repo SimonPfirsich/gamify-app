@@ -195,6 +195,7 @@ export class ChatView {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
 
+                // Do not prevent default to allow scrolling, but we need to manage focus manually if needed
                 this.longPressTimer = setTimeout(() => {
                     const currentX = this.lastTouchX || e.touches[0].clientX;
                     if (Math.abs(currentX - this.touchStartX) < 15) {
@@ -211,7 +212,13 @@ export class ChatView {
                         // Push history state to allow back button to close this
                         window.history.pushState({ picker: 'open' }, '');
 
-                        if (navigator.vibrate) navigator.vibrate(40);
+                        // Prevent focus loss on input if keyboard is open
+                        const input = document.getElementById('chat-input');
+                        if (document.activeElement === input) {
+                            // Keep focus
+                        } else if (navigator.vibrate) {
+                            navigator.vibrate(40);
+                        }
                     }
                 }, 400);
             };

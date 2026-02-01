@@ -3,7 +3,7 @@ import { translations } from '../translations.js';
 
 export class ActionView {
     constructor() {
-        this.isEditMode = false;
+        this.editingId = null; // Changed from isEditMode boolean
         this.longPressTimer = null;
         this.currentView = store.state.actionsView || 'tile';
     }
@@ -34,7 +34,7 @@ export class ActionView {
                 </div>
             </div>
 
-            <div class="actions-container ${this.isEditMode ? 'edit-mode' : ''}" style="padding: 10px 16px 120px;">
+            <div class="actions-container ${this.editingId ? 'edit-mode' : ''}" style="padding: 10px 16px 120px;">
                 ${challenges.length === 0 ? `<p style="text-align:center; padding: 40px; color: var(--text-muted); opacity: 0.6;">${this.t('no_entries')}</p>` : ''}
                 ${challenges.map(c => {
             // Apply sorting if available
@@ -53,9 +53,11 @@ export class ActionView {
                 // Filter out Phosphor class strings like "ph-users"
                 const iconDisplay = (a.icon && a.icon.startsWith('ph-')) ? '🚀' : (a.icon || '🚀');
 
+                const isEditingThis = this.editingId === a.id;
+
                 return `
-                                    <div class="action-card ${this.isEditMode ? 'edit-active' : ''}" 
-                                         data-cid="${c.id}" data-aid="${a.id}" draggable="${this.isEditMode}"
+                                    <div class="action-card ${isEditingThis ? 'edit-active' : ''}" 
+                                         data-cid="${c.id}" data-aid="${a.id}" draggable="${!!this.editingId}" 
                                          style="
                                             display: flex; 
                                             flex-direction: ${this.currentView === 'tile' ? 'column' : 'row'}; 
@@ -65,20 +67,23 @@ export class ActionView {
                                             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
                                             text-align: ${this.currentView === 'tile' ? 'center' : 'left'}; 
                                             cursor: pointer; position: relative;
+                                            opacity: ${this.editingId && !isEditingThis ? '0.5' : '1'};
+                                            transform: ${isEditingThis ? 'scale(1.05)' : 'scale(1)'};
+                                            z-index: ${isEditingThis ? '100' : '1'};
                                          ">
                                         
                                         <!-- Edit Controls -->
-                                        <div class="edit-controls">
-                                            <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}">
+                                        <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'};">
+                                            <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto;">
                                                 <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
                                             </button>
-                                            <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2;">
+                                            <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto;">
                                                 <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
                                             </button>
                                         </div>
 
-                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1;">${iconDisplay}</div>
-                                        <div style="flex:1;">
+                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.3' : '1'};">${iconDisplay}</div>
+                                        <div style="flex:1; opacity: ${isEditingThis ? '0.3' : '1'};">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
                                         </div>
@@ -158,12 +163,12 @@ export class ActionView {
         cards.forEach(card => {
             // LONG PRESS DETECTION
             card.onmousedown = card.ontouchstart = (e) => {
-                if (this.isEditMode) return;
+                if (this.editingId) return; // Already editing something
                 this.longPressTimer = setTimeout(() => {
-                    this.isEditMode = true;
+                    this.editingId = card.dataset.aid;
                     if (navigator.vibrate) navigator.vibrate(50);
                     this.renderUpdate();
-                }, 700);
+                }, 600);
             };
 
             card.onmouseup = card.onmouseleave = card.ontouchend = () => {
@@ -172,21 +177,33 @@ export class ActionView {
 
             // CLICK ACTION
             card.onclick = (e) => {
-                if (this.isEditMode) {
+                const aId = card.dataset.aid;
+
+                if (this.editingId) {
+                    // Controls Logic
                     if (e.target.closest('.delete-action')) {
-                        const aid = e.target.closest('.delete-action').dataset.aid;
                         if (confirm(this.t('delete_confirm'))) {
-                            store.deleteAction(aid);
+                            store.deleteAction(aId);
+                            this.editingId = null;
                         }
                     } else if (e.target.closest('.edit-action')) {
                         const btn = e.target.closest('.edit-action');
                         this.openModal(btn.dataset.aid, btn.dataset.cid);
+                        this.editingId = null;
+                    } else if (this.editingId === aId) {
+                        // Click on the shaking card itself -> exit edit mode?
+                        // User didn't request this, they requested controls to be clickable.
+                        // Controls are handled above.
+                    } else {
+                        // Clicked another card while editing one -> switch edit to that one? or exit?
+                        // Let's just exit edit mode for safety or switch
+                        this.editingId = null;
+                        this.renderUpdate();
                     }
                     return;
                 }
 
                 const cId = card.dataset.cid;
-                const aId = card.dataset.aid;
                 store.addEvent(cId, aId);
 
                 if (navigator.vibrate) navigator.vibrate(20);
@@ -195,8 +212,10 @@ export class ActionView {
             };
 
             // DRAG AND DROP
-            if (this.isEditMode) {
-                card.addEventListener('dragstart', () => card.classList.add('dragging'));
+            if (this.editingId) {
+                card.addEventListener('dragstart', () => {
+                    if (card.dataset.aid === this.editingId) card.classList.add('dragging');
+                });
                 card.addEventListener('dragend', () => {
                     card.classList.remove('dragging');
                     this.saveOrder(card.closest('.challenge-group'));
@@ -208,8 +227,8 @@ export class ActionView {
         const container = document.querySelector('.actions-container');
         if (container) {
             container.onclick = (e) => {
-                if (this.isEditMode && !e.target.closest('.action-card')) {
-                    this.isEditMode = false;
+                if (this.editingId && !e.target.closest('.action-card')) {
+                    this.editingId = null;
                     this.renderUpdate();
                 }
             };
@@ -218,7 +237,7 @@ export class ActionView {
         // DRAG OVER LOGIC
         document.querySelectorAll('.actions-grid').forEach(grid => {
             grid.addEventListener('dragover', e => {
-                if (!this.isEditMode) return;
+                if (!this.editingId) return;
                 e.preventDefault();
                 const dragging = document.querySelector('.dragging');
                 if (!dragging) return;

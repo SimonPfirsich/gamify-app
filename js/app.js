@@ -50,7 +50,8 @@ class App {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
 
-        this.switchTab('actions');
+        const savedTab = localStorage.getItem('gamify_last_tab') || 'actions';
+        this.switchTab(savedTab);
         store.subscribe(() => this.render());
     }
 
@@ -122,6 +123,7 @@ class App {
 
     switchTab(tabName) {
         this.currentTab = tabName;
+        localStorage.setItem('gamify_last_tab', tabName);
         if (tabName === 'chat') {
             document.body.classList.add('chat-active');
         } else {
