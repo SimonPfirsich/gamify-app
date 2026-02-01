@@ -75,9 +75,11 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="drag-handle-ratio" style="position: absolute; top: 8px; color: #1e293b; width: 100%; display: flex; justify-content: center;">
-                        <span style="font-size: 32px;">✋</span>
-                    </div>
+                                            <div class="drag-handle-tile" style="position: absolute; top: 8px; right: 8px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="ph ph-hand-grabbing" style="font-size: 18px; color: #64748b; transform: rotate(-30deg);"></i>
+                                                </div>
+                                            </div>
                                             <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px; z-index: 102;">
                                                 <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
                                                     <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
@@ -90,8 +92,10 @@ export class ActionView {
 
                                         <!-- Edit Controls List View -->
                                         ${isEditingThis && this.currentView === 'list' ? `
-                                             <div class="drag-handle-list" style="margin-right: 15px; color: #1e293b;">
-                                                <span style="font-size: 32px;">✋</span>
+                                             <div class="drag-handle-list" style="margin-right: 12px;">
+                                                <div style="width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="ph ph-hand-grabbing" style="font-size: 20px; color: #64748b; transform: rotate(-30deg);"></i>
+                                                </div>
                                             </div>
                                         ` : ''}
 

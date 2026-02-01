@@ -135,10 +135,24 @@ export class AnalyticsView {
             </div>
 
             <div style="margin-top: 30px; padding: 0 16px 100px;">
-                <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">${this.t('charts')}</h3>
-                <div style="height: 120px; background: #f8fafc; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; border: 2px dashed #edf2f7;">
-                    <i class="ph ph-chart-line-up" style="font-size: 24px; margin-right: 8px;"></i>
-                    <p style="font-size: 11px;">${this.t('trends_loading')}</p>
+                <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">${this.t('charts')}</h3>
+                
+                <!-- LINE CHART: Activity over last 7 days -->
+                <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('activity_trend') || 'Aktivitäts-Trend (7 Tage)'}</div>
+                    ${this.renderLineChart(events)}
+                </div>
+                
+                <!-- DONUT CHART: Action Distribution -->
+                <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('action_distribution') || 'Verteilung der Actions'}</div>
+                    ${this.renderDonutChart(events, allActions)}
+                </div>
+                
+                <!-- BAR CHART: Top Actions -->
+                <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('top_actions') || 'Top Actions'}</div>
+                    ${this.renderBarChart(events, allActions)}
                 </div>
             </div>
 
@@ -216,15 +230,17 @@ export class AnalyticsView {
         return `
             <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" draggable="${!!this.editingId}" style="position: relative; overflow: visible;">
                 ${isEditingThis ? `
-                     <div class="drag-handle-ratio" style="position: absolute; top: 8px; color: #1e293b; width: 100%; display: flex; justify-content: center;">
-                        <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
+                     <div class="drag-handle-ratio" style="position: absolute; top: 8px; right: 8px;">
+                        <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                            <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
+                        </div>
                     </div>
                 ` : ''}
                 
-                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1};">
-                    <span class="ratio-label">${plural1} ${this.t('pro')} ${act2.name}</span>
+                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1}; word-break: break-word; hyphens: auto;">
+                    <span class="ratio-label" style="word-break: break-word; hyphens: auto;">${plural1} ${this.t('pro')} ${act2.name}</span>
                     <span class="ratio-value">${percentage}%</span>
-                    <span class="ratio-details">${count1} ${plural1} / ${count2} ${plural2}</span>
+                    <span class="ratio-details" style="word-break: break-word;">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
 
                 <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: center; gap: 12px; z-index: 20;">
@@ -403,5 +419,142 @@ export class AnalyticsView {
     renderUpdate() {
         const content = document.getElementById('content');
         if (content) { content.innerHTML = this.render(); this.afterRender(); }
+    }
+
+    renderLineChart(events) {
+        const counts = [];
+        const labels = [];
+
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setHours(0, 0, 0, 0);
+            labels.push(d.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', { weekday: 'short' }));
+
+            const dayEnd = new Date(d);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            let filtered = events.filter(e => {
+                const ed = new Date(e.created_at);
+                return ed >= d && ed <= dayEnd;
+            });
+            if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
+            counts.push(filtered.length);
+        }
+
+        const max = Math.max(...counts, 1);
+        const width = 280;
+        const height = 100;
+        const padding = 20;
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding;
+
+        const points = counts.map((c, i) => {
+            const x = padding + (i / 6) * chartWidth;
+            const y = height - padding - (c / max) * chartHeight;
+            return { x, y };
+        });
+
+        const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + ' ' + p.x + ' ' + p.y).join(' ');
+        const areaD = pathD + ' L ' + points[6].x + ' ' + (height - padding) + ' L ' + points[0].x + ' ' + (height - padding) + ' Z';
+
+        const circlesHtml = points.map(p => '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="var(--primary)" />').join('');
+        const labelsHtml = labels.map((l, i) => '<text x="' + (padding + (i / 6) * chartWidth) + '" y="' + (height - 2) + '" text-anchor="middle" font-size="9" fill="#94a3b8">' + l + '</text>').join('');
+
+        return '<svg width="100%" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '" style="display: block;"><defs><linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:var(--primary);stop-opacity:0.3" /><stop offset="100%" style="stop-color:var(--primary);stop-opacity:0" /></linearGradient></defs><path d="' + areaD + '" fill="url(#lineGradient)" /><path d="' + pathD + '" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />' + circlesHtml + labelsHtml + '</svg>';
+    }
+
+    renderDonutChart(events, allActions) {
+        let filtered = events;
+        if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
+
+        const actionCounts = {};
+        filtered.forEach(e => {
+            actionCounts[e.action_id] = (actionCounts[e.action_id] || 0) + 1;
+        });
+
+        const sortedActions = Object.entries(actionCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        const total = sortedActions.reduce((sum, arr) => sum + arr[1], 0);
+        if (total === 0) {
+            return '<div style="text-align: center; color: #94a3b8; font-size: 12px; padding: 20px;">' + this.t('no_entries') + '</div>';
+        }
+
+        const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'];
+        const size = 120;
+        const cx = size / 2;
+        const cy = size / 2;
+        const radius = 45;
+        const innerRadius = 28;
+
+        let currentAngle = -90;
+        let segmentsHtml = '';
+        let legendHtml = '';
+
+        sortedActions.forEach((arr, i) => {
+            const actionId = arr[0];
+            const count = arr[1];
+            const angle = (count / total) * 360;
+            const startAngle = currentAngle;
+            const endAngle = currentAngle + angle;
+            currentAngle = endAngle;
+
+            const startRad = (startAngle * Math.PI) / 180;
+            const endRad = (endAngle * Math.PI) / 180;
+
+            const x1 = cx + radius * Math.cos(startRad);
+            const y1 = cy + radius * Math.sin(startRad);
+            const x2 = cx + radius * Math.cos(endRad);
+            const y2 = cy + radius * Math.sin(endRad);
+            const x3 = cx + innerRadius * Math.cos(endRad);
+            const y3 = cy + innerRadius * Math.sin(endRad);
+            const x4 = cx + innerRadius * Math.cos(startRad);
+            const y4 = cy + innerRadius * Math.sin(startRad);
+
+            const largeArc = angle > 180 ? 1 : 0;
+            const path = 'M ' + x1 + ' ' + y1 + ' A ' + radius + ' ' + radius + ' 0 ' + largeArc + ' 1 ' + x2 + ' ' + y2 + ' L ' + x3 + ' ' + y3 + ' A ' + innerRadius + ' ' + innerRadius + ' 0 ' + largeArc + ' 0 ' + x4 + ' ' + y4 + ' Z';
+
+            const action = allActions.find(a => a.id === actionId);
+            const name = action ? action.name : 'Action';
+
+            segmentsHtml += '<path d="' + path + '" fill="' + colors[i] + '" />';
+            legendHtml += '<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><div style="width: 10px; height: 10px; border-radius: 3px; background: ' + colors[i] + ';"></div><span style="color: var(--text-dark); flex: 1; word-break: break-word;">' + name + '</span><span style="color: #94a3b8;">' + count + '</span></div>';
+        });
+
+        return '<div style="display: flex; align-items: center; gap: 16px;"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + segmentsHtml + '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="700" fill="var(--text-dark)">' + total + '</text></svg><div style="flex: 1; font-size: 11px;">' + legendHtml + '</div></div>';
+    }
+
+    renderBarChart(events, allActions) {
+        let filtered = events;
+        if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
+
+        const actionCounts = {};
+        filtered.forEach(e => {
+            actionCounts[e.action_id] = (actionCounts[e.action_id] || 0) + 1;
+        });
+
+        const sorted = Object.entries(actionCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        if (sorted.length === 0) {
+            return '<div style="text-align: center; color: #94a3b8; font-size: 12px; padding: 20px;">' + this.t('no_entries') + '</div>';
+        }
+
+        const max = sorted[0][1];
+
+        let barsHtml = '';
+        sorted.forEach(arr => {
+            const actionId = arr[0];
+            const count = arr[1];
+            const action = allActions.find(a => a.id === actionId);
+            const name = action ? action.name : 'Action';
+            const pct = (count / max) * 100;
+            barsHtml += '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 70px; font-size: 11px; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + name + '</div><div style="flex: 1; height: 16px; background: #f1f5f9; border-radius: 8px; overflow: hidden;"><div style="height: 100%; width: ' + pct + '%; background: linear-gradient(90deg, var(--primary), #8b5cf6); border-radius: 8px;"></div></div><div style="width: 24px; font-size: 11px; color: #64748b; text-align: right;">' + count + '</div></div>';
+        });
+
+        return '<div style="display: flex; flex-direction: column; gap: 8px;">' + barsHtml + '</div>';
     }
 }
