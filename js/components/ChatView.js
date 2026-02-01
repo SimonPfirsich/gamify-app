@@ -56,7 +56,7 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 15px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 30px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${(() => {
                 let lastDate = null;
                 return chat.map(msg => {
@@ -111,7 +111,7 @@ export class ChatView {
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
-                                        <div style="line-height: 1.4; display: block;"><div style="white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div><div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300; width: 100%; pointer-events: none;">${this.formatTime(msg.created_at)}</div></div>
+                                        <div style="line-height: 1.4; display: block;"><div style="white-space: pre-wrap; display: inline-block;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div><div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300; width: 100%; pointer-events: none;">${this.formatTime(msg.created_at)}</div></div>
                                     </div>
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-msg-id="${msg.id}" style="
@@ -165,14 +165,13 @@ export class ChatView {
             pickerContainer.classList.remove('active');
             document.getElementById('single-emoji-input-container').classList.remove('open');
             if (window.history.state === 'emoji-picker-open') {
-                window.history.replaceState(null, ''); // Clear the "open" state
+                window.history.replaceState(null, '');
             }
         };
 
-        // ANDROID BACK BUTTON HANDLING - robust listener
+        // ANDROID BACK BUTTON HANDLING - sync both classes
         window.addEventListener('popstate', (event) => {
-            if (pickerContainer.classList.contains('active')) {
-                // Prevent browser back navigation
+            if (pickerContainer.classList.contains('active') || document.getElementById('single-emoji-input-container').classList.contains('open')) {
                 pickerContainer.classList.remove('active');
                 document.getElementById('single-emoji-input-container').classList.remove('open');
             }
@@ -338,6 +337,7 @@ export class ChatView {
             plusBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (emojiBar) emojiBar.style.display = 'none';
+                pickerContainer.classList.add('active'); // SYNC: Add active class here too
                 document.getElementById('single-emoji-input-container').classList.add('open');
                 window.history.pushState('emoji-picker-open', '');
                 singleEmojiInput?.focus();
