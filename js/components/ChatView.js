@@ -111,9 +111,9 @@ export class ChatView {
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
-                                        <div style="line-height: 1.4; white-space: pre-wrap; display: flex; flex-direction: column;">
-                                            <span>${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</span>
-                                            <div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300;">${this.formatTime(msg.created_at)}</div>
+                                        <div style="line-height: 1.4; white-space: pre-wrap; display: block;">
+                                            <div>${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
+                                            <div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 4px; font-weight: 300; width: 100%;">${this.formatTime(msg.created_at)}</div>
                                         </div>
                                     </div>
                                     ${reactions.length > 0 ? `
@@ -361,14 +361,13 @@ export class ChatView {
 
             singleEmojiInput.onblur = closeOnDismiss;
 
-            // Use visualViewport for more reliable keyboard-close detection
+            // Better keyboard-close detection via visualViewport
             if (window.visualViewport) {
-                const onResize = () => {
+                window.visualViewport.addEventListener('resize', () => {
                     if (window.visualViewport.height > window.innerHeight * 0.9) {
                         closePicker();
                     }
-                };
-                window.visualViewport.addEventListener('resize', onResize);
+                });
             }
         }
 

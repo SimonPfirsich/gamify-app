@@ -87,11 +87,11 @@ class App {
             if (!this.isPulling) return;
             this.isPulling = false;
 
-            if (this.pullDelta > 60) {
+            if (this.pullDelta > 55) {
                 refresher.style.transform = 'translate3d(0, 50px, 0)';
                 icon.classList.add('ph-spin');
                 // Hard reload to clear PWA cache/service worker if present
-                setTimeout(() => location.reload(true), 500);
+                setTimeout(() => location.reload(true), 400);
             } else {
                 refresher.style.transform = '';
                 icon.style.transform = '';

@@ -58,9 +58,9 @@ class Store {
                 const testMsg = {
                     id: 'test-11-reactions',
                     user_id: '8fcb9560-f435-430c-8090-e4b2d41a7986', // Simon
-                    content: 'Dies ist eine Testnachricht mit 11 Reaktionen zum Prüfen der Ansicht! 🚀',
+                    content: 'Testnachricht mit 11 Reaktionen (Gestern)! 🚀',
                     type: 'text',
-                    created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+                    created_at: new Date(Date.now() - 86400000).toISOString(),
                     reactions: [
                         { u: '1', e: '👍' }, { u: '2', e: '❤️' }, { u: '3', e: '😂' },
                         { u: '4', e: '😮' }, { u: '5', e: '😢' }, { u: '6', e: '🙏' },
@@ -68,7 +68,8 @@ class Store {
                         { u: '10', e: '✨' }, { u: this.state.currentUser.id, e: '💯' }
                     ]
                 };
-                this.state.chat = [...messages, testMsg];
+                const existing = messages.find(m => m.id === 'test-11-reactions');
+                this.state.chat = existing ? messages : [...messages, testMsg];
             }
 
             this.notify();

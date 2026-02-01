@@ -407,7 +407,7 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 150px;
+    padding-bottom: 90px;
 }
 
 #chat-input-container::after {
