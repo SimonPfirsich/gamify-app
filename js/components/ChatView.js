@@ -161,21 +161,11 @@ export class ChatView {
             this.shouldScrollNow = false;
         }
 
-        const closePicker = () => {
-            pickerContainer.classList.remove('active');
-            document.getElementById('single-emoji-input-container').classList.remove('open');
-            if (window.history.state === 'emoji-picker-open') {
-                window.history.replaceState(null, '');
-            }
+        this.closePicker = () => {
+            if (pickerContainer) pickerContainer.classList.remove('active');
+            const container = document.getElementById('single-emoji-input-container');
+            if (container) container.classList.remove('open');
         };
-
-        // ANDROID BACK BUTTON HANDLING - sync both classes
-        window.addEventListener('popstate', (event) => {
-            if (pickerContainer.classList.contains('active') || document.getElementById('single-emoji-input-container').classList.contains('open')) {
-                pickerContainer.classList.remove('active');
-                document.getElementById('single-emoji-input-container').classList.remove('open');
-            }
-        });
 
         const closeReactionModal = (force = false) => {
             reactionModal.style.background = 'rgba(0,0,0,0)';
@@ -188,7 +178,7 @@ export class ChatView {
         }
 
         this.renderSmartEmojiList();
-        if (pickerOverlay) pickerOverlay.onclick = closePicker;
+        if (pickerOverlay) pickerOverlay.onclick = this.closePicker;
         if (reactionOverlay) reactionOverlay.onclick = () => closeReactionModal();
 
         // Interaction

@@ -131,6 +131,27 @@ class App {
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tabName);
         });
+
+        // NATIVE MODAL CLOSE ON BACK
+        window.onpopstate = (e) => {
+            // Check for any open bottom sheets or modals
+            const openSheets = document.querySelectorAll('.bottom-sheet.open, .modal-layer.active');
+            if (openSheets.length > 0) {
+                // If we have an active view with a close method, call it
+                const view = this.views[this.currentTab];
+                if (view && typeof view.closeModal === 'function') {
+                    view.closeModal();
+                } else if (view && typeof view.closePicker === 'function') {
+                    view.closePicker();
+                } else {
+                    // Fallback: search and destroy open classes locally
+                    document.querySelectorAll('.bottom-sheet.open').forEach(s => s.classList.remove('open'));
+                    document.querySelectorAll('.modal-layer.active').forEach(m => m.classList.remove('active'));
+                    document.querySelectorAll('.picker-container.active').forEach(p => p.classList.remove('active'));
+                }
+            }
+        };
+
         this.render();
         this.updateNavLabels();
     }

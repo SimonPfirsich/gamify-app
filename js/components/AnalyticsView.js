@@ -7,6 +7,8 @@ export class AnalyticsView {
         this.filterTime = 'all';
         this.customStart = '';
         this.customEnd = '';
+        this.isEditMode = false;
+        this.longPressTimer = null;
     }
 
     t(key) {
@@ -210,13 +212,13 @@ export class AnalyticsView {
         const plural2 = this.pluralize(act2.name);
 
         return `
-            <div class="ratio-card" data-index="${index}" draggable="true">
+            <div class="ratio-card ${this.isEditMode ? 'edit-mode' : ''}" data-index="${index}" draggable="true">
                 <div class="ratio-info">
                     <span class="ratio-label">${plural1} ${this.t('pro')} ${act2.name}</span>
                     <span class="ratio-value">${percentage}%</span>
                     <span class="ratio-details">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div class="edit-controls" style="display: ${this.isEditMode ? 'flex' : 'none'}; gap: 8px;">
                     <button class="action-btn edit-ratio-btn" data-index="${index}"><i class="ph ph-pencil-simple"></i></button>
                     <button class="action-btn delete delete-ratio-btn" data-index="${index}"><i class="ph ph-trash"></i></button>
                 </div>
@@ -291,17 +293,43 @@ export class AnalyticsView {
         document.querySelectorAll('.edit-ratio-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(parseInt(btn.dataset.index)); });
 
         // DRAG AND DROP
+        // LONG PRESS TO ENTER EDIT MODE
         const cards = document.querySelectorAll('.ratio-card');
         cards.forEach(card => {
-            card.addEventListener('dragstart', () => card.classList.add('dragging'));
-            card.addEventListener('dragend', () => {
-                card.classList.remove('dragging');
-                const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[c.dataset.index]);
-                localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
-                this.renderUpdate();
-            });
+            card.onmousedown = card.ontouchstart = (e) => {
+                if (this.isEditMode) return;
+                this.longPressTimer = setTimeout(() => {
+                    this.isEditMode = true;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    this.renderUpdate();
+                }, 700);
+            };
+            card.onmouseup = card.onmouseleave = card.ontouchend = () => {
+                clearTimeout(this.longPressTimer);
+            };
+
+            if (this.isEditMode) {
+                card.addEventListener('dragstart', () => card.classList.add('dragging'));
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[c.dataset.index]);
+                    localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
+                    this.renderUpdate();
+                });
+            }
         });
+
+        // Exit edit mode on click outside
+        const ratioList = document.getElementById('ratio-list');
+        if (ratioList) {
+            ratioList.onclick = (e) => {
+                if (this.isEditMode && !e.target.closest('.ratio-card')) {
+                    this.isEditMode = false;
+                    this.renderUpdate();
+                }
+            };
+        }
 
         const list = document.getElementById('ratio-list');
         if (list) {

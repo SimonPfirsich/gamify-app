@@ -19,7 +19,9 @@ class Store {
             challenges: [],
             events: [],
             chat: [],
-            language: savedLang
+            language: savedLang,
+            actionsView: localStorage.getItem('gamify_actions_view') || 'tile', // 'list' or 'tile'
+            actionOrder: JSON.parse(localStorage.getItem('gamify_action_order') || '{}')
         };
         this.listeners = [];
         this.init();
@@ -35,6 +37,18 @@ class Store {
     setLanguage(lang) {
         this.state.language = lang;
         localStorage.setItem('gamify_lang', lang);
+        this.notify();
+    }
+
+    setActionsView(view) {
+        this.state.actionsView = view;
+        localStorage.setItem('gamify_actions_view', view);
+        this.notify();
+    }
+
+    updateActionOrder(challengeId, newOrder) {
+        this.state.actionOrder[challengeId] = newOrder;
+        localStorage.setItem('gamify_action_order', JSON.stringify(this.state.actionOrder));
         this.notify();
     }
 
@@ -107,6 +121,28 @@ class Store {
             return console.error(error);
         }
         await this.addMessage(`hat ${action ? action.name : 'eine Action'} ausgeführt!`, 'event', data[0].id);
+    }
+
+    async addAction(challengeId, name, points, icon = '🚀') {
+        const { data, error } = await supabaseClient.from('actions').insert([
+            { challenge_id: challengeId, name, points, icon }
+        ]).select();
+        if (error) return console.error(error);
+        await this.fetchData();
+    }
+
+    async updateAction(actionId, name, points, icon) {
+        const { error } = await supabaseClient.from('actions')
+            .update({ name, points, icon })
+            .eq('id', actionId);
+        if (error) return console.error(error);
+        await this.fetchData();
+    }
+
+    async deleteAction(actionId) {
+        const { error } = await supabaseClient.from('actions').delete().eq('id', actionId);
+        if (error) return console.error(error);
+        await this.fetchData();
     }
 
     async addEventManual(challengeId, actionId, userId, date) {

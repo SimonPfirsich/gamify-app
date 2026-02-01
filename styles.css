@@ -406,8 +406,68 @@ body {
     display: block;
 }
 
+/* Actions Edit Mode & Grid */
+.actions-grid.tile {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.actions-grid.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-card.edit-active {
+    animation: shake 0.3s infinite;
+}
+
+@keyframes shake {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(0.5deg);
+    }
+
+    75% {
+        transform: rotate(-0.5deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.action-card .edit-controls {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    z-index: 10;
+    gap: 5px;
+}
+
+.edit-mode .action-card .edit-controls {
+    display: flex;
+}
+
+.action-card.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
 .chat-active .content-area {
-    padding-bottom: 180px;
+    padding-bottom: 130px;
 }
 
 #chat-input-container::after {
