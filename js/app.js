@@ -95,7 +95,7 @@ class App {
                 // Snappier reload
                 setTimeout(() => {
                     location.reload(true);
-                }, 150);
+                }, 50);
             } else {
                 refresher.style.transform = 'translate3d(-50%, -100px, 0)';
                 refresher.style.opacity = '0';
