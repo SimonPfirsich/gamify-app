@@ -249,26 +249,20 @@ export class ChatView {
 
         const sendBtn = document.getElementById('send-btn');
         if (sendBtn) {
-            sendBtn.onclick = (e) => {
-                e.preventDefault(); // Prevent accidental blur
+            const handleSend = (e) => {
+                if (e) e.preventDefault();
                 if (input.value.trim()) {
                     const text = input.value.trim();
                     this.forceScroll = true;
                     store.addMessage(text, 'text', null, this.currentReplyId);
-
-                    // Reset UI
                     input.value = '';
                     document.getElementById('reply-preview').style.display = 'none';
                     this.currentReplyId = null;
-
-                    // Keep keyboard open - focus the input again
-                    setTimeout(() => {
-                        input.focus();
-                        // Special fix for some mobile browsers to keep keyboard open
-                        input.setSelectionRange(0, 0);
-                    }, 0);
+                    input.focus();
                 }
             };
+            sendBtn.addEventListener('touchstart', handleSend);
+            sendBtn.onclick = handleSend;
         }
 
         const cancelReplyBtn = document.getElementById('cancel-reply');
