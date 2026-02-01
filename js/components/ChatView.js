@@ -16,6 +16,32 @@ export class ChatView {
         return translations[store.state.language][key] || key;
     }
 
+    formatTime(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    formatDividerDate(dateStr) {
+        const date = new Date(dateStr);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) return this.t('today') || 'Heute';
+        if (date.toDateString() === yesterday.toDateString()) return 'Gestern';
+
+        const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+        const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const list = store.state.language === 'de' ? days : daysEn;
+
+        // If older than a week, show full date
+        if (Date.now() - date.getTime() > 6 * 24 * 60 * 60 * 1000) {
+            return date.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        }
+
+        return list[date.getDay()];
+    }
+
     render() {
         const chat = [...store.state.chat].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const currentUser = store.state.currentUser;
@@ -30,29 +56,39 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px; padding-top: 10px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
-                ${chat.map(msg => {
-            const isMe = msg.user_id === currentUser.id;
-            const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
-            const isEvent = msg.type === 'event';
-            const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
-            const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 110px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+                ${(() => {
+                let lastDate = null;
+                return chat.map(msg => {
+                    const msgDate = new Date(msg.created_at).toDateString();
+                    let dateDivider = '';
+                    if (msgDate !== lastDate) {
+                        lastDate = msgDate;
+                        dateDivider = `<div class="date-divider" style="align-self: center; background: #fff; border: 1px solid #eee; padding: 4px 12px; border-radius: 12px; font-size: 11px; color: #64748b; margin: 10px 0; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">${this.formatDividerDate(msg.created_at)}</div>`;
+                    }
 
-            const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
-            const emojiCounts = {};
-            reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
+                    const isMe = msg.user_id === currentUser.id;
+                    const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
+                    const isEvent = msg.type === 'event';
+                    const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
+                    const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-            let uniqueEmojis = Object.keys(emojiCounts);
-            let displayEmojis = [];
-            if (myEmojis.length > 0) {
-                const myMainEmoji = myEmojis[0];
-                const others = uniqueEmojis.filter(e => e !== myMainEmoji);
-                displayEmojis = [...others.slice(0, 3), myMainEmoji];
-            } else {
-                displayEmojis = uniqueEmojis.slice(0, 4);
-            }
+                    const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
+                    const emojiCounts = {};
+                    reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
 
-            return `
+                    let uniqueEmojis = Object.keys(emojiCounts);
+                    let displayEmojis = [];
+                    if (myEmojis.length > 0) {
+                        const myMainEmoji = myEmojis[0];
+                        const others = uniqueEmojis.filter(e => e !== myMainEmoji);
+                        displayEmojis = [...others.slice(0, 3), myMainEmoji];
+                    } else {
+                        displayEmojis = uniqueEmojis.slice(0, 4);
+                    }
+
+                    return `
+                        ${dateDivider}
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
                                 ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
@@ -60,13 +96,14 @@ export class ChatView {
                                     <div class="message-bubble" style="
                                         background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
                                         color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
-                                        padding: ${isEvent ? '4px 10px' : '8px 12px'}; 
+                                        padding: ${isEvent ? '4px 10px' : '8px 12px 6px'}; 
                                         border-radius: 18px; 
                                         ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
                                         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                                         border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
                                         font-size: ${isEvent ? '11px' : '15px'};
                                         cursor: pointer;
+                                        min-width: 40px;
                                     ">
                                         ${replyMsg ? `
                                             <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
@@ -74,7 +111,10 @@ export class ChatView {
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
-                                        <div style="line-height: 1.4; white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
+                                        <div style="line-height: 1.4; white-space: pre-wrap; display: flex; align-items: flex-end; gap: 8px;">
+                                            <span>${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</span>
+                                            <span style="font-size: 9px; opacity: 0.6; margin-bottom: -2px; margin-left: auto; font-weight: 300;">${this.formatTime(msg.created_at)}</span>
+                                        </div>
                                     </div>
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-msg-id="${msg.id}" style="
@@ -102,7 +142,8 @@ export class ChatView {
                             </div>
                         </div>
                     `;
-        }).join('')}
+                }).join('');
+            })()}
             </div>
         `;
     }
@@ -294,14 +335,28 @@ export class ChatView {
         }
 
         if (singleEmojiInput) {
+            // Restriction: Only allow emojis
             singleEmojiInput.oninput = () => {
-                const m = singleEmojiInput.value.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+                const val = singleEmojiInput.value;
+                const m = val.match(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu);
                 if (m) {
                     store.addReaction(this.selectedMsgId, m[0]);
                     singleEmojiInput.value = '';
                     closePicker();
                     this.renderSmartEmojiList();
+                } else if (val.length > 0) {
+                    // Strip non-emoji text
+                    singleEmojiInput.value = '';
                 }
+            };
+
+            // Dismissal: Close picker when input loses focus (handles Android back button)
+            singleEmojiInput.onblur = () => {
+                setTimeout(() => {
+                    if (document.activeElement !== singleEmojiInput) {
+                        closePicker();
+                    }
+                }, 100);
             };
         }
 
