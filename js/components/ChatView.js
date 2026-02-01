@@ -164,7 +164,11 @@ export class ChatView {
         this.closePicker = () => {
             if (pickerContainer) pickerContainer.classList.remove('active');
             const container = document.getElementById('single-emoji-input-container');
-            if (container) container.classList.remove('open');
+            if (container) {
+                container.classList.remove('open');
+                const inp = document.getElementById('single-emoji-input');
+                if (inp) inp.blur(); // Dismiss keyboard
+            }
             if (emojiBar) emojiBar.style.display = 'none';
         };
 

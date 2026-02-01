@@ -7,7 +7,10 @@ export class LogbookView {
         this.filterAction = 'all';
         this.filterTime = 'all';
         this.customStart = '';
+        this.customStart = '';
         this.customEnd = '';
+        this.isEditMode = false;
+        this.longPressTimer = null;
     }
 
     t(key) {
@@ -104,29 +107,30 @@ export class LogbookView {
             const fTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             return `
-                        <div class="log-item">
-                            <div class="log-left">
+                        <div class="log-item ${this.isEditMode ? 'edit-mode-item' : ''}" data-id="${event.id}" style="position: relative;">
+                            <div class="log-left" style="opacity: ${this.isEditMode ? 0.3 : 1};">
                                 <div class="log-info-main">
                                     <span class="log-title">${action.name}</span>
                                     <span class="log-subtitle">${user.name}</span>
                                 </div>
                             </div>
-                            <div class="log-right">
+                            <div class="log-right" style="opacity: ${this.isEditMode ? 0.3 : 1};">
                                 <div style="display: flex; flex-direction: column; align-items: flex-end;">
                                     <span class="log-score">+${action.points}</span>
                                     <span class="log-ts">${fTime} • ${fDate}</span>
                                 </div>
-                                ${isMe ? `
-                                    <div class="log-actions">
-                                        <button class="action-btn edit-log-btn" data-id="${event.id}">
-                                            <i class="ph ph-pencil-simple"></i>
-                                        </button>
-                                        <button class="action-btn delete delete-log-btn" data-id="${event.id}">
-                                            <i class="ph ph-trash"></i>
-                                        </button>
-                                    </div>
-                                ` : ''}
                             </div>
+                            
+                            ${this.isEditMode && isMe ? `
+                                <div class="edit-controls" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 12px; z-index: 10;">
+                                    <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i>
+                                    </button>
+                                    <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; background: #fee2e2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ph ph-trash" style="font-size: 18px; color: #ef4444;"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
         }).join('')}
@@ -233,10 +237,40 @@ export class LogbookView {
         if (overlay) overlay.onclick = closeModal;
         if (closeBtn) closeBtn.onclick = closeModal;
 
+        const container = document.getElementById('log-list');
+        if (container) {
+            container.onclick = (e) => {
+                if (this.isEditMode && !e.target.closest('.edit-controls')) {
+                    this.isEditMode = false;
+                    this.renderUpdate();
+                }
+            };
+        }
+
+        document.querySelectorAll('.log-item').forEach(item => {
+            item.onmousedown = item.ontouchstart = (e) => {
+                if (this.isEditMode) return;
+                this.longPressTimer = setTimeout(() => {
+                    this.isEditMode = true;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    this.renderUpdate();
+                }, 700);
+            };
+
+            item.onmouseup = item.onmouseleave = item.ontouchend = () => {
+                clearTimeout(this.longPressTimer);
+            };
+        });
+
         document.querySelectorAll('.edit-log-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(btn.dataset.id); });
         document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
             e.stopPropagation();
-            if (confirm(this.t('delete_confirm'))) await store.deleteEvent(btn.dataset.id);
+            if (confirm(this.t('delete_confirm'))) {
+                await store.deleteEvent(btn.dataset.id);
+                // Stay in edit mode if there are other items? 
+                // Currently store delete triggers notify -> re-render -> isEditMode persists if instance not recreated?
+                // The re-render creates a new view instance if done via app.js? No, app.js calls render() on same instance.
+            }
         });
 
         if (submitBtn) {

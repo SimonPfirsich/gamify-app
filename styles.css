@@ -423,6 +423,10 @@ body {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .action-card.edit-active {
@@ -471,12 +475,8 @@ body {
 }
 
 .chat-active .content-area {
-    padding-bottom: 110px;
+    padding-bottom: 120px;
     transition: padding-bottom 0.1s ease-out;
-}
-
-body.keyboard-open.chat-active .content-area {
-    padding-bottom: 30px;
 }
 
 #chat-input-container::after {

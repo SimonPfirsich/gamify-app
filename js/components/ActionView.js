@@ -70,16 +70,16 @@ export class ActionView {
                                         <!-- Edit Controls -->
                                         <div class="edit-controls">
                                             <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}">
-                                                <i class="ph ph-pencil-simple" style="font-size: 12px; color: #64748b;"></i>
+                                                <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
                                             </button>
                                             <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2;">
-                                                <i class="ph ph-trash" style="font-size: 12px; color: #ef4444;"></i>
+                                                <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
                                             </button>
                                         </div>
 
                                         <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1;">${iconDisplay}</div>
                                         <div style="flex:1;">
-                                            <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark);">${a.name}</div>
+                                            <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
                                         </div>
                                     </div>
@@ -129,9 +129,11 @@ export class ActionView {
                     display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dark);
                 }
                 .action-mini-btn {
-                    width: 24px; height: 24px; border-radius: 8px; border: none; background: #f1f5f9;
+                    width: 44px; height: 44px; border-radius: 14px; border: none; background: white;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
                     display: flex; align-items: center; justify-content: center; cursor: pointer;
                 }
+                .action-mini-btn i { font-size: 20px !important; }
             </style>
         `;
     }
