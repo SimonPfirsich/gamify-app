@@ -54,10 +54,8 @@
 <body>
     <div id="app">
         <div id="pull-to-refresh"
-            style="position: absolute; top: -50px; left: 0; width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 13px; z-index: 5000; pointer-events: none; transition: transform 0.2s;">
-            <i class="ph ph-arrow-counter-clockwise" id="refresh-icon"
-                style="font-size: 20px; transition: transform 0.2s;"></i>
-            <span style="margin-left: 8px;">Aktualisieren...</span>
+            style="position: absolute; top: 10px; left: 50%; transform: translate3d(-50%, -100px, 0); width: 42px; height: 42px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 5000; pointer-events: none; transition: transform 0.1s linear, opacity 0.2s; opacity: 0;">
+            <i class="ph-bold ph-arrow-counter-clockwise" id="refresh-icon" style="font-size: 20px;"></i>
         </div>
         <main id="content" class="content-area">
             <div class="loading-spinner">

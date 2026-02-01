@@ -364,7 +364,7 @@ export class ChatView {
             // Better keyboard-close detection via visualViewport
             if (window.visualViewport) {
                 window.visualViewport.addEventListener('resize', () => {
-                    if (window.visualViewport.height > window.innerHeight * 0.9) {
+                    if (window.visualViewport.height > window.innerHeight * 0.9 && document.activeElement !== singleEmojiInput) {
                         closePicker();
                     }
                 });

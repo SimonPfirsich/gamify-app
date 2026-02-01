@@ -69,13 +69,15 @@ class App {
         document.addEventListener('touchmove', (e) => {
             if (!this.isPulling) return;
             const y = e.touches[0].pageY;
-            this.pullDelta = Math.max(0, (y - this.startY) * 0.5);
+            this.pullDelta = Math.max(0, (y - this.startY) * 0.4);
 
             if (this.pullDelta > 0) {
-                refresher.style.transform = `translate3d(0, ${Math.min(this.pullDelta, 60)}px, 0) `;
-                icon.style.transform = `rotate(${this.pullDelta * 3}deg)`;
+                refresher.style.opacity = Math.min(this.pullDelta / 50, 1);
+                const visualY = Math.min(this.pullDelta, 140);
+                refresher.style.transform = `translate3d(-50%, ${visualY}px, 0)`;
+                icon.style.transform = `rotate(${this.pullDelta * 4}deg)`;
 
-                if (this.pullDelta > 60) {
+                if (this.pullDelta > 85) {
                     refresher.style.color = 'var(--primary-dark)';
                 } else {
                     refresher.style.color = 'var(--primary)';
@@ -87,13 +89,13 @@ class App {
             if (!this.isPulling) return;
             this.isPulling = false;
 
-            if (this.pullDelta > 55) {
-                refresher.style.transform = 'translate3d(0, 50px, 0)';
+            if (this.pullDelta > 85) {
+                refresher.style.transform = 'translate3d(-50%, 60px, 0)';
                 icon.classList.add('ph-spin');
-                // Hard reload to clear PWA cache/service worker if present
                 setTimeout(() => location.reload(true), 400);
             } else {
-                refresher.style.transform = '';
+                refresher.style.transform = 'translate3d(-50%, -100px, 0)';
+                refresher.style.opacity = '0';
                 icon.style.transform = '';
             }
             this.pullDelta = 0;
