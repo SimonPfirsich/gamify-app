@@ -75,9 +75,9 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="drag-handle-tile" style="position: absolute; top: 12px; color: #1e293b;">
-                                                <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
-                                            </div>
+                                            <div class="drag-handle-ratio" style="position: absolute; top: 8px; color: #1e293b; width: 100%; display: flex; justify-content: center;">
+                        <span style="font-size: 32px;">✋</span>
+                    </div>
                                             <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px; z-index: 102;">
                                                 <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
                                                     <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
@@ -91,7 +91,7 @@ export class ActionView {
                                         <!-- Edit Controls List View -->
                                         ${isEditingThis && this.currentView === 'list' ? `
                                              <div class="drag-handle-list" style="margin-right: 15px; color: #1e293b;">
-                                                <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
+                                                <span style="font-size: 32px;">✋</span>
                                             </div>
                                         ` : ''}
 

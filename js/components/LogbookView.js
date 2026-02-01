@@ -110,11 +110,7 @@ export class LogbookView {
 
             return `
                         <div class="log-item ${isEditingThis ? 'edit-mode-item' : ''}" data-id="${event.id}" style="position: relative; display: flex; align-items: center;">
-                            ${isEditingThis && isMe ? `
-                                <div class="drag-handle-list" style="margin-right: 15px; color: #1e293b;">
-                                     <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
-                                </div>
-                            ` : ''}
+
 
                             <div class="log-left" style="opacity: ${isEditingThis ? 0.3 : 1}; flex: 1;">
                 <div class="log-info-main">

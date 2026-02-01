@@ -142,6 +142,24 @@ body {
     font-weight: 500;
 }
 
+/* Chat Layout Overrides */
+body.chat-active #content {
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100dvh;
+    /* Ensure it respects dynamic viewport */
+}
+
+/* Analytics Grid Layout */
+.ratios-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 16px;
+}
+
 /* --- Filters & Inputs --- */
 .filter-pill {
     flex: 1;

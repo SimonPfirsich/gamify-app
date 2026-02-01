@@ -50,21 +50,24 @@ export class ChatView {
         this.forceScroll = false;
 
         return `
-            <div class="header" style="padding-bottom: 5px;">
-                <h1>${this.t('chat')}</h1>
-                <div style="font-size: 10px; color: var(--text-muted); cursor: pointer;" id="test-user-switch">
-                    ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
+            <div id="chat-flex-container" style="display: flex; flex-direction: column; height: 100%; position: relative;">
+                
+                <div class="header" style="flex-shrink: 0; padding-bottom: 5px;">
+                    <h1>${this.t('chat')}</h1>
+                    <div style="font-size: 10px; color: var(--text-muted); cursor: pointer;" id="test-user-switch">
+                        ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
+                    </div>
                 </div>
-            </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 20px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
-                ${(() => {
+
+                <div id="chat-feed" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 16px; display: flex; flex-direction: column; gap: 4px;">
+                    ${(() => {
                 let lastDate = null;
                 return chat.map(msg => {
                     const msgDate = new Date(msg.created_at).toDateString();
                     let dateDivider = '';
                     if (msgDate !== lastDate) {
                         lastDate = msgDate;
-                        dateDivider = `<div class="date-divider" style="align-self: center; background: #fff; border: 1px solid #eee; padding: 4px 12px; border-radius: 12px; font-size: 11px; color: #64748b; margin: 10px 0; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">${this.formatDividerDate(msg.created_at)}</div>`;
+                        dateDivider = `<div class="date-divider" style="align-self: center; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 12px; font-size: 11px; color: #64748b; margin: 12px 0; font-weight: 500;">${this.formatDividerDate(msg.created_at)}</div>`;
                     }
 
                     const isMe = msg.user_id === currentUser.id;
@@ -88,60 +91,101 @@ export class ChatView {
                     }
 
                     return `
-                        ${dateDivider}
-                        <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
-                            <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
-                                ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
-                                <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: ${isEvent ? '85%' : '100%'};">
-                                    <div class="message-bubble" style="
-                                        background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
-                                        color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
-                                        padding: ${isEvent ? '4px 10px' : '8px 12px 6px'}; 
-                                        border-radius: 18px; 
-                                        ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
-                                        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                                        border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
-                                        font-size: ${isEvent ? '11px' : '15px'};
-                                        cursor: pointer;
-                                        min-width: 40px;
-                                    ">
-                                        ${replyMsg ? `
-                                            <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
-                                                <strong>${replyMsg.user_id === currentUser.id ? 'Du' : (store.state.users.find(u => u.id === replyMsg.user_id)?.name || 'User')}</strong><br>
-                                                ${replyMsg.content.substring(0, 25)}...
+                                ${dateDivider}
+                                <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
+                                    <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0; width: 100%; box-sizing: border-box;">
+                                        ${isEvent ? '' : `<div style="width: 28px; height: 28px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">${user.avatar}</div>`}
+                                        <div style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; max-width: ${isEvent ? '85%' : '80%'};">
+                                            <div class="message-bubble" style="
+                                                background: ${isEvent ? '#f1f5f9' : (isMe ? 'var(--primary)' : 'white')}; 
+                                                color: ${isEvent ? '#64748b' : (isMe ? 'white' : 'var(--text-dark)')};
+                                                padding: ${isEvent ? '4px 10px' : '8px 12px 6px'}; 
+                                                border-radius: 18px; 
+                                                ${isEvent ? '' : `border-bottom-${isMe ? 'right' : 'left'}-radius: 4px;`}
+                                                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                                                border: ${isMe || isEvent ? 'none' : '1px solid #e2e8f0'};
+                                                font-size: ${isEvent ? '11px' : '15px'};
+                                                cursor: pointer;
+                                                min-width: 40px;
+                                            ">
+                                                ${replyMsg ? `
+                                                    <div style="background: rgba(0,0,0,0.05); padding: 4px 6px; border-radius: 6px; font-size: 11px; margin-bottom: 4px; border-left: 2px solid ${isMe ? 'white' : 'var(--primary)'}; opacity: 0.8;">
+                                                        <strong>${replyMsg.user_id === currentUser.id ? 'Du' : (store.state.users.find(u => u.id === replyMsg.user_id)?.name || 'User')}</strong><br>
+                                                        ${replyMsg.content.substring(0, 25)}...
+                                                    </div>
+                                                ` : ''}
+                                                <div style="line-height: 1.4; display: flex; flex-direction: column;"><div style="white-space: pre-wrap; display: inline;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div><div style="font-size: 9px; opacity: 0.6; align-self: flex-end; margin-top: 2px; font-weight: 300; pointer-events: none;">${this.formatTime(msg.created_at)}</div></div>
                                             </div>
-                                        ` : ''}
-                                        <div style="line-height: 1.4; display: flex; flex-direction: column;"><div style="white-space: pre-wrap; display: inline;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div><div style="font-size: 9px; opacity: 0.6; align-self: flex-end; margin-top: 2px; font-weight: 300; pointer-events: none;">${this.formatTime(msg.created_at)}</div></div>
-                                    </div>
-                                    ${reactions.length > 0 ? `
-                                        <div class="reaction-pill" data-msg-id="${msg.id}" style="
-                                            display: flex; align-items: center; gap: 0px; 
-                                            background: white; border: 1px solid #e2e8f0; 
-                                            border-radius: 12px; padding: 2px 4px 2px 6px; margin-top: -10px; 
-                                            margin-${isMe ? 'right' : 'left'}: 8px; 
-                                            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-                                            font-size: 14px; cursor: pointer; z-index: 10;
-                                        ">
-                                            <div style="display: flex; align-items: center; pointer-events: none;">
-                                                ${displayEmojis.map(e => `
-                                                    <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
-                                                `).join('')}
-                                            </div>
-                                            <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px; pointer-events: none;">
-                                                ${reactions.length}
-                                            </span>
+                                            ${reactions.length > 0 ? `
+                                                <div class="reaction-pill" data-msg-id="${msg.id}" style="
+                                                    display: flex; align-items: center; gap: 0px; 
+                                                    background: white; border: 1px solid #e2e8f0; 
+                                                    border-radius: 12px; padding: 2px 4px 2px 6px; margin-top: -10px; 
+                                                    margin-${isMe ? 'right' : 'left'}: 8px; 
+                                                    box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+                                                    font-size: 14px; cursor: pointer; z-index: 10;
+                                                ">
+                                                    <div style="display: flex; align-items: center; pointer-events: none;">
+                                                        ${displayEmojis.map(e => `
+                                                            <span class="emoji-span ${myEmojis.includes(e) ? 'is-mine' : ''}" style="display: inline-flex; font-size: 11px;">${e}</span>
+                                                        `).join('')}
+                                                    </div>
+                                                    <span style="color: var(--text-muted); font-weight: 500; font-size: 11px; margin-left: 2px; pointer-events: none;">
+                                                        ${reactions.length}
+                                                    </span>
+                                                </div>
+                                            ` : ''}
                                         </div>
-                                    ` : ''}
+                                    </div>
+                                    <div class="swipe-indicator" style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
+                                        <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="swipe-indicator" style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); opacity: 0; pointer-events: none;">
-                                <i class="ph ph-arrow-bend-up-left" style="font-size: 20px; color: var(--primary);"></i>
-                            </div>
-                        </div>
-                    `;
+                            `;
                 }).join('');
             })()}
+                    <div style="height: 10px; flex-shrink: 0;"></div>
+                </div>
+
+                <!-- INPUT AREA (Sits in flex flow) -->
+                <div class="chat-input-area" style="flex-shrink: 0; background: white; border-top: 1px solid #f1f5f9; position: relative;">
+                    <!-- Reply Preview (Absolute, pops up) -->
+                    <div id="reply-preview" style="display: none; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: var(--text-muted);">
+                        <span id="reply-text" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%;"></span>
+                        <button id="cancel-reply" style="background: none; border: none; font-size: 16px; color: #94a3b8; padding: 0 4px;">&times;</button>
+                    </div>
+
+                    <div style="padding: 10px 12px; display: flex; align-items: center; gap: 8px;">
+                         <button id="show-full-picker-btn" style="width: 36px; height: 36px; border-radius: 50%; border: none; background: #f1f5f9; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">
+                            <i class="ph ph-smiley"></i>
+                        </button>
+                        <input type="text" id="chat-input" placeholder="${this.t('chat_placeholder')}" style="flex: 1; height: 40px; border-radius: 20px; border: 1px solid #e2e8f0; padding: 0 16px; font-size: 15px; outline: none; background: #f8fafc;">
+                        <button id="send-btn" style="width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px var(--primary-glow);">
+                            <i class="ph ph-paper-plane-right" style="font-size: 20px;"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
+            
+            <style>
+                /* Adjust padding when nav is visible */
+                .chat-input-area {
+                    padding-bottom: calc(var(--safe-area-bottom) + 10px) !important; 
+                    /* Default for keyboard open or no nav? No, when keyboard is open nav is hidden. We need conditional. */
+                }
+                
+                /* When Nav is present (default), add extra space so input is not covered */
+                 @media (min-height: 500px) { /* Heuristic for 'keyboard likely closed' */
+                    .chat-input-area {
+                       padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 10px) !important;
+                    }
+                 }
+                
+                /* Override if body has .keyboard-open */
+                body.keyboard-open .chat-input-area {
+                    padding-bottom: 10px !important;
+                }
+            </style>
         `;
     }
 

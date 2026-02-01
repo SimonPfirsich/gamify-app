@@ -129,7 +129,7 @@ export class AnalyticsView {
             <div id="ratios-container" style="margin-top: 10px;">
                 <h3 style="padding: 0 16px; font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">${this.t('ratios')}</h3>
                 ${savedRatios.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
-                <div id="ratio-list">
+                <div id="ratio-list" class="ratios-grid">
                     ${savedRatios.map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions)).join('')}
                 </div>
             </div>
