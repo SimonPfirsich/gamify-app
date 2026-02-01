@@ -115,8 +115,6 @@ export class LogbookView {
                                      <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
                                 </div>
                             ` : ''}
-                            ` : ''
-        }
 
                             <div class="log-left" style="opacity: ${isEditingThis ? 0.3 : 1}; flex: 1;">
                 <div class="log-info-main">
@@ -131,8 +129,7 @@ export class LogbookView {
                 </div>
             </div>
                             
-                            ${
-            isEditingThis && isMe ? `
+                            ${isEditingThis && isMe ? `
                                 <div class="edit-controls-list" style="display: flex; gap: 8px; margin-left: auto; padding-left: 10px;">
                                     <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
                                         <i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i>
@@ -142,11 +139,11 @@ export class LogbookView {
                                     </button>
                                 </div>
                             ` : ''
-            }
+                }
                         </div >
                 `;
-    }).join('')
-}
+        }).join('')
+            }
             </div >
 
             < !--MODAL FOR ADD / EDIT-- >
@@ -184,153 +181,153 @@ export class LogbookView {
         </div>
     </div>
 `;
-        }
+    }
 
     afterRender() {
-            const userSelect = document.getElementById('filter-user');
-            const actionSelect = document.getElementById('filter-action');
-            const timeSelect = document.getElementById('filter-time');
-            const customStart = document.getElementById('custom-start');
-            const customEnd = document.getElementById('custom-end');
+        const userSelect = document.getElementById('filter-user');
+        const actionSelect = document.getElementById('filter-action');
+        const timeSelect = document.getElementById('filter-time');
+        const customStart = document.getElementById('custom-start');
+        const customEnd = document.getElementById('custom-end');
 
-            const triggerAdd = document.getElementById('add-log-trigger');
-            const modal = document.getElementById('log-modal');
-            const sheet = document.getElementById('log-sheet');
-            const overlay = document.getElementById('log-modal-overlay');
-            const submitBtn = document.getElementById('submit-log-btn');
-            const closeBtn = document.getElementById('close-log-modal');
+        const triggerAdd = document.getElementById('add-log-trigger');
+        const modal = document.getElementById('log-modal');
+        const sheet = document.getElementById('log-sheet');
+        const overlay = document.getElementById('log-modal-overlay');
+        const submitBtn = document.getElementById('submit-log-btn');
+        const closeBtn = document.getElementById('close-log-modal');
 
-            const logUserSelect = document.getElementById('log-user-select');
-            const logActionSelect = document.getElementById('log-action-select');
-            const logDateInput = document.getElementById('log-date-input');
-            const userGroup = document.getElementById('user-select-group');
+        const logUserSelect = document.getElementById('log-user-select');
+        const logActionSelect = document.getElementById('log-action-select');
+        const logDateInput = document.getElementById('log-date-input');
+        const userGroup = document.getElementById('user-select-group');
 
-            const currentUser = store.state.currentUser;
-            const isAdmin = currentUser.name === 'Julius';
-            let currentId = null;
+        const currentUser = store.state.currentUser;
+        const isAdmin = currentUser.name === 'Julius';
+        let currentId = null;
 
-            const openModal = (id = null) => {
-                currentId = id;
-                if (id) {
-                    const ev = store.state.events.find(e => e.id === id);
-                    if (!ev) return;
-                    document.getElementById('modal-title').innerText = this.t('edit_activity');
-                    logActionSelect.value = ev.action_id;
-                    logUserSelect.value = ev.user_id;
-                    userGroup.style.display = 'none';
-                    const d = new Date(ev.created_at);
-                    const offset = d.getTimezoneOffset() * 60000;
-                    logDateInput.value = (new Date(d - offset)).toISOString().slice(0, 16);
-                } else {
-                    document.getElementById('modal-title').innerText = this.t('log_activity');
-                    logActionSelect.selectedIndex = 0;
-                    logUserSelect.value = currentUser.id;
-                    userGroup.style.display = isAdmin ? 'block' : 'none';
-                    const now = new Date();
-                    const offset = now.getTimezoneOffset() * 60000;
-                    logDateInput.value = (new Date(now - offset)).toISOString().slice(0, 16);
-                }
-                modal.classList.add('active');
-                setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.classList.add('open'); }, 10);
-            };
+        const openModal = (id = null) => {
+            currentId = id;
+            if (id) {
+                const ev = store.state.events.find(e => e.id === id);
+                if (!ev) return;
+                document.getElementById('modal-title').innerText = this.t('edit_activity');
+                logActionSelect.value = ev.action_id;
+                logUserSelect.value = ev.user_id;
+                userGroup.style.display = 'none';
+                const d = new Date(ev.created_at);
+                const offset = d.getTimezoneOffset() * 60000;
+                logDateInput.value = (new Date(d - offset)).toISOString().slice(0, 16);
+            } else {
+                document.getElementById('modal-title').innerText = this.t('log_activity');
+                logActionSelect.selectedIndex = 0;
+                logUserSelect.value = currentUser.id;
+                userGroup.style.display = isAdmin ? 'block' : 'none';
+                const now = new Date();
+                const offset = now.getTimezoneOffset() * 60000;
+                logDateInput.value = (new Date(now - offset)).toISOString().slice(0, 16);
+            }
+            modal.classList.add('active');
+            setTimeout(() => { modal.style.background = 'rgba(0,0,0,0.4)'; sheet.classList.add('open'); }, 10);
+        };
 
-            const closeModal = () => {
-                if (this.editingId) {
-                    this.editingId = null;
+        const closeModal = () => {
+            if (this.editingId) {
+                this.editingId = null;
+                this.renderUpdate();
+                return;
+            }
+            modal.style.background = 'rgba(0,0,0,0)';
+            sheet.classList.remove('open');
+            setTimeout(() => modal.classList.remove('active'), 300);
+        };
+
+        this.closeModal = closeModal;
+
+        if (userSelect) userSelect.onchange = () => { this.filterUser = userSelect.value; this.renderUpdate(); };
+        if (actionSelect) actionSelect.onchange = () => { this.filterAction = actionSelect.value; this.renderUpdate(); };
+        if (timeSelect) timeSelect.onchange = () => { this.filterTime = timeSelect.value; this.renderUpdate(); };
+        if (customStart) customStart.onchange = () => { this.customStart = customStart.value; this.renderUpdate(); };
+        if (customEnd) customEnd.onchange = () => { this.customEnd = customEnd.value; this.renderUpdate(); };
+
+        if (triggerAdd) triggerAdd.onclick = () => openModal();
+        if (overlay) overlay.onclick = closeModal;
+        if (closeBtn) closeBtn.onclick = closeModal;
+
+        const container = document.getElementById('log-list');
+
+        document.querySelectorAll('.log-item').forEach(item => {
+            item.onmousedown = item.ontouchstart = (e) => {
+                if (this.editingId) return;
+                this.longPressTimer = setTimeout(() => {
+                    this.editingId = item.dataset.id;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    // Push state for back button integration
+                    history.pushState({ editMode: true }, '');
                     this.renderUpdate();
-                    return;
-                }
-                modal.style.background = 'rgba(0,0,0,0)';
-                sheet.classList.remove('open');
-                setTimeout(() => modal.classList.remove('active'), 300);
+                }, 700);
             };
 
-            this.closeModal = closeModal;
+            item.onmouseup = item.onmouseleave = item.ontouchend = () => {
+                clearTimeout(this.longPressTimer);
+            };
+        });
 
-            if(userSelect) userSelect.onchange = () => { this.filterUser = userSelect.value; this.renderUpdate(); };
-            if(actionSelect) actionSelect.onchange = () => { this.filterAction = actionSelect.value; this.renderUpdate(); };
-            if(timeSelect) timeSelect.onchange = () => { this.filterTime = timeSelect.value; this.renderUpdate(); };
-            if(customStart) customStart.onchange = () => { this.customStart = customStart.value; this.renderUpdate(); };
-            if(customEnd) customEnd.onchange = () => { this.customEnd = customEnd.value; this.renderUpdate(); };
-
-            if(triggerAdd) triggerAdd.onclick = () => openModal();
-            if(overlay) overlay.onclick = closeModal;
-            if(closeBtn) closeBtn.onclick = closeModal;
-
-            const container = document.getElementById('log-list');
-
-            document.querySelectorAll('.log-item').forEach(item => {
-                item.onmousedown = item.ontouchstart = (e) => {
-                    if (this.editingId) return;
-                    this.longPressTimer = setTimeout(() => {
-                        this.editingId = item.dataset.id;
-                        if (navigator.vibrate) navigator.vibrate(50);
-                        // Push state for back button integration
-                        history.pushState({ editMode: true }, '');
+        // Exit Edit Mode Logic - Global / Container
+        const appContainer = document.getElementById('app');
+        if (appContainer) { // Global click to catch outside
+            this.handleOutsideClick = (e) => {
+                if (this.editingId && !e.target.closest('.log-item')) {
+                    if (history.state && history.state.editMode) history.back();
+                    else {
+                        this.editingId = null;
                         this.renderUpdate();
-                    }, 700);
-                };
-
-                item.onmouseup = item.onmouseleave = item.ontouchend = () => {
-                    clearTimeout(this.longPressTimer);
-                };
-            });
-
-            // Exit Edit Mode Logic - Global / Container
-            const appContainer = document.getElementById('app');
-            if(appContainer) { // Global click to catch outside
-                this.handleOutsideClick = (e) => {
-                    if (this.editingId && !e.target.closest('.log-item')) {
-                        if (history.state && history.state.editMode) history.back();
-                        else {
-                            this.editingId = null;
-                            this.renderUpdate();
-                        }
                     }
-                };
-                document.body.addEventListener('click', this.handleOutsideClick, { once: true });
-            }
-         
-         if(container) {
-                container.onclick = (e) => {
-                    if (this.editingId && !e.target.closest('.log-item') && !e.target.closest('.edit-controls-list')) {
-                        if (history.state && history.state.editMode) history.back();
-                        else {
-                            this.editingId = null;
-                            this.renderUpdate();
-                        }
+                }
+            };
+            document.body.addEventListener('click', this.handleOutsideClick, { once: true });
+        }
+
+        if (container) {
+            container.onclick = (e) => {
+                if (this.editingId && !e.target.closest('.log-item') && !e.target.closest('.edit-controls-list')) {
+                    if (history.state && history.state.editMode) history.back();
+                    else {
+                        this.editingId = null;
+                        this.renderUpdate();
                     }
-                };
-            }
+                }
+            };
+        }
 
         document.querySelectorAll('.edit-log-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(btn.dataset.id); });
-            document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm(this.t('delete_confirm'))) {
-                    await store.deleteEvent(btn.dataset.id);
-                    // Stay in edit mode if there are other items? 
-                    // Currently store delete triggers notify -> re-render -> isEditMode persists if instance not recreated?
-                    // The re-render creates a new view instance if done via app.js? No, app.js calls render() on same instance.
-                }
-            });
-
-            if(submitBtn) {
-                submitBtn.onclick = async () => {
-                    const actionId = logActionSelect.value;
-                    const userId = logUserSelect.value;
-                    const date = new Date(logDateInput.value).toISOString();
-                    if (currentId) await store.updateEvent(currentId, actionId, date);
-                    else {
-                        const challenge = store.state.challenges.find(c => c.actions.some(a => a.id === actionId));
-                        await store.addEventManual(challenge.id, actionId, userId, date);
-                    }
-                    closeModal();
-                };
+        document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
+            e.stopPropagation();
+            if (confirm(this.t('delete_confirm'))) {
+                await store.deleteEvent(btn.dataset.id);
+                // Stay in edit mode if there are other items? 
+                // Currently store delete triggers notify -> re-render -> isEditMode persists if instance not recreated?
+                // The re-render creates a new view instance if done via app.js? No, app.js calls render() on same instance.
             }
+        });
+
+        if (submitBtn) {
+            submitBtn.onclick = async () => {
+                const actionId = logActionSelect.value;
+                const userId = logUserSelect.value;
+                const date = new Date(logDateInput.value).toISOString();
+                if (currentId) await store.updateEvent(currentId, actionId, date);
+                else {
+                    const challenge = store.state.challenges.find(c => c.actions.some(a => a.id === actionId));
+                    await store.addEventManual(challenge.id, actionId, userId, date);
+                }
+                closeModal();
+            };
         }
+    }
 
     renderUpdate() {
-            const content = document.getElementById('content');
-            if(content) { content.innerHTML = this.render(); this.afterRender(); }
-        }
+        const content = document.getElementById('content');
+        if (content) { content.innerHTML = this.render(); this.afterRender(); }
+    }
 }
