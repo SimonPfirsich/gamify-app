@@ -40,33 +40,34 @@ body {
     background: #fff;
 }
 
-/* STICKY HEADER - Absolute zero gap */
+/* STICKY HEADER - Precise height for no-gap stickiness */
 .header {
-    padding: 20px 16px 0px;
-    /* No bottom padding */
+    padding: 15px 16px 5px;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     background: white;
-    z-index: 101;
+    z-index: 102;
     margin: 0;
 }
 
 .header h1 {
     font-size: 20px;
     text-align: center;
-    margin: 0 0 4px 0;
+    margin: 0;
+    line-height: 1.2;
 }
 
 .header p {
     text-align: center;
-    margin: 0 0 10px 0;
-    /* Margin used for spacing instead of padding */
+    margin: 0;
+    line-height: 1.4;
+    font-size: 13px;
 }
 
-/* FILTER BAR - Seamlessly integrated */
+/* FILTER BAR - Seamlessly integrated under 59px header (15+24+16+5=60ish) */
 .filter-bar {
-    padding: 0 16px 16px;
+    padding: 10px 16px 16px;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -74,8 +75,8 @@ body {
     flex-wrap: wrap;
     position: -webkit-sticky;
     position: sticky;
-    top: 65px;
-    /* Adjusting top to perfectly meet the header */
+    top: 59px;
+    /* Matches the header height exactly */
     z-index: 101;
     border-bottom: 1px solid #f8fafc;
     margin: 0;
@@ -369,19 +370,19 @@ body {
     background-position: right 15px center;
 }
 
-/* --- Chat Input --- Safety margin from nav */
+/* --- Chat Input --- Directly on nav for zero gap */
 #chat-input-container {
     position: fixed;
-    bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 1px);
+    bottom: calc(var(--nav-height) + var(--safe-area-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 450px;
-    z-index: 3000;
+    z-index: 1500;
     /* Stays below nav (4000) */
     pointer-events: none;
     display: none;
-    background: linear-gradient(to bottom, transparent 0%, transparent 60%, white 60%, white 100%);
+    background: linear-gradient(to bottom, transparent 0%, transparent 45%, white 45%, white 100%);
 }
 
 #chat-input-container .input-wrapper {
