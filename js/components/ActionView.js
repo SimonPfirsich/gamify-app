@@ -75,10 +75,10 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="drag-handle-tile" style="position: absolute; top: 8px; color: #cbd5e1;">
-                                                <i class="ph ph-dots-six-vertical" style="font-size: 24px;"></i>
+                                            <div class="drag-handle-tile" style="position: absolute; top: 12px; color: #1e293b;">
+                                                <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
                                             </div>
-                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px;">
+                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px; z-index: 102;">
                                                 <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
                                                     <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
                                                 </button>
@@ -90,8 +90,8 @@ export class ActionView {
 
                                         <!-- Edit Controls List View -->
                                         ${isEditingThis && this.currentView === 'list' ? `
-                                             <div class="drag-handle-list" style="margin-right: 15px; color: #cbd5e1;">
-                                                <i class="ph ph-dots-six-vertical" style="font-size: 24px;"></i>
+                                             <div class="drag-handle-list" style="margin-right: 15px; color: #1e293b;">
+                                                <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
                                             </div>
                                         ` : ''}
 
@@ -299,11 +299,7 @@ export class ActionView {
             if (this.editingId) {
                 this.editingId = null;
                 this.renderUpdate();
-                // If we pushed state for edit mode, we should go back?
-                // The issue is if we click "outside" (not back button), we are still in "edit" history state?
-                // For simplicity, let's not push history state for edit mode yet, just rely on Back to CLOSE MODALS. 
-                // Wait, user request: "durch die Android-Zurück-Taste wieder verlassen werden können"
-                // So we MUST push state.
+                // Pop history if we have an editMode state
                 if (history.state && history.state.editMode) {
                     history.back();
                 }

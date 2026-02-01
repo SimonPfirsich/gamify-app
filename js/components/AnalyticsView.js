@@ -7,7 +7,7 @@ export class AnalyticsView {
         this.filterTime = 'all';
         this.customStart = '';
         this.customEnd = '';
-        this.isEditMode = false;
+        this.editingId = null; // Single item edit mode
         this.longPressTimer = null;
     }
 
@@ -211,16 +211,25 @@ export class AnalyticsView {
         const plural1 = this.pluralize(act1.name);
         const plural2 = this.pluralize(act2.name);
 
+        const isEditingThis = this.editingId === String(index);
+
         return `
-            <div class="ratio-card ${this.isEditMode ? 'edit-mode' : ''}" data-index="${index}" draggable="true">
-                <div class="ratio-info">
+            <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" draggable="${!!this.editingId}" style="position: relative; overflow: visible;">
+                ${isEditingThis ? `
+                     <div class="drag-handle-ratio" style="position: absolute; top: 8px; color: #1e293b; width: 100%; display: flex; justify-content: center;">
+                        <i class="ph ph-dots-six-vertical" style="font-size: 32px; font-weight: bold;"></i>
+                    </div>
+                ` : ''}
+                
+                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1};">
                     <span class="ratio-label">${plural1} ${this.t('pro')} ${act2.name}</span>
                     <span class="ratio-value">${percentage}%</span>
                     <span class="ratio-details">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
-                <div class="edit-controls" style="display: ${this.isEditMode ? 'flex' : 'none'}; position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100%; justify-content:center; gap:12px; z-index:20; pointer-events:none;">
-                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 44px; height: 44px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 20px; color: #64748b;"></i></button>
-                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 44px; height: 44px; border-radius: 14px; background: #fee2e2; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i></button>
+
+                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: center; gap: 12px; z-index: 20;">
+                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 20px; color: #64748b;"></i></button>
+                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 40px; height: 40px; border-radius: 12px; background: #fee2e2; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i></button>
                 </div>
             </div>
         `;
@@ -260,10 +269,17 @@ export class AnalyticsView {
         };
 
         const closeModal = () => {
+            if (this.editingId) {
+                this.editingId = null;
+                this.renderUpdate();
+                return;
+            }
             modal.style.background = 'rgba(0,0,0,0)';
             sheet.classList.remove('open');
             setTimeout(() => modal.classList.remove('active'), 300);
         };
+
+        this.closeModal = closeModal; // Bind to instance for App.js to call
 
         if (trigger) trigger.onclick = () => openModal();
         if (overlay) overlay.onclick = closeModal;
@@ -298,10 +314,12 @@ export class AnalyticsView {
         const cards = document.querySelectorAll('.ratio-card');
         cards.forEach(card => {
             card.onmousedown = card.ontouchstart = (e) => {
-                if (this.isEditMode) return;
+                if (this.editingId) return;
                 this.longPressTimer = setTimeout(() => {
-                    this.isEditMode = true;
+                    this.editingId = card.dataset.index;
                     if (navigator.vibrate) navigator.vibrate(50);
+                    // Push state for back button integration
+                    history.pushState({ editMode: true }, '');
                     this.renderUpdate();
                 }, 700);
             };
@@ -309,12 +327,15 @@ export class AnalyticsView {
                 clearTimeout(this.longPressTimer);
             };
 
-            if (this.isEditMode) {
-                card.addEventListener('dragstart', () => card.classList.add('dragging'));
+            if (this.editingId) {
+                card.addEventListener('dragstart', () => {
+                    if (card.dataset.index === this.editingId) card.classList.add('dragging');
+                });
                 card.addEventListener('dragend', () => {
                     card.classList.remove('dragging');
                     const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[c.dataset.index]);
+                    // Need to reconstruct order from DOM
+                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[parseInt(c.dataset.index)]);
                     localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
                     this.renderUpdate();
                 });
@@ -322,12 +343,35 @@ export class AnalyticsView {
         });
 
         // Exit edit mode on click outside
+        // Using global click handler for robustness
+        const appContainer = document.getElementById('app');
+        if (appContainer) {
+            this.handleOutsideClick = (e) => {
+                if (this.editingId && !e.target.closest('.ratio-card')) {
+                    // Check if history state needs popping
+                    if (history.state && history.state.editMode) history.back();
+                    else {
+                        this.editingId = null;
+                        this.renderUpdate();
+                    }
+                }
+            };
+            document.body.addEventListener('click', this.handleOutsideClick, { once: true }); // Attach once per render or handle cleanup? 
+            // Better: attached globally but checked. Since we render often, maybe attaching to body repeatedly is bad.
+            // Actually renderUpdate is called, which re-attaches. 
+            // Let's use the local container click for simplicity first, as ActionView did it globally but we can try local if it works.
+        }
+
         const ratioList = document.getElementById('ratio-list');
         if (ratioList) {
             ratioList.onclick = (e) => {
-                if (this.isEditMode && !e.target.closest('.ratio-card')) {
-                    this.isEditMode = false;
-                    this.renderUpdate();
+                if (this.editingId && !e.target.closest('.ratio-card') && !e.target.closest('.edit-controls')) {
+                    // Manual exit
+                    if (history.state && history.state.editMode) history.back();
+                    else {
+                        this.editingId = null;
+                        this.renderUpdate();
+                    }
                 }
             };
         }
@@ -335,8 +379,10 @@ export class AnalyticsView {
         const list = document.getElementById('ratio-list');
         if (list) {
             list.addEventListener('dragover', e => {
+                if (!this.editingId) return;
                 e.preventDefault();
                 const dragging = document.querySelector('.dragging');
+                if (!dragging) return;
                 const afterElement = this.getDragAfterElement(list, e.clientY);
                 if (afterElement == null) list.appendChild(dragging);
                 else list.insertBefore(dragging, afterElement);
