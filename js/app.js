@@ -17,6 +17,9 @@ class App {
             logbook: new LogbookView(),
             chat: new ChatView()
         };
+        this.startY = 0;
+        this.pullDelta = 0;
+        this.isPulling = false;
         this.init();
     }
 
@@ -41,12 +44,60 @@ class App {
             window.visualViewport.addEventListener('resize', updateLayout);
         }
 
+        this.setupPullToRefresh();
+
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
 
         this.switchTab('actions');
         store.subscribe(() => this.render());
+    }
+
+    setupPullToRefresh() {
+        const content = document.getElementById('content');
+        const refresher = document.getElementById('pull-to-refresh');
+        const icon = document.getElementById('refresh-icon');
+
+        document.addEventListener('touchstart', (e) => {
+            if (content.scrollTop <= 0) {
+                this.startY = e.touches[0].pageY;
+                this.isPulling = true;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!this.isPulling) return;
+            const y = e.touches[0].pageY;
+            this.pullDelta = Math.max(0, (y - this.startY) * 0.5);
+
+            if (this.pullDelta > 0) {
+                refresher.style.transform = `translate3d(0, ${Math.min(this.pullDelta, 60)}px, 0) `;
+                icon.style.transform = `rotate(${this.pullDelta * 3}deg)`;
+
+                if (this.pullDelta > 60) {
+                    refresher.style.color = 'var(--primary-dark)';
+                } else {
+                    refresher.style.color = 'var(--primary)';
+                }
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (!this.isPulling) return;
+            this.isPulling = false;
+
+            if (this.pullDelta > 60) {
+                refresher.style.transform = 'translate3d(0, 50px, 0)';
+                icon.classList.add('ph-spin');
+                // Hard reload to clear PWA cache/service worker if present
+                setTimeout(() => location.reload(true), 500);
+            } else {
+                refresher.style.transform = '';
+                icon.style.transform = '';
+            }
+            this.pullDelta = 0;
+        });
     }
 
     updateNavLabels() {

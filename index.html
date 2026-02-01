@@ -53,6 +53,12 @@
 
 <body>
     <div id="app">
+        <div id="pull-to-refresh"
+            style="position: absolute; top: -50px; left: 0; width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 13px; z-index: 5000; pointer-events: none; transition: transform 0.2s;">
+            <i class="ph ph-arrow-counter-clockwise" id="refresh-icon"
+                style="font-size: 20px; transition: transform 0.2s;"></i>
+            <span style="margin-left: 8px;">Aktualisieren...</span>
+        </div>
         <main id="content" class="content-area">
             <div class="loading-spinner">
                 <div class="spinner"></div>

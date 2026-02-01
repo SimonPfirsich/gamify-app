@@ -28,7 +28,7 @@ export class ChatView {
         yesterday.setDate(today.getDate() - 1);
 
         if (date.toDateString() === today.toDateString()) return this.t('today') || 'Heute';
-        if (date.toDateString() === yesterday.toDateString()) return 'Gestern';
+        if (date.toDateString() === yesterday.toDateString()) return this.t('yesterday') || 'Gestern';
 
         const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
         const daysEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -56,7 +56,7 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 110px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 75px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${(() => {
                 let lastDate = null;
                 return chat.map(msg => {
@@ -111,9 +111,9 @@ export class ChatView {
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
-                                        <div style="line-height: 1.4; white-space: pre-wrap; display: flex; align-items: flex-end; gap: 8px;">
+                                        <div style="line-height: 1.4; white-space: pre-wrap; display: flex; flex-direction: column;">
                                             <span>${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</span>
-                                            <span style="font-size: 9px; opacity: 0.6; margin-bottom: -2px; margin-left: auto; font-weight: 300;">${this.formatTime(msg.created_at)}</span>
+                                            <div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300;">${this.formatTime(msg.created_at)}</div>
                                         </div>
                                     </div>
                                     ${reactions.length > 0 ? `
@@ -350,14 +350,26 @@ export class ChatView {
                 }
             };
 
-            // Dismissal: Close picker when input loses focus (handles Android back button)
-            singleEmojiInput.onblur = () => {
+            // Enhanced Dismissal: Close picker on blur AND when keyboard closes
+            const closeOnDismiss = () => {
                 setTimeout(() => {
                     if (document.activeElement !== singleEmojiInput) {
                         closePicker();
                     }
-                }, 100);
+                }, 150);
             };
+
+            singleEmojiInput.onblur = closeOnDismiss;
+
+            // Use visualViewport for more reliable keyboard-close detection
+            if (window.visualViewport) {
+                const onResize = () => {
+                    if (window.visualViewport.height > window.innerHeight * 0.9) {
+                        closePicker();
+                    }
+                };
+                window.visualViewport.addEventListener('resize', onResize);
+            }
         }
 
         // LANGUAGE SWITCHER IN HEADER (for testing)
