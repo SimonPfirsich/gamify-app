@@ -351,7 +351,8 @@ export class ActionView {
             const action = store.state.challenges.flatMap(c => c.actions).find(a => a.id === aid);
             nameInput.value = action.name;
             pointsInput.value = action.points;
-            iconInput.value = action.icon;
+            // Hide class names!
+            iconInput.value = (action.icon && action.icon.startsWith('ph-')) ? '🚀' : (action.icon || '🚀');
             saveBtn.dataset.aid = aid;
             saveBtn.dataset.cid = cid;
         } else {
