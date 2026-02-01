@@ -56,7 +56,7 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 25px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 15px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${(() => {
                 let lastDate = null;
                 return chat.map(msg => {
@@ -111,10 +111,7 @@ export class ChatView {
                                                 ${replyMsg.content.substring(0, 25)}...
                                             </div>
                                         ` : ''}
-                                        <div style="line-height: 1.4; display: block;">
-                                            <div style="white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div>
-                                            <div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300; width: 100%; pointer-events: none;">${this.formatTime(msg.created_at)}</div>
-                                        </div>
+                                        <div style="line-height: 1.4; display: block;"><div style="white-space: pre-wrap;">${isEvent ? `${user.avatar} <strong>${user.name}</strong> ` : ''}${msg.content}</div><div style="font-size: 9px; opacity: 0.6; text-align: right; margin-top: 2px; font-weight: 300; width: 100%; pointer-events: none;">${this.formatTime(msg.created_at)}</div></div>
                                     </div>
                                     ${reactions.length > 0 ? `
                                         <div class="reaction-pill" data-msg-id="${msg.id}" style="
@@ -168,16 +165,18 @@ export class ChatView {
             pickerContainer.classList.remove('active');
             document.getElementById('single-emoji-input-container').classList.remove('open');
             if (window.history.state === 'emoji-picker-open') {
-                window.history.back();
+                window.history.replaceState(null, ''); // Clear the "open" state
             }
         };
 
-        // ANDROID BACK BUTTON HANDLING
-        window.onpopstate = (event) => {
+        // ANDROID BACK BUTTON HANDLING - robust listener
+        window.addEventListener('popstate', (event) => {
             if (pickerContainer.classList.contains('active')) {
-                closePicker();
+                // Prevent browser back navigation
+                pickerContainer.classList.remove('active');
+                document.getElementById('single-emoji-input-container').classList.remove('open');
             }
-        };
+        });
 
         const closeReactionModal = (force = false) => {
             reactionModal.style.background = 'rgba(0,0,0,0)';

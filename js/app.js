@@ -92,7 +92,10 @@ class App {
             if (this.pullDelta > 85) {
                 refresher.style.transform = 'translate3d(-50%, 60px, 0)';
                 icon.classList.add('ph-spin');
-                setTimeout(() => location.reload(true), 400);
+                // Snappier reload
+                setTimeout(() => {
+                    location.reload(true);
+                }, 300);
             } else {
                 refresher.style.transform = 'translate3d(-50%, -100px, 0)';
                 refresher.style.opacity = '0';
