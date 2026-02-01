@@ -451,21 +451,10 @@ body {
     }
 }
 
-.action-card .edit-controls {
-    display: none;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 20;
-    gap: 12px;
-    width: 100%;
-    justify-content: center;
-    pointer-events: none;
-}
-
-.edit-mode .action-card .edit-controls {
-    display: flex;
+.chat-active .content-area {
+    padding-bottom: 140px;
+    /* Increased to be safe */
+    transition: padding-bottom 0.1s ease-out;
 }
 
 .action-card.dragging {

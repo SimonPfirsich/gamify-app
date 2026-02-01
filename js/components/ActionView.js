@@ -18,12 +18,10 @@ export class ActionView {
 
         return `
             <div class="header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div>
-                        <h1>Gamify</h1>
-                        <p>${this.t('actions')}</p>
-                    </div>
-                    <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="header">
+                <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
+                    <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
                         <button id="view-toggle-btn" class="header-icon-btn">
                             <i class="ph ${this.currentView === 'tile' ? 'ph-list' : 'ph-squares-four'}"></i>
                         </button>
@@ -32,6 +30,7 @@ export class ActionView {
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
 
             <div class="actions-container ${this.editingId ? 'edit-mode' : ''}" style="padding: 10px 16px 120px;">
@@ -61,32 +60,57 @@ export class ActionView {
                                          style="
                                             display: flex; 
                                             flex-direction: ${this.currentView === 'tile' ? 'column' : 'row'}; 
-                                            align-items: ${this.currentView === 'tile' ? 'center' : 'center'};
-                                            padding: ${this.currentView === 'tile' ? '12px 8px' : '14px 18px'};
+                                            align-items: center;
+                                            justify-content: ${this.currentView === 'tile' ? 'center' : 'flex-start'};
+                                            padding: ${this.currentView === 'tile' ? '12px 6px' : '14px 18px'};
                                             background: white; border-radius: 20px; border: 1px solid #f1f5f9; 
                                             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
                                             text-align: ${this.currentView === 'tile' ? 'center' : 'left'}; 
                                             cursor: pointer; position: relative;
                                             opacity: ${this.editingId && !isEditingThis ? '0.5' : '1'};
-                                            transform: ${isEditingThis ? 'scale(1.05)' : 'scale(1)'};
+                                            transform: ${isEditingThis ? 'scale(1.02)' : 'scale(1)'};
                                             z-index: ${isEditingThis ? '100' : '1'};
+                                            min-height: ${this.currentView === 'tile' ? '110px' : 'auto'};
                                          ">
                                         
-                                        <!-- Edit Controls -->
-                                        <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'};">
-                                            <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto;">
-                                                <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
-                                            </button>
-                                            <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto;">
-                                                <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
-                                            </button>
-                                        </div>
+                                        <!-- Edit Controls Tile View -->
+                                        ${isEditingThis && this.currentView === 'tile' ? `
+                                            <div class="drag-handle-tile" style="position: absolute; top: 8px; color: #cbd5e1;">
+                                                <i class="ph ph-dots-six-vertical" style="font-size: 24px;"></i>
+                                            </div>
+                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px;">
+                                                <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
+                                                    <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
+                                                </button>
+                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
+                                                    <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
+                                                </button>
+                                            </div>
+                                        ` : ''}
 
-                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.3' : '1'};">${iconDisplay}</div>
-                                        <div style="flex:1; opacity: ${isEditingThis ? '0.3' : '1'};">
+                                        <!-- Edit Controls List View -->
+                                        ${isEditingThis && this.currentView === 'list' ? `
+                                             <div class="drag-handle-list" style="margin-right: 15px; color: #cbd5e1;">
+                                                <i class="ph ph-dots-six-vertical" style="font-size: 24px;"></i>
+                                            </div>
+                                        ` : ''}
+
+                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
+                                        <div style="flex:1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
                                         </div>
+
+                                        ${isEditingThis && this.currentView === 'list' ? `
+                                            <div class="edit-controls-list" style="display: flex; gap: 8px; margin-left: auto;">
+                                               <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 36px; height: 36px; border-radius: 10px;">
+                                                    <i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i>
+                                                </button>
+                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 36px; height: 36px; border-radius: 10px;">
+                                                    <i class="ph ph-trash" style="font-size: 18px; color: #ef4444;"></i>
+                                                </button>
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 `;
             }).join('')}
@@ -167,6 +191,8 @@ export class ActionView {
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = card.dataset.aid;
                     if (navigator.vibrate) navigator.vibrate(50);
+                    // Push state for back button integration
+                    history.pushState({ editMode: true }, '');
                     this.renderUpdate();
                 }, 600);
             };
@@ -223,22 +249,36 @@ export class ActionView {
             }
         });
 
-        // Click outside to exit edit mode
-        const container = document.querySelector('.actions-container');
-        if (container) {
-            container.onclick = (e) => {
+        // Exit Edit Mode Logic
+
+        // 1. Outside Click
+        const appContainer = document.getElementById('app');
+        if (appContainer) { // Attach higher up than container to catch everything
+            this.handleOutsideClick = (e) => {
                 if (this.editingId && !e.target.closest('.action-card')) {
-                    this.editingId = null;
-                    this.renderUpdate();
+                    this.exitEditMode();
                 }
             };
+            document.body.addEventListener('click', this.handleOutsideClick);
         }
+
+        // 2. Back Button (Popstate)
+        // Store the original popstate to restore it? App.js overrides it. 
+        // We need to integrate with App.js logic, or just add a one-time listener.
+        // Actually, App.js logic calls methods on current view. Let's implement `closeModal` or a new `exitEditMode` hook?
+        // App.js calls `view.closeModal()` if .modal-layer.active etc. 
+        // We can make `closeModal` handle edit mode exit too? 
+        // Or better: Let's just push state when entering edit mode, and listen for pop.
+
+        // But App.js has a global onpopstate. We should hook into `closeModal` which App.js calls!
+        // So we add logic to `closeModal` to also check for `editingId`.
 
         // DRAG OVER LOGIC
         document.querySelectorAll('.actions-grid').forEach(grid => {
             grid.addEventListener('dragover', e => {
                 if (!this.editingId) return;
                 e.preventDefault();
+                // ... same logic
                 const dragging = document.querySelector('.dragging');
                 if (!dragging) return;
 
@@ -255,7 +295,27 @@ export class ActionView {
         const cancelBtn = document.getElementById('cancel-action-edit');
         const saveBtn = document.getElementById('save-action-edit');
 
+        this.exitEditMode = () => {
+            if (this.editingId) {
+                this.editingId = null;
+                this.renderUpdate();
+                // If we pushed state for edit mode, we should go back?
+                // The issue is if we click "outside" (not back button), we are still in "edit" history state?
+                // For simplicity, let's not push history state for edit mode yet, just rely on Back to CLOSE MODALS. 
+                // Wait, user request: "durch die Android-Zurück-Taste wieder verlassen werden können"
+                // So we MUST push state.
+                if (history.state && history.state.editMode) {
+                    history.back();
+                }
+            }
+        };
+
         this.closeModal = () => {
+            if (this.editingId) {
+                this.editingId = null;
+                this.renderUpdate();
+                return; // Prioritize exiting edit mode if it's considered a "modal" state
+            }
             sheet.classList.remove('open');
             setTimeout(() => modal.classList.remove('active'), 300);
         };

@@ -138,7 +138,7 @@ class App {
         window.onpopstate = (e) => {
             const view = this.views[this.currentTab];
             // If we have an active view with a close method, prioritize it
-            if (view && typeof view.closeModal === 'function' && (document.querySelector('.bottom-sheet.open') || document.querySelector('.modal-layer.active'))) {
+            if (view && typeof view.closeModal === 'function' && (document.querySelector('.bottom-sheet.open') || document.querySelector('.modal-layer.active') || view.editingId)) {
                 view.closeModal();
             } else if (view && typeof view.closePicker === 'function' && (document.getElementById('emoji-picker-container').classList.contains('active'))) {
                 view.closePicker();
