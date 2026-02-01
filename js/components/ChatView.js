@@ -145,23 +145,35 @@ export class ChatView {
         // Interaction
         document.querySelectorAll('.message-wrapper').forEach(wrapper => {
             const bubble = wrapper.querySelector('.message-bubble');
-            bubble.addEventListener('touchstart', (e) => {
+
+            // Interaction: Long press for reactions
+            const handleTouchStart = (e) => {
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
+
                 this.longPressTimer = setTimeout(() => {
+                    // Check if we didn't move much
                     if (Math.abs(e.touches[0].clientX - this.touchStartX) < 15) {
-                        input?.blur();
+                        // Don't blur input if keyboard is open, just keep it
                         this.selectedMsgId = wrapper.dataset.id;
-                        const rect = bubble.getBoundingClientRect();
-                        pickerContainer.classList.add('active');
+
+                        // Fresh measurement
+                        const currentRect = bubble.getBoundingClientRect();
+
                         if (emojiBar) {
                             emojiBar.style.display = 'flex';
-                            emojiBar.style.top = `${rect.top < 150 ? rect.bottom + 10 : rect.top - 65}px`;
+                            // Positioning: Below if near top, else above
+                            const topPos = currentRect.top < 150 ? currentRect.bottom + 10 : currentRect.top - 65;
+                            emojiBar.style.top = `${Math.max(10, topPos)}px`;
                         }
+
+                        pickerContainer.classList.add('active');
                         if (navigator.vibrate) navigator.vibrate(50);
                     }
                 }, 400);
-            }, { passive: true });
+            };
+
+            bubble.addEventListener('touchstart', handleTouchStart, { passive: true });
 
             wrapper.addEventListener('touchmove', (e) => {
                 const dX = e.touches[0].clientX - this.touchStartX;
@@ -237,13 +249,24 @@ export class ChatView {
 
         const sendBtn = document.getElementById('send-btn');
         if (sendBtn) {
-            sendBtn.onclick = () => {
+            sendBtn.onclick = (e) => {
+                e.preventDefault(); // Prevent accidental blur
                 if (input.value.trim()) {
+                    const text = input.value.trim();
                     this.forceScroll = true;
-                    store.addMessage(input.value.trim(), 'text', null, this.currentReplyId);
+                    store.addMessage(text, 'text', null, this.currentReplyId);
+
+                    // Reset UI
                     input.value = '';
                     document.getElementById('reply-preview').style.display = 'none';
                     this.currentReplyId = null;
+
+                    // Keep keyboard open - focus the input again
+                    setTimeout(() => {
+                        input.focus();
+                        // Special fix for some mobile browsers to keep keyboard open
+                        input.setSelectionRange(0, 0);
+                    }, 0);
                 }
             };
         }
