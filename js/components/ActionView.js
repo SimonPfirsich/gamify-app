@@ -75,16 +75,14 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="drag-handle-tile" style="position: absolute; top: 8px; right: 8px;">
-                                                <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
-                                                    <i class="ph ph-hand-grabbing" style="font-size: 18px; color: #64748b; transform: rotate(-30deg);"></i>
+                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 102;">
+                                                <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-tile">
+                                                    <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
                                                 </div>
-                                            </div>
-                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; display: flex; gap: 8px; z-index: 102;">
-                                                <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
+                                                <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
                                                     <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
                                                 </button>
-                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px;">
+                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
                                                     <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
                                                 </button>
                                             </div>
@@ -92,10 +90,16 @@ export class ActionView {
 
                                         <!-- Edit Controls List View -->
                                         ${isEditingThis && this.currentView === 'list' ? `
-                                             <div class="drag-handle-list" style="margin-right: 12px;">
-                                                <div style="width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
+                                            <div class="edit-controls-list-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; z-index: 102;">
+                                                <div style="width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-list">
                                                     <i class="ph ph-hand-grabbing" style="font-size: 20px; color: #64748b; transform: rotate(-30deg);"></i>
                                                 </div>
+                                                <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="ph ph-pencil-simple" style="font-size: 20px; color: #64748b;"></i>
+                                                </button>
+                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i>
+                                                </button>
                                             </div>
                                         ` : ''}
 
@@ -105,16 +109,7 @@ export class ActionView {
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
                                         </div>
 
-                                        ${isEditingThis && this.currentView === 'list' ? `
-                                            <div class="edit-controls-list" style="display: flex; gap: 8px; margin-left: auto;">
-                                               <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 36px; height: 36px; border-radius: 10px;">
-                                                    <i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i>
-                                                </button>
-                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 36px; height: 36px; border-radius: 10px;">
-                                                    <i class="ph ph-trash" style="font-size: 18px; color: #ef4444;"></i>
-                                                </button>
-                                            </div>
-                                        ` : ''}
+
                                     </div>
                                 `;
             }).join('')}

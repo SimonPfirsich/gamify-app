@@ -229,13 +229,7 @@ export class AnalyticsView {
 
         return `
             <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" draggable="${!!this.editingId}" style="position: relative; overflow: visible;">
-                ${isEditingThis ? `
-                     <div class="drag-handle-ratio" style="position: absolute; top: 8px; right: 8px;">
-                        <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;">
-                            <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
-                        </div>
-                    </div>
-                ` : ''}
+
                 
                 <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1}; word-break: break-word; hyphens: auto;">
                     <span class="ratio-label" style="word-break: break-word; hyphens: auto;">${plural1} ${this.t('pro')} ${act2.name}</span>
@@ -244,8 +238,11 @@ export class AnalyticsView {
                 </div>
 
                 <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: center; gap: 12px; z-index: 20;">
-                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 20px; color: #64748b;"></i></button>
-                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 40px; height: 40px; border-radius: 12px; background: #fee2e2; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i></button>
+                    <div style="width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-ratio">
+                        <i class="ph ph-hand-grabbing" style="font-size: 24px; color: #64748b; transform: rotate(-30deg);"></i>
+                    </div>
+                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 24px; color: #64748b;"></i></button>
+                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 24px; color: #ef4444;"></i></button>
                 </div>
             </div>
         `;
@@ -424,22 +421,77 @@ export class AnalyticsView {
     renderLineChart(events) {
         const counts = [];
         const labels = [];
+        let numPoints = 7;
+        let dateFormat = { weekday: 'short' };
 
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            d.setHours(0, 0, 0, 0);
-            labels.push(d.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', { weekday: 'short' }));
+        // Determine range based on filter
+        if (this.filterTime === 'today') {
+            numPoints = 6;
+            dateFormat = { hour: '2-digit' };
+            for (let i = numPoints - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setHours(d.getHours() - i * 4, 0, 0, 0);
+                labels.push(d.toLocaleTimeString(store.state.language === 'de' ? 'de-DE' : 'en-US', dateFormat));
+                const hEnd = new Date(d);
+                hEnd.setHours(d.getHours() + 4, 0, 0, 0);
+                let filtered = events.filter(e => {
+                    const ed = new Date(e.created_at);
+                    return ed >= d && ed < hEnd;
+                });
+                counts.push(filtered.length);
+            }
+        } else if (this.filterTime === 'month') {
+            numPoints = 4;
+            dateFormat = { day: '2-digit', month: 'short' };
+            for (let i = numPoints - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i * 7);
+                d.setHours(0, 0, 0, 0);
+                labels.push(d.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', dateFormat));
+                const wEnd = new Date(d);
+                wEnd.setDate(wEnd.getDate() + 7);
+                let filtered = events.filter(e => {
+                    const ed = new Date(e.created_at);
+                    return ed >= d && ed < wEnd;
+                });
+                counts.push(filtered.length);
+            }
+        } else if (this.filterTime === 'year') {
+            numPoints = 6;
+            dateFormat = { month: 'short' };
+            for (let i = numPoints - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i * 2);
+                d.setDate(1);
+                d.setHours(0, 0, 0, 0);
+                labels.push(d.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', dateFormat));
+                const mEnd = new Date(d);
+                mEnd.setMonth(mEnd.getMonth() + 2);
+                let filtered = events.filter(e => {
+                    const ed = new Date(e.created_at);
+                    return ed >= d && ed < mEnd;
+                });
+                counts.push(filtered.length);
+            }
+        } else {
+            // Default: last 7 days (for 'week', 'all', 'custom')
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                d.setHours(0, 0, 0, 0);
+                labels.push(d.toLocaleDateString(store.state.language === 'de' ? 'de-DE' : 'en-US', { weekday: 'short' }));
+                const dayEnd = new Date(d);
+                dayEnd.setHours(23, 59, 59, 999);
+                let filtered = events.filter(e => {
+                    const ed = new Date(e.created_at);
+                    return ed >= d && ed <= dayEnd;
+                });
+                counts.push(filtered.length);
+            }
+        }
 
-            const dayEnd = new Date(d);
-            dayEnd.setHours(23, 59, 59, 999);
-
-            let filtered = events.filter(e => {
-                const ed = new Date(e.created_at);
-                return ed >= d && ed <= dayEnd;
-            });
-            if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
-            counts.push(filtered.length);
+        if (this.filterUser !== 'all') {
+            // Already filtered in events from render
         }
 
         const max = Math.max(...counts, 1);
@@ -448,18 +500,19 @@ export class AnalyticsView {
         const padding = 20;
         const chartWidth = width - padding * 2;
         const chartHeight = height - padding;
+        const numSegs = counts.length - 1;
 
         const points = counts.map((c, i) => {
-            const x = padding + (i / 6) * chartWidth;
+            const x = padding + (numSegs > 0 ? (i / numSegs) * chartWidth : chartWidth / 2);
             const y = height - padding - (c / max) * chartHeight;
             return { x, y };
         });
 
         const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + ' ' + p.x + ' ' + p.y).join(' ');
-        const areaD = pathD + ' L ' + points[6].x + ' ' + (height - padding) + ' L ' + points[0].x + ' ' + (height - padding) + ' Z';
+        const areaD = pathD + ' L ' + points[points.length - 1].x + ' ' + (height - padding) + ' L ' + points[0].x + ' ' + (height - padding) + ' Z';
 
         const circlesHtml = points.map(p => '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="var(--primary)" />').join('');
-        const labelsHtml = labels.map((l, i) => '<text x="' + (padding + (i / 6) * chartWidth) + '" y="' + (height - 2) + '" text-anchor="middle" font-size="9" fill="#94a3b8">' + l + '</text>').join('');
+        const labelsHtml = labels.map((l, i) => '<text x="' + (padding + (numSegs > 0 ? (i / numSegs) * chartWidth : chartWidth / 2)) + '" y="' + (height - 2) + '" text-anchor="middle" font-size="8" fill="#94a3b8">' + l + '</text>').join('');
 
         return '<svg width="100%" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '" style="display: block;"><defs><linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:var(--primary);stop-opacity:0.3" /><stop offset="100%" style="stop-color:var(--primary);stop-opacity:0" /></linearGradient></defs><path d="' + areaD + '" fill="url(#lineGradient)" /><path d="' + pathD + '" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />' + circlesHtml + labelsHtml + '</svg>';
     }

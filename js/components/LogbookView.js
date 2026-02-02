@@ -126,12 +126,12 @@ export class LogbookView {
             </div>
                             
                             ${isEditingThis && isMe ? `
-                                <div class="edit-controls-list" style="display: flex; gap: 8px; margin-left: auto; padding-left: 10px;">
-                                    <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                        <i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i>
+                                <div class="edit-controls-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 102;">
+                                    <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ph ph-pencil-simple" style="font-size: 22px; color: #64748b;"></i>
                                     </button>
-                                    <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 36px; height: 36px; border-radius: 10px; background: #fee2e2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                        <i class="ph ph-trash" style="font-size: 18px; color: #ef4444;"></i>
+                                    <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: #fee2e2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ph ph-trash" style="font-size: 22px; color: #ef4444;"></i>
                                     </button>
                                 </div>
                             ` : ''

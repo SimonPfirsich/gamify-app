@@ -160,6 +160,23 @@ body.chat-active #content {
     padding: 0 16px;
 }
 
+.ratios-grid .ratio-card {
+    word-break: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    overflow-wrap: break-word;
+}
+
+/* Action/Analytics text hyphenation */
+.action-name,
+.ratio-label,
+.ratio-details {
+    word-break: break-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    overflow-wrap: break-word;
+}
+
 /* --- Filters & Inputs --- */
 .filter-pill {
     flex: 1;
