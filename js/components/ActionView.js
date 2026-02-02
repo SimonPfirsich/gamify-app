@@ -262,7 +262,7 @@ export class ActionView {
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
                     this.draggedCard.classList.remove('dragging');
                     this.saveOrder(this.draggedCard.closest('.challenge-group'));
-                    this.editingId = null;
+                    // Keep editingId active to allow further edits/deletion
                     this.isDraggingAfterLongPress = false;
                     this.draggedCard = null;
                     this.renderUpdate();

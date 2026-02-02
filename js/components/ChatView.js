@@ -207,6 +207,7 @@ export class ChatView {
                 this.lastTouchX = null; // Reset previous swipe state
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
+                this.isLongPressTriggered = false;
                 // Capture if keyboard is currently open (input focused)
                 this.wasFocused = (document.activeElement === document.getElementById('chat-input'));
 
@@ -215,6 +216,7 @@ export class ChatView {
                     const currentX = this.lastTouchX || e.touches[0].clientX;
                     // Check if finger stayed relatively still (increased tolerance)
                     if (Math.abs(currentX - this.touchStartX) < 30) {
+                        this.isLongPressTriggered = true;
                         // Restore focus ONLY if it was open before
                         if (this.wasFocused) {
                             const input = document.getElementById('chat-input');
@@ -257,6 +259,11 @@ export class ChatView {
 
             wrapper.addEventListener('touchend', (e) => {
                 clearTimeout(this.longPressTimer);
+                if (this.isLongPressTriggered) {
+                    if (e.cancelable) e.preventDefault();
+                    this.isLongPressTriggered = false;
+                    return;
+                }
                 const dX = e.changedTouches[0].clientX - this.touchStartX;
                 const dY = e.changedTouches[0].clientY - this.touchStartY;
                 if (dX > 50 && Math.abs(dY) < 40) {
