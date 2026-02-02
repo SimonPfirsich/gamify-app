@@ -186,19 +186,90 @@ export class ActionView {
         const cards = document.querySelectorAll('.action-card');
 
         cards.forEach(card => {
-            // LONG PRESS DETECTION
-            card.onmousedown = card.ontouchstart = (e) => {
-                if (this.editingId) return; // Already editing something
+            let startX, startY, initialTouchIdentifier;
+
+            // LONG PRESS DETECTION with immediate drag
+            card.ontouchstart = (e) => {
+                if (this.editingId) return;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialTouchIdentifier = touch.identifier;
+
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = card.dataset.aid;
                     if (navigator.vibrate) navigator.vibrate(50);
-                    // Push state for back button integration
+                    history.pushState({ editMode: true }, '');
+
+                    // Mark this card as being dragged immediately
+                    card.classList.add('dragging');
+                    this.draggedCard = card;
+                    this.isDraggingAfterLongPress = true;
+
+                    this.renderUpdate();
+
+                    // Re-select the card after re-render
+                    setTimeout(() => {
+                        const newCard = document.querySelector(`.action-card[data-aid="${card.dataset.aid}"]`);
+                        if (newCard) {
+                            newCard.classList.add('dragging');
+                            this.draggedCard = newCard;
+                        }
+                    }, 50);
+                }, 600);
+            };
+
+            card.ontouchmove = (e) => {
+                // If moved more than threshold, cancel long press
+                if (!this.isDraggingAfterLongPress && this.longPressTimer) {
+                    const touch = [...e.touches].find(t => t.identifier === initialTouchIdentifier);
+                    if (touch) {
+                        const dx = Math.abs(touch.clientX - startX);
+                        const dy = Math.abs(touch.clientY - startY);
+                        if (dx > 10 || dy > 10) {
+                            clearTimeout(this.longPressTimer);
+                        }
+                    }
+                }
+
+                // Handle drag if in drag mode
+                if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const grid = this.draggedCard.closest('.actions-grid');
+                    if (grid) {
+                        const afterElement = this.getDragAfterElement(grid, touch.clientX, touch.clientY);
+                        if (afterElement == null) grid.appendChild(this.draggedCard);
+                        else grid.insertBefore(this.draggedCard, afterElement);
+                    }
+                }
+            };
+
+            card.ontouchend = card.ontouchcancel = () => {
+                clearTimeout(this.longPressTimer);
+
+                if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    this.draggedCard.classList.remove('dragging');
+                    this.saveOrder(this.draggedCard.closest('.challenge-group'));
+                    this.editingId = null;
+                    this.isDraggingAfterLongPress = false;
+                    this.draggedCard = null;
+                    this.renderUpdate();
+                }
+            };
+
+            // Mouse events for desktop
+            card.onmousedown = (e) => {
+                if (this.editingId) return;
+                this.longPressTimer = setTimeout(() => {
+                    this.editingId = card.dataset.aid;
+                    if (navigator.vibrate) navigator.vibrate(50);
                     history.pushState({ editMode: true }, '');
                     this.renderUpdate();
                 }, 600);
             };
 
-            card.onmouseup = card.onmouseleave = card.ontouchend = () => {
+            card.onmouseup = card.onmouseleave = () => {
                 clearTimeout(this.longPressTimer);
             };
 
@@ -237,8 +308,8 @@ export class ActionView {
                 card.style.transform = 'scale(0.95)';
                 setTimeout(() => card.style.transform = '', 100);
 
-                // Confetti celebration
-                this.showConfetti();
+                // Confetti celebration - explode from button
+                this.showConfetti(card);
             };
 
             // DRAG AND DROP
@@ -413,57 +484,141 @@ export class ActionView {
         }
     }
 
-    showConfetti() {
-        const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e'];
+    showConfetti(originElement) {
+        // Haptic feedback
+        if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+
+        // Play applause sound
+        try {
+            const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNqqqq//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+            audio.volume = 0.3;
+            audio.play().catch(() => { });
+        } catch (e) { }
+
+        const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e', '#ffd700', '#ff6b6b', '#4ecdc4'];
         const container = document.createElement('div');
         container.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden;';
         document.body.appendChild(container);
 
-        for (let i = 0; i < 50; i++) {
+        // Get button position for explosion origin
+        let originX = 50;
+        let originY = 50;
+        if (originElement) {
+            const rect = originElement.getBoundingClientRect();
+            originX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+            originY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+        }
+
+        // Add keyframe animation once
+        const styleEl = document.createElement('style');
+        styleEl.id = 'confetti-styles';
+        styleEl.textContent = `
+            @keyframes confettiExplode {
+                0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 1; }
+                10% { transform: translate(var(--tx1), var(--ty1)) rotate(180deg) scale(1); opacity: 1; }
+                100% { transform: translate(var(--tx2), var(--ty2)) rotate(var(--rot)) scale(0.5); opacity: 0; }
+            }
+            @keyframes lamettaFall {
+                0% { transform: translate(0, 0) rotateY(0deg) rotateZ(0deg); opacity: 1; }
+                100% { transform: translate(var(--lx), var(--ly)) rotateY(1080deg) rotateZ(var(--lrot)); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(styleEl);
+
+        // Confetti particles - more explosive
+        for (let i = 0; i < 80; i++) {
             const confetti = document.createElement('div');
             const color = colors[Math.floor(Math.random() * colors.length)];
-            const size = Math.random() * 10 + 5;
-            const startX = Math.random() * 100;
-            const startY = -10;
-            const endX = startX + (Math.random() - 0.5) * 40;
-            const endY = 110;
-            const rotation = Math.random() * 720;
-            const duration = Math.random() * 1000 + 1500;
-            const delay = Math.random() * 300;
+            const size = Math.random() * 12 + 6;
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 200 + 100;
+            const tx1 = Math.cos(angle) * velocity * 0.3;
+            const ty1 = Math.sin(angle) * velocity * 0.3 - 50;
+            const tx2 = Math.cos(angle) * velocity + (Math.random() - 0.5) * 100;
+            const ty2 = Math.sin(angle) * velocity + window.innerHeight * 0.8;
+            const rotation = Math.random() * 1440;
+            const duration = Math.random() * 1500 + 2000;
+            const delay = Math.random() * 150;
 
             confetti.style.cssText = `
                 position: absolute;
                 width: ${size}px;
                 height: ${size}px;
                 background: ${color};
-                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-                left: ${startX}%;
-                top: ${startY}%;
-                opacity: 1;
-                transform: rotate(0deg);
-                animation: confettiFall ${duration}ms ease-out ${delay}ms forwards;
+                border-radius: ${Math.random() > 0.6 ? '50%' : Math.random() > 0.5 ? '2px' : '0'};
+                left: ${originX}%;
+                top: ${originY}%;
+                --tx1: ${tx1}px;
+                --ty1: ${ty1}px;
+                --tx2: ${tx2}px;
+                --ty2: ${ty2}px;
+                --rot: ${rotation}deg;
+                animation: confettiExplode ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms forwards;
             `;
-
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes confettiFall {
-                    0% {
-                        transform: translateY(0) rotate(0deg);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(${endY - startY}vh) translateX(${(endX - startX)}vw) rotate(${rotation}deg);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-
             container.appendChild(confetti);
+        }
+
+        // Lametta / streamers
+        for (let i = 0; i < 30; i++) {
+            const lametta = document.createElement('div');
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const width = Math.random() * 4 + 2;
+            const height = Math.random() * 30 + 20;
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 150 + 80;
+            const lx = Math.cos(angle) * velocity;
+            const ly = Math.sin(angle) * velocity + window.innerHeight * 0.6;
+            const lrot = (Math.random() - 0.5) * 360;
+            const duration = Math.random() * 2000 + 2500;
+            const delay = Math.random() * 200;
+
+            lametta.style.cssText = `
+                position: absolute;
+                width: ${width}px;
+                height: ${height}px;
+                background: linear-gradient(to bottom, ${color}, ${color}88);
+                border-radius: 2px;
+                left: ${originX}%;
+                top: ${originY}%;
+                --lx: ${lx}px;
+                --ly: ${ly}px;
+                --lrot: ${lrot}deg;
+                animation: lamettaFall ${duration}ms ease-out ${delay}ms forwards;
+                transform-style: preserve-3d;
+            `;
+            container.appendChild(lametta);
+        }
+
+        // Stars / sparkles
+        for (let i = 0; i < 20; i++) {
+            const star = document.createElement('div');
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 120 + 60;
+            const tx2 = Math.cos(angle) * velocity;
+            const ty2 = Math.sin(angle) * velocity;
+
+            star.style.cssText = `
+                position: absolute;
+                width: 0; height: 0;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-bottom: 10px solid #ffd700;
+                left: ${originX}%;
+                top: ${originY}%;
+                --tx1: ${tx2 * 0.3}px;
+                --ty1: ${ty2 * 0.3 - 30}px;
+                --tx2: ${tx2}px;
+                --ty2: ${ty2 + 200}px;
+                --rot: ${Math.random() * 720}deg;
+                animation: confettiExplode ${Math.random() * 1000 + 1500}ms ease-out ${Math.random() * 100}ms forwards;
+            `;
+            container.appendChild(star);
         }
 
         setTimeout(() => {
             container.remove();
-        }, 2500);
+            const styleToRemove = document.getElementById('confetti-styles');
+            if (styleToRemove) styleToRemove.remove();
+        }, 4000);
     }
 }

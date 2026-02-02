@@ -57,38 +57,49 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column-reverse; gap: 4px; padding-bottom: 100px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+            <div id="chat-feed" style="display: flex; flex-direction: column-reverse; gap: 4px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${(() => {
+                // With column-reverse, we iterate newest to oldest
+                // Date dividers should appear BELOW the LAST message of each day (which is first in our array for that day)
                 let lastDate = null;
-                return chat.map(msg => {
+                return chat.map((msg, idx) => {
                     const msgDate = new Date(msg.created_at).toDateString();
                     let dateDivider = '';
-                    if (msgDate !== lastDate) {
-                        lastDate = msgDate;
+
+                    // Check if NEXT message (older) is from a different day
+                    const nextMsg = chat[idx + 1];
+                    const nextDate = nextMsg ? new Date(nextMsg.created_at).toDateString() : null;
+
+                    // Show divider AFTER this message if this is the oldest message of this day
+                    if (nextDate && nextDate !== msgDate) {
+                        dateDivider = `<div class="date-divider" style="align-self: center; background: #fff; border: 1px solid #eee; padding: 4px 12px; border-radius: 12px; font-size: 11px; color: #64748b; margin: 10px 0; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">${this.formatDividerDate(msg.created_at)}</div>`;
+                    }
+                    // Also show divider for the oldest message in chat (first day ever)
+                    if (idx === chat.length - 1) {
                         dateDivider = `<div class="date-divider" style="align-self: center; background: #fff; border: 1px solid #eee; padding: 4px 12px; border-radius: 12px; font-size: 11px; color: #64748b; margin: 10px 0; font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">${this.formatDividerDate(msg.created_at)}</div>`;
                     }
 
                     const isMe = msg.user_id === currentUser.id;
-                    const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
-                    const isEvent = msg.type === 'event';
-                    const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
-                    const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
+                const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
+                const isEvent = msg.type === 'event';
+                const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
+                const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-                    const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
-                    const emojiCounts = {};
-                    reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
+                const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
+                const emojiCounts = {};
+                reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
 
-                    let uniqueEmojis = Object.keys(emojiCounts);
-                    let displayEmojis = [];
-                    if (myEmojis.length > 0) {
-                        const myMainEmoji = myEmojis[0];
-                        const others = uniqueEmojis.filter(e => e !== myMainEmoji);
-                        displayEmojis = [...others.slice(0, 3), myMainEmoji];
-                    } else {
-                        displayEmojis = uniqueEmojis.slice(0, 4);
-                    }
+                let uniqueEmojis = Object.keys(emojiCounts);
+                let displayEmojis = [];
+                if (myEmojis.length > 0) {
+                    const myMainEmoji = myEmojis[0];
+                    const others = uniqueEmojis.filter(e => e !== myMainEmoji);
+                    displayEmojis = [...others.slice(0, 3), myMainEmoji];
+                } else {
+                    displayEmojis = uniqueEmojis.slice(0, 4);
+                }
 
-                    return `
+                return `
                         ${dateDivider}
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
@@ -140,10 +151,10 @@ export class ChatView {
                             </div>
                         </div>
                     `;
-                }).join('');
-            })()}
-            </div>
-        `;
+            }).join('');
+    })()}
+            </div >
+    `;
     }
 
     afterRender() {
@@ -206,7 +217,7 @@ export class ChatView {
                         if (emojiBar) {
                             emojiBar.style.display = 'flex';
                             const topPos = currentRect.top < 150 ? currentRect.bottom + 10 : currentRect.top - 65;
-                            emojiBar.style.top = `${Math.max(10, topPos)}px`;
+                            emojiBar.style.top = `${ Math.max(10, topPos) } px`;
                         }
 
                         pickerContainer.classList.add('active');
@@ -233,7 +244,7 @@ export class ChatView {
                 if (Math.abs(dY) > 20 || dX < -10) clearTimeout(this.longPressTimer);
                 if (dX > 20 && Math.abs(dY) < 30) {
                     clearTimeout(this.longPressTimer);
-                    wrapper.style.transform = `translate3d(${Math.min(dX, 60)}px, 0, 0)`;
+                    wrapper.style.transform = `translate3d(${ Math.min(dX, 60) }px, 0, 0)`;
                     wrapper.querySelector('.swipe-indicator').style.opacity = Math.min(dX / 60, 1);
                 }
             }, { passive: true });
@@ -246,7 +257,7 @@ export class ChatView {
                     this.currentReplyId = wrapper.dataset.id;
                     const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
-                    document.getElementById('reply-text').innerText = `${this.t('reply')}: ${msg.content.substring(0, 25)}...`;
+                    document.getElementById('reply-text').innerText = `${ this.t('reply') }: ${ msg.content.substring(0, 25) }...`;
                     input?.focus();
                 }
                 wrapper.style.transform = '';
@@ -263,12 +274,12 @@ export class ChatView {
                 const msg = store.state.chat.find(m => m.id === msgId);
                 if (!msg) return;
                 const reactions = msg.reactions || [];
-                document.getElementById('reaction-count-title').innerText = `${reactions.length} ${this.t('chat')}`; // Placeholder for count
+                document.getElementById('reaction-count-title').innerText = `${ reactions.length } ${ this.t('chat') } `; // Placeholder for count
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.4s ease-out;">
+    < div class="reaction-row" data - emoji="${r.e}" data - id="${r.u}" style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.4s ease-out;" >
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? `(${this.t('testing_as').split(' ')[0]})` : ''}</span>
@@ -277,8 +288,8 @@ export class ChatView {
                                 <span style="font-size: 20px;">${r.e}</span>
                                 ${isMe ? `<span class="delete-x" style="font-size: 14px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 10px;">✕</span>` : ''}
                             </div>
-                        </div>
-                    `;
+                        </div >
+    `;
                 }).join('');
 
                 document.querySelectorAll('.reaction-row').forEach(row => {

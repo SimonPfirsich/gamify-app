@@ -441,6 +441,17 @@ body.chat-active #content {
     display: block;
 }
 
+/* Chat feed padding based on keyboard state */
+#chat-feed {
+    padding-bottom: 90px;
+    /* Default: input height + some margin when keyboard closed */
+}
+
+.keyboard-open #chat-feed {
+    padding-bottom: 20px;
+    /* When keyboard open, less padding needed since tab bar is hidden */
+}
+
 /* Actions Edit Mode & Grid */
 .actions-grid.tile {
     display: grid;
