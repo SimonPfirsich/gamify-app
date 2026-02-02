@@ -757,7 +757,7 @@ export class ActionView {
             } catch (e) {
                 // Fallback
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.3;
+                a.volume = 0.15;
                 a.play().catch(() => { });
                 return;
             }
@@ -768,7 +768,7 @@ export class ActionView {
         }
 
         if (this.confettiBuffer) {
-            this.playSoundFromBuffer(this.confettiBuffer, 0.3);
+            this.playSoundFromBuffer(this.confettiBuffer, 0.15);
             return;
         }
 
@@ -777,11 +777,11 @@ export class ActionView {
             .then(arr => this.audioCtx.decodeAudioData(arr))
             .then(audioBuffer => {
                 this.confettiBuffer = audioBuffer;
-                this.playSoundFromBuffer(audioBuffer, 0.3);
+                this.playSoundFromBuffer(audioBuffer, 0.15);
             })
             .catch(() => {
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.3;
+                a.volume = 0.15;
                 a.play().catch(() => { });
             });
     }
