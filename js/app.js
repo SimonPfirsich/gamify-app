@@ -73,8 +73,24 @@ class App {
 
         document.addEventListener('touchmove', (e) => {
             if (!this.isPulling) return;
+
+            // Re-check scroll position to be safe (if momentum scrolling happened)
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            if (currentScroll > 0) {
+                this.isPulling = false;
+                return;
+            }
+
             const y = e.touches[0].pageY;
-            this.pullDelta = Math.max(0, (y - this.startY) * 0.4);
+            const diff = y - this.startY;
+
+            // Only if pulling DOWN
+            if (diff > 0) {
+                if (e.cancelable) e.preventDefault();
+                this.pullDelta = Math.max(0, diff * 0.4);
+            } else {
+                this.pullDelta = 0;
+            }
 
             if (this.pullDelta > 0) {
                 refresher.style.opacity = Math.min(this.pullDelta / 50, 1);
@@ -88,7 +104,7 @@ class App {
                     refresher.style.color = 'var(--primary)';
                 }
             }
-        }, { passive: true });
+        }, { passive: false });
 
         document.addEventListener('touchend', () => {
             if (!this.isPulling) return;

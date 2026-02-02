@@ -220,6 +220,10 @@ export class ActionView {
 
                     // Create Ghost
                     const rect = card.getBoundingClientRect();
+                    // Calculate offset from the initial touch point to the card's top-left corner
+                    this.dragOffsetX = this.touchStartX - rect.left;
+                    this.dragOffsetY = this.touchStartY - rect.top;
+
                     this.dragGhost = card.cloneNode(true);
                     this.dragGhost.style.position = 'fixed';
                     this.dragGhost.style.left = rect.left + 'px';
@@ -269,8 +273,12 @@ export class ActionView {
                     if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
 
                     if (this.hasMoved && this.dragGhost) {
-                        this.dragGhost.style.left = (t.clientX - this.dragGhost.offsetWidth / 2) + 'px';
-                        this.dragGhost.style.top = (t.clientY - this.dragGhost.offsetHeight / 2) + 'px';
+                        const t = e.touches[0];
+                        // Use offset to keep ghost exactly under finger as it was grabbed
+                        const x = t.clientX - this.dragOffsetX;
+                        const y = t.clientY - this.dragOffsetY;
+                        this.dragGhost.style.left = x + 'px';
+                        this.dragGhost.style.top = y + 'px';
                     }
 
                     e.preventDefault();
@@ -363,7 +371,9 @@ export class ActionView {
 
                 // Confetti celebration
                 this.showConfetti(rect);
-                new Audio('confetti.mp3').play().catch(() => { });
+                const audio = new Audio('confetti.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(() => { });
             };
 
             // DRAG AND DROP
