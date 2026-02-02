@@ -159,6 +159,16 @@ export class ChatView {
 
     afterRender() {
         const input = document.getElementById('chat-input');
+        if (input) {
+            input.addEventListener('focus', () => {
+                setTimeout(() => {
+                    const feed = document.getElementById('chat-feed');
+                    // Scroll to bottom (since column-reverse, usually scrollTop=scrollHeight or 0 depending on browser implementation, but here feedContainer sets scrollHeight)
+                    const feedContainer = document.querySelector('.content-area');
+                    if (feedContainer) feedContainer.scrollTo({ top: feedContainer.scrollHeight, behavior: 'smooth' });
+                }, 300);
+            });
+        }
         const pickerContainer = document.getElementById('emoji-picker-container');
         const emojiBar = document.getElementById('emoji-bar');
         const pickerOverlay = document.getElementById('emoji-picker-overlay');
@@ -288,7 +298,7 @@ export class ChatView {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
                     return `
-    < div class="reaction-row" data - emoji="${r.e}" data - id="${r.u}" style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.4s ease-out;" >
+                        <div class="reaction-row" data-emoji="${r.e}" data-id="${r.u}" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; transition: opacity 0.4s ease-out;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">${user?.avatar || '👤'}</div>
                                 <span style="font-weight: 500;">${user?.name || 'Unbekannt'} ${isMe ? `(${this.t('testing_as').split(' ')[0]})` : ''}</span>
@@ -298,7 +308,7 @@ export class ChatView {
                                 ${isMe ? `<span class="delete-x" style="font-size: 14px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 10px;">✕</span>` : ''}
                             </div>
                         </div >
-    `;
+                        `;
                 }).join('');
 
                 document.querySelectorAll('.reaction-row').forEach(row => {

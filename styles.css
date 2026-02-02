@@ -508,9 +508,10 @@ select.filter-pill option:first-child {
 }
 
 .action-card.dragging {
-    opacity: 0.5;
-    transform: scale(1.05);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    opacity: 0.3;
+    transform: scale(0.95);
+    box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
 }
 
 .chat-active .content-area {

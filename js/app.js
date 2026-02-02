@@ -61,7 +61,8 @@ class App {
         const icon = document.getElementById('refresh-icon');
 
         document.addEventListener('touchstart', (e) => {
-            if (content.scrollTop <= 0) {
+            const scrollTop = Math.max(content.scrollTop, window.scrollY, document.documentElement.scrollTop);
+            if (scrollTop <= 0) {
                 this.startY = e.touches[0].pageY;
                 this.isPulling = true;
             }

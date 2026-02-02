@@ -218,6 +218,21 @@ export class ActionView {
                     this.isDraggingAfterLongPress = true;
                     this.hasMoved = false;
 
+                    // Create Ghost
+                    const rect = card.getBoundingClientRect();
+                    this.dragGhost = card.cloneNode(true);
+                    this.dragGhost.style.position = 'fixed';
+                    this.dragGhost.style.left = rect.left + 'px';
+                    this.dragGhost.style.top = rect.top + 'px';
+                    this.dragGhost.style.width = rect.width + 'px';
+                    this.dragGhost.style.height = rect.height + 'px';
+                    this.dragGhost.style.zIndex = '9999';
+                    this.dragGhost.style.pointerEvents = 'none';
+                    this.dragGhost.style.opacity = '0.9';
+                    this.dragGhost.style.transform = 'scale(1.1)'; // Pops out
+                    document.body.appendChild(this.dragGhost);
+                    card.style.opacity = '0.3'; // Placeholder style
+
                     this.renderUpdate();
 
                     // Re-select the card after re-render
@@ -248,6 +263,12 @@ export class ActionView {
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
                     const t = e.touches[0];
                     if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
+
+                    if (this.hasMoved && this.dragGhost) {
+                        this.dragGhost.style.left = (t.clientX - this.dragGhost.offsetWidth / 2) + 'px';
+                        this.dragGhost.style.top = (t.clientY - this.dragGhost.offsetHeight / 2) + 'px';
+                    }
+
                     e.preventDefault();
                     const touch = e.touches[0];
                     const grid = this.draggedCard.closest('.actions-grid');
@@ -263,6 +284,11 @@ export class ActionView {
                 clearTimeout(this.longPressTimer);
 
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    if (this.dragGhost) {
+                        this.dragGhost.remove();
+                        this.dragGhost = null;
+                    }
+                    this.draggedCard.style.opacity = '';
                     this.draggedCard.classList.remove('dragging');
                     this.saveOrder(this.draggedCard.closest('.challenge-group'));
                     // If we moved (dragged), exit mode. If we just held (symbol access), keep mode.
