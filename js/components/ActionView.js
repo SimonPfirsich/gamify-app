@@ -21,6 +21,7 @@ export class ActionView {
             <div class="header">
                 <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
                     <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
+                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5</div>
                 </div>
             </div>
             </div>
@@ -48,7 +49,7 @@ export class ActionView {
 
                 return `
                                     <div class="action-card ${isEditingThis ? 'edit-active' : ''}" 
-                                         data-cid="${c.id}" data-aid="${a.id}" draggable="${!!this.editingId}" 
+                                         data-cid="${c.id}" data-aid="${a.id}" 
                                          style="
                                             display: flex; 
                                             flex-direction: ${this.currentView === 'tile' ? 'column' : 'row'}; 
@@ -238,8 +239,8 @@ export class ActionView {
                         e.stopPropagation();
                     } else if (e.target.closest('.delete-action')) {
                         if (confirm(this.t('delete_confirm'))) {
-                            store.deleteAction(aId);
-                            this.editingId = null;
+                            await store.deleteAction(aId);
+                            this.exitEditMode();
                         }
                         e.stopPropagation();
                     } else {
@@ -341,18 +342,6 @@ export class ActionView {
             };
 
             // DRAG AND DROP
-            if (this.editingId) {
-                card.addEventListener('dragstart', () => {
-                    if (card.dataset.aid === this.editingId) card.classList.add('dragging');
-                });
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                    this.saveOrder(card.closest('.challenge-group'));
-                    // Exit edit mode after drag
-                    this.editingId = null;
-                    this.renderUpdate();
-                });
-            }
         });
 
         // Exit Edit Mode Logic
@@ -380,19 +369,7 @@ export class ActionView {
         // So we add logic to `closeModal` to also check for `editingId`.
 
         // DRAG OVER LOGIC
-        document.querySelectorAll('.actions-grid').forEach(grid => {
-            grid.addEventListener('dragover', e => {
-                if (!this.editingId) return;
-                e.preventDefault();
-                // ... same logic
-                const dragging = document.querySelector('.dragging');
-                if (!dragging) return;
 
-                const afterElement = this.getDragAfterElement(grid, e.clientX, e.clientY);
-                if (afterElement == null) grid.appendChild(dragging);
-                else grid.insertBefore(dragging, afterElement);
-            });
-        });
 
         // MODAL LOGIC
         const modal = document.getElementById('action-edit-modal');
@@ -746,7 +723,7 @@ export class ActionView {
         // Swap
         [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
 
-        store.saveActionOrder(cid, order);
+        store.updateActionOrder(cid, order);
         this.renderUpdate();
     }
 
