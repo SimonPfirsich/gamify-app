@@ -372,7 +372,7 @@ export class ActionView {
                 // Confetti celebration
                 this.showConfetti(rect);
                 const audio = new Audio('confetti.mp3');
-                audio.volume = 0.5;
+                audio.volume = 0.3;
                 audio.play().catch(() => { });
             };
 

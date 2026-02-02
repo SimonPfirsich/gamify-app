@@ -61,17 +61,16 @@ class App {
         const icon = document.getElementById('refresh-icon');
 
         document.addEventListener('touchstart', (e) => {
-            const chatFeed = document.getElementById('chat-feed');
-            if (chatFeed && chatFeed.scrollTop > 0) return; // Prevent pulling if chat is scrolled down
-
-            const scrollTop = Math.max(content.scrollTop, window.scrollY, document.documentElement.scrollTop);
-            if (scrollTop <= 0) {
+            if (this.currentTab === 'chat') return;
+            // Use simple check like Logbook
+            if (window.scrollY <= 0) {
                 this.startY = e.touches[0].pageY;
                 this.isPulling = true;
             }
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
+            if (this.currentTab === 'chat') return; // Disable Pull-to-Refresh in Chat to prevent interference
             if (!this.isPulling) return;
 
             // Re-check scroll position to be safe (if momentum scrolling happened)
@@ -82,15 +81,7 @@ class App {
             }
 
             const y = e.touches[0].pageY;
-            const diff = y - this.startY;
-
-            // Only if pulling DOWN
-            if (diff > 0) {
-                if (e.cancelable) e.preventDefault();
-                this.pullDelta = Math.max(0, diff * 0.4);
-            } else {
-                this.pullDelta = 0;
-            }
+            this.pullDelta = Math.max(0, (y - this.startY) * 0.4);
 
             if (this.pullDelta > 0) {
                 refresher.style.opacity = Math.min(this.pullDelta / 50, 1);
@@ -104,7 +95,7 @@ class App {
                     refresher.style.color = 'var(--primary)';
                 }
             }
-        }, { passive: false });
+        }, { passive: true });
 
         document.addEventListener('touchend', () => {
             if (!this.isPulling) return;
