@@ -42,7 +42,7 @@ export class ActionView {
                             ${actions.map(a => {
                 const count = store.state.events.filter(e => e.action_id === a.id && e.user_id === currentUser.id).length;
                 // Filter out Phosphor class strings like "ph-users"
-                const iconDisplay = (a.icon && a.icon.startsWith('ph-')) ? '🚀' : (a.icon || '🚀');
+                const iconDisplay = a.icon || '';
 
                 const isEditingThis = this.editingId === a.id;
 
@@ -146,7 +146,7 @@ export class ActionView {
                             </div>
                             <div>
                                 <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Icon</label>
-                                <input type="text" id="edit-action-icon" class="form-control-pill" value="🚀">
+                                <input type="text" id="edit-action-icon" class="form-control-pill" value="">
                             </div>
                         </div>
 
@@ -176,6 +176,14 @@ export class ActionView {
     afterRender() {
         // VIEW TOGGLE
         // VIEW TOGGLE REMOVED
+
+        // Input Validation for Icon
+        const iconInp = document.getElementById('edit-action-icon');
+        if (iconInp) {
+            iconInp.oninput = (e) => {
+                e.target.value = e.target.value.replace(/[a-zA-Z0-9]/g, '');
+            };
+        }
 
 
         // ADD BUTTON

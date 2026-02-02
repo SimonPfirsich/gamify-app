@@ -213,6 +213,10 @@ export class ChatView {
                     const currentX = this.lastTouchX || e.touches[0].clientX;
                     // Check if finger stayed relatively still (increased tolerance)
                     if (Math.abs(currentX - this.touchStartX) < 30) {
+                        // Ensure keyboard stays open
+                        const input = document.getElementById('chat-input');
+                        if (input) input.focus();
+
                         this.selectedMsgId = wrapper.dataset.id;
                         const currentRect = bubble.getBoundingClientRect();
 
@@ -227,13 +231,7 @@ export class ChatView {
                         // Push history state to allow back button to close this
                         window.history.pushState({ picker: 'open' }, '');
 
-                        // Prevent focus loss on input if keyboard is open
-                        const input = document.getElementById('chat-input');
-                        if (document.activeElement === input) {
-                            // Keep focus
-                        } else if (navigator.vibrate) {
-                            navigator.vibrate(40);
-                        }
+                        if (navigator.vibrate) navigator.vibrate(40);
                     }
                 }, 400);
             };

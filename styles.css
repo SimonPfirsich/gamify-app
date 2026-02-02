@@ -425,7 +425,7 @@ body.chat-active #content {
 #chat-input-container .input-wrapper {
     margin: 0 10px 0 10px;
     pointer-events: auto;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
 }
 
 .keyboard-open #chat-input-container {

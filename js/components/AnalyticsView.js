@@ -84,12 +84,13 @@ export class AnalyticsView {
     }
 
     render() {
-        const users = store.state.users;
-        const allActions = store.state.challenges.flatMap(c => c.actions);
-        const events = store.state.events;
-        const savedRatios = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+        try {
+            const users = store.state.users;
+            const allActions = store.state.challenges.flatMap(c => c.actions);
+            const events = store.state.events;
+            const savedRatios = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
 
-        return `
+            return `
             <div class="header">
                 <h1>${this.t('analytics')}</h1>
                 <p style="font-size: 13px; color: var(--text-muted); opacity: 0.8;">${this.t('performance')}</p>
@@ -185,6 +186,10 @@ export class AnalyticsView {
                 </div>
             </div>
         `;
+        } catch (e) {
+            console.error("Analytics Render Error:", e);
+            return '<div style="padding:40px; text-align:center; color:#ef4444;">Ein Fehler ist aufgetreten: ' + e.message + '</div>';
+        }
     }
 
     renderRatioCard(ratio, index, events, allActions) {
