@@ -430,7 +430,6 @@ body.chat-active #content {
 
 .keyboard-open #chat-input-container {
     bottom: 0px !important;
-    background: white;
     transition: none;
 }
 
