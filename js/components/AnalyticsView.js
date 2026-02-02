@@ -350,6 +350,8 @@ export class AnalyticsView {
                     // Need to reconstruct order from DOM
                     const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[parseInt(c.dataset.index)]);
                     localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
+                    // Exit edit mode after drag
+                    this.editingId = null;
                     this.renderUpdate();
                 });
             }
