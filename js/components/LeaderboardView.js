@@ -82,16 +82,16 @@ export class LeaderboardView {
             </div>
             
             <div class="filter-bar">
+                <select id="lb-filter-action" class="filter-pill">
+                    <option value="all">${this.t('all_actions')} (alle)</option>
+                    ${allActions.map(a => `<option value="${a.id}" ${this.filterAction === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+                </select>
                 <select id="lb-filter-time" class="filter-pill">
-                    <option value="all">${this.t('timeframe')}</option>
+                    <option value="all">${this.t('timeframe')} (alle)</option>
                     <option value="today" ${this.filterTime === 'today' ? 'selected' : ''}>${this.t('today')}</option>
                     <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>${this.t('this_week')}</option>
                     <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>${this.t('this_month')}</option>
                     <option value="year" ${this.filterTime === 'year' ? 'selected' : ''}>${this.t('this_year')}</option>
-                </select>
-                <select id="lb-filter-action" class="filter-pill">
-                    <option value="all">${this.t('all_actions') || 'Alle Actions'}</option>
-                    ${allActions.map(a => `<option value="${a.id}" ${this.filterAction === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
             </div>
             

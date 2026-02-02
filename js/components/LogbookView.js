@@ -58,15 +58,15 @@ export class LogbookView {
 
             <div class="filter-bar">
                 <select id="filter-user" class="filter-pill">
-                    <option value="all">${this.t('team_members')}</option>
+                    <option value="all">${this.t('team_members')} (alle)</option>
                     ${users.map(u => `<option value="${u.id}" ${this.filterUser === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
                 </select>
                 <select id="filter-action" class="filter-pill">
-                    <option value="all">${this.t('all_actions')}</option>
+                    <option value="all">${this.t('all_actions')} (alle)</option>
                     ${allActions.map(a => `<option value="${a.id}" ${this.filterAction === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
                 <select id="filter-time" class="filter-pill">
-                    <option value="all">${this.t('timeframe')}</option>
+                    <option value="all">${this.t('timeframe')} (alle)</option>
                     <option value="today" ${this.filterTime === 'today' ? 'selected' : ''}>${this.t('today')}</option>
                     <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>${this.t('this_week')}</option>
                     <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>${this.t('this_month')}</option>

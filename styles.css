@@ -319,6 +319,8 @@ body.chat-active #content {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    text-align: center;
+    align-items: center;
 }
 
 .ratio-label {
@@ -442,14 +444,17 @@ body.chat-active #content {
 }
 
 /* Chat feed padding based on keyboard state */
+/* Chat feed padding based on keyboard state */
 #chat-feed {
-    padding-bottom: 90px;
-    /* Default: input height + some margin when keyboard closed */
+    padding-bottom: 100px;
 }
 
 .keyboard-open #chat-feed {
-    padding-bottom: 20px;
-    /* When keyboard open, less padding needed since tab bar is hidden */
+    padding-bottom: 30px;
+}
+
+select.filter-pill option:first-child {
+    font-weight: bold;
 }
 
 /* Actions Edit Mode & Grid */

@@ -106,7 +106,7 @@ export class ActionView {
                                         ` : ''}
 
                                         <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
-                                        <div style="flex:1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
+                                        <div style="${this.currentView === 'list' ? 'flex:1;' : 'text-align: center; width: 100%;'} opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('points') || 'Punkte'}</div>
                                         </div>
@@ -488,30 +488,52 @@ export class ActionView {
         // Haptic feedback
         if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
 
-        // Play applause sound
+        // Play celebration sound using Web Audio API
         try {
-            const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNqqqq//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
-            audio.volume = 0.3;
-            audio.play().catch(() => { });
-        } catch (e) { }
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                const audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const playTone = (freq, startTime, duration) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.1, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                    osc.start(startTime);
+                    osc.stop(startTime + duration);
+                };
+                // Quick celebratory arpeggio
+                const now = audioCtx.currentTime;
+                playTone(523, now, 0.15);
+                playTone(659, now + 0.08, 0.15);
+                playTone(784, now + 0.16, 0.2);
+                playTone(1047, now + 0.24, 0.3);
+            }
+        } catch (e) { console.error(e); }
 
         const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f43f5e', '#ffd700', '#ff6b6b', '#4ecdc4'];
         const container = document.createElement('div');
         container.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden;';
         document.body.appendChild(container);
 
-        // Get button position for explosion origin
-        let originX = 50;
-        let originY = 50;
+        // Get button position for explosion origin (in pixels)
+        let originX = window.innerWidth / 2;
+        let originY = window.innerHeight / 2;
         if (originElement) {
             const rect = originElement.getBoundingClientRect();
-            originX = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
-            originY = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+            originX = rect.left + rect.width / 2;
+            originY = rect.top + rect.height / 2;
         }
 
         // Add keyframe animation once
         const styleEl = document.createElement('style');
-        styleEl.id = 'confetti-styles';
+        styleEl.id = 'confetti-styles-' + Date.now();
         styleEl.textContent = `
             @keyframes confettiExplode {
                 0% { transform: translate(0, 0) rotate(0deg) scale(0); opacity: 1; }
@@ -535,7 +557,7 @@ export class ActionView {
             const tx1 = Math.cos(angle) * velocity * 0.3;
             const ty1 = Math.sin(angle) * velocity * 0.3 - 50;
             const tx2 = Math.cos(angle) * velocity + (Math.random() - 0.5) * 100;
-            const ty2 = Math.sin(angle) * velocity + window.innerHeight * 0.8;
+            const ty2 = Math.sin(angle) * velocity + window.innerHeight * 0.6;
             const rotation = Math.random() * 1440;
             const duration = Math.random() * 1500 + 2000;
             const delay = Math.random() * 150;
@@ -546,8 +568,8 @@ export class ActionView {
                 height: ${size}px;
                 background: ${color};
                 border-radius: ${Math.random() > 0.6 ? '50%' : Math.random() > 0.5 ? '2px' : '0'};
-                left: ${originX}%;
-                top: ${originY}%;
+                left: ${originX}px;
+                top: ${originY}px;
                 --tx1: ${tx1}px;
                 --ty1: ${ty1}px;
                 --tx2: ${tx2}px;
@@ -567,7 +589,7 @@ export class ActionView {
             const angle = Math.random() * Math.PI * 2;
             const velocity = Math.random() * 150 + 80;
             const lx = Math.cos(angle) * velocity;
-            const ly = Math.sin(angle) * velocity + window.innerHeight * 0.6;
+            const ly = Math.sin(angle) * velocity + window.innerHeight * 0.5;
             const lrot = (Math.random() - 0.5) * 360;
             const duration = Math.random() * 2000 + 2500;
             const delay = Math.random() * 200;
@@ -578,8 +600,8 @@ export class ActionView {
                 height: ${height}px;
                 background: linear-gradient(to bottom, ${color}, ${color}88);
                 border-radius: 2px;
-                left: ${originX}%;
-                top: ${originY}%;
+                left: ${originX}px;
+                top: ${originY}px;
                 --lx: ${lx}px;
                 --ly: ${ly}px;
                 --lrot: ${lrot}deg;
@@ -603,8 +625,8 @@ export class ActionView {
                 border-left: 6px solid transparent;
                 border-right: 6px solid transparent;
                 border-bottom: 10px solid #ffd700;
-                left: ${originX}%;
-                top: ${originY}%;
+                left: ${originX}px;
+                top: ${originY}px;
                 --tx1: ${tx2 * 0.3}px;
                 --ty1: ${ty2 * 0.3 - 30}px;
                 --tx2: ${tx2}px;
@@ -617,8 +639,7 @@ export class ActionView {
 
         setTimeout(() => {
             container.remove();
-            const styleToRemove = document.getElementById('confetti-styles');
-            if (styleToRemove) styleToRemove.remove();
+            styleEl.remove();
         }, 4000);
     }
 }

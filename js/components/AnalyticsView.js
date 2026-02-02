@@ -97,11 +97,11 @@ export class AnalyticsView {
 
             <div class="filter-bar">
                 <select id="ana-filter-user" class="filter-pill">
-                    <option value="all">${this.t('team_members')}</option>
+                    <option value="all">${this.t('team_members')} (alle)</option>
                     ${users.map(u => `<option value="${u.id}" ${this.filterUser === u.id ? 'selected' : ''}>${u.name}</option>`).join('')}
                 </select>
                 <select id="ana-filter-time" class="filter-pill">
-                    <option value="all">${this.t('timeframe')}</option>
+                    <option value="all">${this.t('timeframe')} (alle)</option>
                     <option value="today" ${this.filterTime === 'today' ? 'selected' : ''}>${this.t('today')}</option>
                     <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>${this.t('this_week')}</option>
                     <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>${this.t('this_month')}</option>
@@ -323,20 +323,91 @@ export class AnalyticsView {
         document.querySelectorAll('.edit-ratio-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(parseInt(btn.dataset.index)); });
 
         // DRAG AND DROP
-        // LONG PRESS TO ENTER EDIT MODE
+        // LONG PRESS TO ENTER EDIT MODE with immediate drag
         const cards = document.querySelectorAll('.ratio-card');
         cards.forEach(card => {
-            card.onmousedown = card.ontouchstart = (e) => {
+            let startX, startY, initialTouchIdentifier;
+
+            card.ontouchstart = (e) => {
+                if (this.editingId) return;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                initialTouchIdentifier = touch.identifier;
+
+                this.longPressTimer = setTimeout(() => {
+                    this.editingId = card.dataset.index;
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    history.pushState({ editMode: true }, '');
+
+                    // Mark as dragging immediately
+                    card.classList.add('dragging');
+                    this.draggedCard = card;
+                    this.isDraggingAfterLongPress = true;
+
+                    this.renderUpdate();
+
+                    setTimeout(() => {
+                        const newCard = document.querySelector(`.ratio-card[data-index="${card.dataset.index}"]`);
+                        if (newCard) {
+                            newCard.classList.add('dragging');
+                            this.draggedCard = newCard;
+                        }
+                    }, 50);
+                }, 700);
+            };
+
+            card.ontouchmove = (e) => {
+                if (!this.isDraggingAfterLongPress && this.longPressTimer) {
+                    const touch = [...e.touches].find(t => t.identifier === initialTouchIdentifier);
+                    if (touch) {
+                        const dx = Math.abs(touch.clientX - startX);
+                        const dy = Math.abs(touch.clientY - startY);
+                        if (dx > 10 || dy > 10) {
+                            clearTimeout(this.longPressTimer);
+                        }
+                    }
+                }
+
+                if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const grid = document.getElementById('ratio-list');
+                    if (grid) {
+                        const afterElement = this.getDragAfterElement(grid, touch.clientX, touch.clientY);
+                        if (afterElement == null) grid.appendChild(this.draggedCard);
+                        else grid.insertBefore(this.draggedCard, afterElement);
+                    }
+                }
+            };
+
+            card.ontouchend = card.ontouchcancel = () => {
+                clearTimeout(this.longPressTimer);
+
+                if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    this.draggedCard.classList.remove('dragging');
+                    const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[parseInt(c.dataset.index)]);
+                    localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
+                    this.editingId = null;
+                    this.isDraggingAfterLongPress = false;
+                    this.draggedCard = null;
+                    this.renderUpdate();
+                }
+            };
+
+            // Mouse events for desktop
+            card.onmousedown = (e) => {
                 if (this.editingId) return;
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = card.dataset.index;
                     if (navigator.vibrate) navigator.vibrate(50);
-                    // Push state for back button integration
                     history.pushState({ editMode: true }, '');
                     this.renderUpdate();
                 }, 700);
             };
-            card.onmouseup = card.onmouseleave = card.ontouchend = () => {
+
+            card.onmouseup = card.onmouseleave = () => {
                 clearTimeout(this.longPressTimer);
             };
 
@@ -405,7 +476,9 @@ export class AnalyticsView {
         }
     }
 
-    getDragAfterElement(container, y) {
+    getDragAfterElement(container, x, y) {
+        // If only 2 args, y is actually passed as x (for backward compatibility)
+        if (y === undefined) { y = x; }
         const elements = [...container.querySelectorAll('.ratio-card:not(.dragging)')];
         return elements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();

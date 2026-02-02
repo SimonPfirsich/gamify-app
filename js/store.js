@@ -65,8 +65,44 @@ class Store {
             const { data: messages } = await supabaseClient.from('messages').select('*');
 
             if (challenges) this.state.challenges = challenges;
-            if (profiles) this.state.users = profiles;
-            if (events) this.state.events = events;
+            if (profiles) {
+                this.state.users = profiles;
+                // Add 11 dummy users for testing
+                const avatars = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁'];
+                for (let i = 1; i <= 11; i++) {
+                    const uid = `dummy-${i}`;
+                    // Only add if not exists
+                    if (!this.state.users.find(u => u.id === uid)) {
+                        this.state.users.push({
+                            id: uid,
+                            name: `Test Player ${i}`,
+                            avatar: avatars[i - 1]
+                        });
+
+                        // Add some random events for them
+                        if (challenges && challenges.length > 0) {
+                            const c = challenges[0];
+                            if (c.actions && c.actions.length > 0) {
+                                for (let j = 0; j < Math.floor(Math.random() * 20) + 5; j++) {
+                                    const action = c.actions[Math.floor(Math.random() * c.actions.length)];
+                                    this.state.events.push({
+                                        id: `evt-${uid}-${j}`,
+                                        user_id: uid,
+                                        action_id: action.id,
+                                        challenge_id: c.id,
+                                        created_at: new Date(Date.now() - Math.floor(Math.random() * 86400000 * 7)).toISOString()
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (events) {
+                // Merge real events with existing dummy events if any (state.events might have them if we push below, but here we overwrite)
+                // Actually, let's append real events to our potential dummy events, or pushing dummy events AFTER setting real events
+                this.state.events = [...events, ...this.state.events.filter(e => e.id.startsWith('evt-dummy'))];
+            }
 
             if (messages) {
                 const testMsg = {
