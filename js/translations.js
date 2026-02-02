@@ -44,7 +44,9 @@ export const translations = {
         testing_as: "Testen als",
         switch: "Wechseln",
         reply: "Antwort",
-        units: "Einheiten"
+        units: "Einheiten",
+        points: "Punkte",
+        champions: "Champions"
     },
     en: {
         actions: "Actions",
@@ -91,6 +93,8 @@ export const translations = {
         testing_as: "Testing as",
         switch: "Switch",
         reply: "Reply",
-        units: "Units"
+        units: "Units",
+        points: "Points",
+        champions: "Champions"
     }
 };

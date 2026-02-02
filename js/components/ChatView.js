@@ -43,7 +43,8 @@ export class ChatView {
     }
 
     render() {
-        const chat = [...store.state.chat].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        // Sort newest first for column-reverse display
+        const chat = [...store.state.chat].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         const currentUser = store.state.currentUser;
         this.shouldScrollNow = (chat.length > this.lastThreadLength) || this.forceScroll;
         this.lastThreadLength = chat.length;
@@ -56,7 +57,7 @@ export class ChatView {
                     ${this.t('testing_as')}: <strong>${currentUser.name}</strong> (${this.t('switch')})
                 </div>
             </div>
-            <div id="chat-feed" style="display: flex; flex-direction: column; gap: 4px; padding-bottom: 20px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
+            <div id="chat-feed" style="display: flex; flex-direction: column-reverse; gap: 4px; padding-bottom: 20px; padding-top: 5px; overflow-x: hidden; user-select: none; -webkit-user-select: none;">
                 ${(() => {
                 let lastDate = null;
                 return chat.map(msg => {

@@ -142,7 +142,7 @@ export class LogbookView {
             }
             </div >
 
-            < !--MODAL FOR ADD / EDIT-- >
+            <!--MODAL FOR ADD / EDIT-->
     <div id="log-modal" class="modal-layer">
         <div id="log-modal-overlay" style="position: absolute; width:100%; height:100%;"></div>
         <div id="log-sheet" class="bottom-sheet">

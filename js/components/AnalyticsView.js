@@ -127,15 +127,13 @@ export class AnalyticsView {
             ` : ''}
 
             <div id="ratios-container" style="margin-top: 10px;">
-                <h3 style="padding: 0 16px; font-size: 14px; margin-bottom: 12px; color: var(--text-muted);">${this.t('ratios')}</h3>
                 ${savedRatios.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
-                <div id="ratio-list" class="ratios-grid">
+                <div id="ratio-list" class="ratios-grid" style="max-height: 240px; overflow-y: auto;">
                     ${savedRatios.map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions)).join('')}
                 </div>
             </div>
 
-            <div style="margin-top: 30px; padding: 0 16px 100px;">
-                <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">${this.t('charts')}</h3>
+            <div style="margin-top: 20px; padding: 0 16px 100px;">
                 
                 <!-- LINE CHART: Activity Trend -->
                 <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
@@ -237,13 +235,13 @@ export class AnalyticsView {
                     <span class="ratio-details" style="word-break: break-word;">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
 
-                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; flex-direction: column; align-items: center; gap: 8px; z-index: 20;">
-                    <div style="width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-ratio">
-                        <i class="ph ph-hand-grabbing" style="font-size: 24px; color: #64748b; transform: rotate(-30deg);"></i>
+                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 20;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-ratio">
+                        <i class="ph ph-hand-grabbing" style="font-size: 18px; color: #64748b; transform: rotate(-30deg);"></i>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 24px; color: #64748b;"></i></button>
-                        <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 24px; color: #64748b;"></i></button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i></button>
+                        <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 18px; color: #64748b;"></i></button>
                     </div>
                 </div>
             </div>

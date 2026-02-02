@@ -75,7 +75,7 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 102;">
+                                            <div class="edit-controls-tile" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 102;">
                                                 <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-tile">
                                                     <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
                                                 </div>
@@ -103,12 +103,12 @@ export class ActionView {
                                                     <i class="ph ph-hand-grabbing" style="font-size: 20px; color: #64748b; transform: rotate(-30deg);"></i>
                                                 </div>
                                             </div>
-                                        ` : ''}}
+                                        ` : ''}
 
                                         <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
                                         <div style="flex:1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
-                                            <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('units') || 'Pkt'}</div>
+                                            <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('points') || 'Punkte'}</div>
                                         </div>
 
 
