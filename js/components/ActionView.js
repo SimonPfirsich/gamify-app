@@ -45,7 +45,7 @@ export class ActionView {
 
             return `
                     <div class="challenge-group" data-cid="${c.id}" style="margin-bottom: 30px;">
-                        <h3 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.05em;">${c.name}</h3>
+                        ${challenges.length > 1 ? `<h3 style="font-size: 13px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; font-weight: 700; letter-spacing: 0.05em;">${c.name}</h3>` : ''}
                         <div class="actions-grid ${this.currentView}" style="${this.currentView === 'tile' ? 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;' : 'display: flex; flex-direction: column; gap: 8px;'}">
                             ${actions.map(a => {
                 const count = store.state.events.filter(e => e.action_id === a.id && e.user_id === currentUser.id).length;
@@ -61,7 +61,7 @@ export class ActionView {
                                             display: flex; 
                                             flex-direction: ${this.currentView === 'tile' ? 'column' : 'row'}; 
                                             align-items: center;
-                                            justify-content: ${this.currentView === 'tile' ? 'center' : 'flex-start'};
+                                            justify-content: center;
                                             padding: ${this.currentView === 'tile' ? '12px 6px' : '14px 18px'};
                                             background: white; border-radius: 20px; border: 1px solid #f1f5f9; 
                                             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
@@ -105,7 +105,7 @@ export class ActionView {
                                             </div>
                                         ` : ''}
 
-                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
+                                        <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 8px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
                                         <div style="${this.currentView === 'list' ? 'flex:1; text-align: center;' : 'text-align: center; width: 100%;'} opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
                                             <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${a.points === 1 ? (this.t('point') || 'Punkt') : (this.t('points') || 'Punkte')}</div>
@@ -301,15 +301,21 @@ export class ActionView {
                     return;
                 }
 
+                const rect = card.getBoundingClientRect();
                 const cId = card.dataset.cid;
                 store.addEvent(cId, aId);
 
                 if (navigator.vibrate) navigator.vibrate(20);
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => card.style.transform = '', 100);
+                setTimeout(() => {
+                    const newCard = document.querySelector(`.action-card[data-aid="${aId}"]`);
+                    if (newCard) {
+                        newCard.style.transform = 'scale(0.95)';
+                        setTimeout(() => newCard.style.transform = '', 100);
+                    }
+                }, 10);
 
                 // Confetti celebration - explode from button
-                this.showConfetti(card);
+                this.showConfetti(rect);
             };
 
             // DRAG AND DROP
@@ -484,11 +490,11 @@ export class ActionView {
         }
     }
 
-    showConfetti(originElement) {
+    showConfetti(originRect) {
         // Haptic feedback
-        if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+        if (navigator.vibrate) navigator.vibrate([50, 30, 100, 30, 50, 30, 100]);
 
-        // Play celebration sound using Web Audio API
+        // Play celebration sound using Web Audio API (Applause + Cheer)
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
@@ -496,24 +502,58 @@ export class ActionView {
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
                 }
-                const playTone = (freq, startTime, duration) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.frequency.value = freq;
-                    osc.type = 'sine';
-                    gain.gain.setValueAtTime(0.1, startTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-                    osc.start(startTime);
-                    osc.stop(startTime + duration);
+
+                const createNoiseBuffer = () => {
+                    const bufferSize = audioCtx.sampleRate * 2;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+                    return buffer;
                 };
-                // Quick celebratory arpeggio
+
+                // Applause (Pink Noise approximation)
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = createNoiseBuffer();
+                const noiseGain = audioCtx.createGain();
+                // Filter to make it sound more like applause (lowpass)
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.value = 1000;
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+
+                noiseGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                noiseGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+                noise.start();
+
+                // Cheering (Whistle/High tones)
+                const playWoo = (freq, start, dur) => {
+                    const osc = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    osc.frequency.setValueAtTime(freq, start);
+                    osc.frequency.linearRampToValueAtTime(freq + 200, start + dur); // Rise in pitch
+                    osc.type = 'triangle';
+                    g.gain.setValueAtTime(0, start);
+                    g.gain.linearRampToValueAtTime(0.1, start + dur * 0.2);
+                    g.gain.linearRampToValueAtTime(0, start + dur);
+                    osc.connect(g);
+                    g.connect(audioCtx.destination);
+                    osc.start(start);
+                    osc.stop(start + dur);
+                };
+
                 const now = audioCtx.currentTime;
-                playTone(523, now, 0.15);
-                playTone(659, now + 0.08, 0.15);
-                playTone(784, now + 0.16, 0.2);
-                playTone(1047, now + 0.24, 0.3);
+                // Multiple cheers
+                playWoo(800, now + 0.1, 0.4);
+                playWoo(1000, now + 0.2, 0.5);
+                playWoo(600, now + 0.3, 0.6);
+                playWoo(1200, now + 0.15, 0.4);
+
             }
         } catch (e) { console.error(e); }
 
@@ -525,10 +565,16 @@ export class ActionView {
         // Get button position for explosion origin (in pixels)
         let originX = window.innerWidth / 2;
         let originY = window.innerHeight / 2;
-        if (originElement) {
-            const rect = originElement.getBoundingClientRect();
-            originX = rect.left + rect.width / 2;
-            originY = rect.top + rect.height / 2;
+        if (originRect) {
+            // Check if originRect is DOMRect or Element (legacy support)
+            if (originRect.left !== undefined) {
+                originX = originRect.left + originRect.width / 2;
+                originY = originRect.top + originRect.height / 2;
+            } else if (originRect.getBoundingClientRect) {
+                const r = originRect.getBoundingClientRect();
+                originX = r.left + r.width / 2;
+                originY = r.top + r.height / 2;
+            }
         }
 
         // Add keyframe animation once

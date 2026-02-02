@@ -78,7 +78,7 @@ export class LeaderboardView {
         }
 
         const leaderboard = this.getLeaderboard(this.selectedChallenge);
-        const medals = ['🏆', '🥈', '🥉'];
+        const medals = ['🥇', '🥈', '🥉'];
 
         return `
             <div class="header">
@@ -115,19 +115,22 @@ export class LeaderboardView {
             ` : ''}
             
             <div style="padding: 0 16px;">
-                <div style="background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #f1f5f9;">
+                <div style="background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #f1f5f9; padding: 8px 0;">
                     ${leaderboard.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
                     
                     ${leaderboard.map((entry, idx) => `
-                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f8fafc; background: ${idx < 3 ? 'linear-gradient(to right, #fff, #fafafa)' : 'white'};">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <div style="font-weight: 800; width: 24px; font-size: 16px; color: ${idx < 3 ? 'var(--text-dark)' : '#cbd5e1'}; text-align: center;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; margin-bottom: 2px; background: ${idx < 3 ? 'linear-gradient(to right, #ffffff, #fdfdfd)' : 'white'};">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <div style="font-weight: 800; width: 28px; font-size: 24px; color: ${idx < 3 ? 'var(--text-dark)' : '#cbd5e1'}; text-align: center; line-height: 1;">
                                     ${idx < 3 ? medals[idx] : '#' + (idx + 1)}
                                 </div>
-                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid ${idx === 0 ? '#fbbf24' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : 'transparent'))};">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid ${idx === 0 ? '#fbbf24' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : 'transparent'))};">
                                     ${entry.user.avatar}
                                 </div>
-                                <div style="font-weight: 600; font-size: 15px; color: var(--text-dark);">${entry.user.name}</div>
+                                <div style="font-weight: 600; font-size: 15px; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
+                                    ${entry.user.name}
+                                    ${idx === 0 ? '🏆' : ''}
+                                </div>
                             </div>
                             <div style="text-align: right;">
                                 <div style="font-weight: 800; font-size: 18px; color: var(--primary);">${entry.score}</div>
