@@ -349,6 +349,7 @@ export class AnalyticsView {
                     card.classList.add('dragging');
                     this.draggedCard = card;
                     this.isDraggingAfterLongPress = true;
+                    this.hasMoved = false;
 
                     this.renderUpdate();
 
@@ -375,6 +376,8 @@ export class AnalyticsView {
                 }
 
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    const t = e.touches[0];
+                    if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
                     e.preventDefault();
                     const touch = e.touches[0];
                     const grid = document.getElementById('ratio-list');
@@ -392,9 +395,9 @@ export class AnalyticsView {
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
                     this.draggedCard.classList.remove('dragging');
                     const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[parseInt(c.dataset.index)]);
+                    const newOrder = [...document.querySelectorAll('.ratio-card:not(.ghost-ratio-btn)')].map(c => rs[parseInt(c.dataset.index)]);
                     localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
-                    this.editingId = null;
+                    if (this.hasMoved) this.editingId = null;
                     this.isDraggingAfterLongPress = false;
                     this.draggedCard = null;
                     this.renderUpdate();

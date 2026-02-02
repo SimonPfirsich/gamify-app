@@ -217,11 +217,7 @@ export class ChatView {
                     // Check if finger stayed relatively still (increased tolerance)
                     if (Math.abs(currentX - this.touchStartX) < 30) {
                         this.isLongPressTriggered = true;
-                        // Restore focus ONLY if it was open before
-                        if (this.wasFocused) {
-                            const input = document.getElementById('chat-input');
-                            if (input && document.activeElement !== input) input.focus();
-                        }
+
 
                         this.selectedMsgId = wrapper.dataset.id;
                         const currentRect = bubble.getBoundingClientRect();
