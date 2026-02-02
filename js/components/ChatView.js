@@ -207,15 +207,19 @@ export class ChatView {
                 this.lastTouchX = null; // Reset previous swipe state
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
+                // Capture if keyboard is currently open (input focused)
+                this.wasFocused = (document.activeElement === document.getElementById('chat-input'));
 
                 // Do not prevent default to allow scrolling, but we need to manage focus manually if needed
                 this.longPressTimer = setTimeout(() => {
                     const currentX = this.lastTouchX || e.touches[0].clientX;
                     // Check if finger stayed relatively still (increased tolerance)
                     if (Math.abs(currentX - this.touchStartX) < 30) {
-                        // Ensure keyboard stays open
-                        const input = document.getElementById('chat-input');
-                        if (input) input.focus();
+                        // Restore focus ONLY if it was open before
+                        if (this.wasFocused) {
+                            const input = document.getElementById('chat-input');
+                            if (input) input.focus();
+                        }
 
                         this.selectedMsgId = wrapper.dataset.id;
                         const currentRect = bubble.getBoundingClientRect();
