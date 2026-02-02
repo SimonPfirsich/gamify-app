@@ -216,6 +216,7 @@ export class ActionView {
                     card.classList.add('dragging');
                     this.draggedCard = card;
                     this.isDraggingAfterLongPress = true;
+                    this.hasMoved = false;
 
                     this.renderUpdate();
 
@@ -245,6 +246,8 @@ export class ActionView {
 
                 // Handle drag if in drag mode
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
+                    const t = e.touches[0];
+                    if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
                     e.preventDefault();
                     const touch = e.touches[0];
                     const grid = this.draggedCard.closest('.actions-grid');
@@ -262,7 +265,8 @@ export class ActionView {
                 if (this.isDraggingAfterLongPress && this.draggedCard) {
                     this.draggedCard.classList.remove('dragging');
                     this.saveOrder(this.draggedCard.closest('.challenge-group'));
-                    // Keep editingId active to allow further edits/deletion
+                    // If we moved (dragged), exit mode. If we just held (symbol access), keep mode.
+                    if (this.hasMoved) this.editingId = null;
                     this.isDraggingAfterLongPress = false;
                     this.draggedCard = null;
                     this.renderUpdate();

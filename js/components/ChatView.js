@@ -220,7 +220,7 @@ export class ChatView {
                         // Restore focus ONLY if it was open before
                         if (this.wasFocused) {
                             const input = document.getElementById('chat-input');
-                            if (input) input.focus();
+                            if (input && document.activeElement !== input) input.focus();
                         }
 
                         this.selectedMsgId = wrapper.dataset.id;
