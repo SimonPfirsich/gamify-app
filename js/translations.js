@@ -46,7 +46,8 @@ export const translations = {
         reply: "Antwort",
         units: "Einheiten",
         points: "Punkte",
-        champions: "Champions"
+        champions: "Champions",
+        point: "Punkt"
     },
     en: {
         actions: "Actions",

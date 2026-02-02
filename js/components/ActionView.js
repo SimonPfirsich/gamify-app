@@ -119,7 +119,6 @@ export class ActionView {
                 min-height: 110px; cursor: pointer; opacity: 0.6;
             ">
                 <i class="ph ph-plus" style="font-size: 32px; color: #cbd5e1;"></i>
-                <div style="font-size: 12px; color: #94a3b8; font-weight: 600; margin-top: 8px;">Neu</div>
             </div>
                         </div>
                     </div>
@@ -278,7 +277,7 @@ export class ActionView {
             };
 
             // CLICK ACTION
-            card.onclick = (e) => {
+            card.onclick = async (e) => {
                 const aId = card.dataset.aid;
 
                 if (this.editingId) {
@@ -307,7 +306,9 @@ export class ActionView {
 
                 const rect = card.getBoundingClientRect();
                 const cId = card.dataset.cid;
-                store.addEvent(cId, aId);
+
+                // Wait for store confirmation (optimistic update handles UI immediately, but we ensure logic flow)
+                await store.addEvent(cId, aId);
 
                 if (navigator.vibrate) navigator.vibrate(20);
                 setTimeout(() => {

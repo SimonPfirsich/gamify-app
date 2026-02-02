@@ -108,9 +108,6 @@ export class AnalyticsView {
                     <option value="year" ${this.filterTime === 'year' ? 'selected' : ''}>${this.t('this_year')}</option>
                     <option value="custom" ${this.filterTime === 'custom' ? 'selected' : ''}>${this.t('custom')}</option>
                 </select>
-                <button id="add-ratio-trigger" class="add-log-btn">
-                    <i class="ph ph-plus"></i>
-                </button>
             </div>
 
             ${this.filterTime === 'custom' ? `
@@ -130,6 +127,13 @@ export class AnalyticsView {
                 ${savedRatios.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
                 <div id="ratio-list" class="ratios-grid" style="max-height: 240px; overflow-y: auto;">
                     ${savedRatios.map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions)).join('')}
+                    <div id="add-ratio-trigger" class="ratio-card ghost-ratio-btn" style="
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                        background: transparent; border: 2px dashed #e2e8f0; opacity: 0.6; cursor: pointer;
+                        min-height: 110px; border-radius: 20px;
+                    ">
+                        <i class="ph ph-plus" style="font-size: 32px; color: #cbd5e1;"></i>
+                    </div>
                 </div>
             </div>
 
@@ -229,8 +233,8 @@ export class AnalyticsView {
             <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" draggable="${!!this.editingId}" style="position: relative; overflow: visible;">
 
                 
-                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1}; word-break: break-word; hyphens: auto;">
-                    <span class="ratio-label" style="word-break: break-word; hyphens: auto;">${plural1} ${this.t('pro')} ${act2.name}</span>
+                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1}; word-break: break-word; hyphens: auto; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+                    <span class="ratio-label" style="word-break: break-word; hyphens: auto; font-size: 13px; line-height: 1.3; margin-bottom: 4px;">${plural1} ${this.t('pro')} ${act2.name}</span>
                     <span class="ratio-value">${percentage}%</span>
                     <span class="ratio-details" style="word-break: break-word;">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>

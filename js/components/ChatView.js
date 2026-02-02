@@ -80,26 +80,26 @@ export class ChatView {
                     }
 
                     const isMe = msg.user_id === currentUser.id;
-                const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
-                const isEvent = msg.type === 'event';
-                const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
-                const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
+                    const user = store.state.users.find(u => u.id === msg.user_id) || { name: 'Unbekannt', avatar: '👤' };
+                    const isEvent = msg.type === 'event';
+                    const replyMsg = msg.reply_to ? chat.find(m => m.id === msg.reply_to) : null;
+                    const reactions = Array.isArray(msg.reactions) ? msg.reactions : [];
 
-                const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
-                const emojiCounts = {};
-                reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
+                    const myEmojis = reactions.filter(r => r.u === currentUser.id).map(r => r.e);
+                    const emojiCounts = {};
+                    reactions.forEach(r => emojiCounts[r.e] = (emojiCounts[r.e] || 0) + 1);
 
-                let uniqueEmojis = Object.keys(emojiCounts);
-                let displayEmojis = [];
-                if (myEmojis.length > 0) {
-                    const myMainEmoji = myEmojis[0];
-                    const others = uniqueEmojis.filter(e => e !== myMainEmoji);
-                    displayEmojis = [...others.slice(0, 3), myMainEmoji];
-                } else {
-                    displayEmojis = uniqueEmojis.slice(0, 4);
-                }
+                    let uniqueEmojis = Object.keys(emojiCounts);
+                    let displayEmojis = [];
+                    if (myEmojis.length > 0) {
+                        const myMainEmoji = myEmojis[0];
+                        const others = uniqueEmojis.filter(e => e !== myMainEmoji);
+                        displayEmojis = [...others.slice(0, 3), myMainEmoji];
+                    } else {
+                        displayEmojis = uniqueEmojis.slice(0, 4);
+                    }
 
-                return `
+                    return `
                         ${dateDivider}
                         <div class="message-wrapper" data-id="${msg.id}" style="display: flex; flex-direction: column; align-items: ${isMe ? 'flex-end' : 'flex-start'}; position: relative; width: 100%;">
                             <div class="message-container" style="display: flex; align-items: flex-end; gap: 6px; flex-direction: ${isMe ? 'row-reverse' : 'row'}; max-width: 100%; padding: 0 10px; width: 100%; box-sizing: border-box;">
@@ -151,8 +151,8 @@ export class ChatView {
                             </div>
                         </div>
                     `;
-            }).join('');
-    })()}
+                }).join('');
+            })()}
             </div >
     `;
     }
@@ -204,20 +204,22 @@ export class ChatView {
 
             // Interaction: Long press for reactions
             const handleTouchStart = (e) => {
+                this.lastTouchX = null; // Reset previous swipe state
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
 
                 // Do not prevent default to allow scrolling, but we need to manage focus manually if needed
                 this.longPressTimer = setTimeout(() => {
                     const currentX = this.lastTouchX || e.touches[0].clientX;
-                    if (Math.abs(currentX - this.touchStartX) < 15) {
+                    // Check if finger stayed relatively still (increased tolerance)
+                    if (Math.abs(currentX - this.touchStartX) < 30) {
                         this.selectedMsgId = wrapper.dataset.id;
                         const currentRect = bubble.getBoundingClientRect();
 
                         if (emojiBar) {
                             emojiBar.style.display = 'flex';
                             const topPos = currentRect.top < 150 ? currentRect.bottom + 10 : currentRect.top - 65;
-                            emojiBar.style.top = `${ Math.max(10, topPos) } px`;
+                            emojiBar.style.top = `${Math.max(10, topPos)} px`;
                         }
 
                         pickerContainer.classList.add('active');
@@ -241,10 +243,11 @@ export class ChatView {
                 this.lastTouchX = e.touches[0].clientX;
                 const dX = e.touches[0].clientX - this.touchStartX;
                 const dY = e.touches[0].clientY - this.touchStartY;
-                if (Math.abs(dY) > 20 || dX < -10) clearTimeout(this.longPressTimer);
+                // Increased tolerance for "wobble" during long press
+                if (Math.abs(dY) > 40 || dX < -20) clearTimeout(this.longPressTimer);
                 if (dX > 20 && Math.abs(dY) < 30) {
                     clearTimeout(this.longPressTimer);
-                    wrapper.style.transform = `translate3d(${ Math.min(dX, 60) }px, 0, 0)`;
+                    wrapper.style.transform = `translate3d(${Math.min(dX, 60)}px, 0, 0)`;
                     wrapper.querySelector('.swipe-indicator').style.opacity = Math.min(dX / 60, 1);
                 }
             }, { passive: true });
@@ -257,7 +260,7 @@ export class ChatView {
                     this.currentReplyId = wrapper.dataset.id;
                     const msg = store.state.chat.find(m => m.id === wrapper.dataset.id);
                     document.getElementById('reply-preview').style.display = 'flex';
-                    document.getElementById('reply-text').innerText = `${ this.t('reply') }: ${ msg.content.substring(0, 25) }...`;
+                    document.getElementById('reply-text').innerText = `${this.t('reply')}: ${msg.content.substring(0, 25)}...`;
                     input?.focus();
                 }
                 wrapper.style.transform = '';
@@ -274,7 +277,7 @@ export class ChatView {
                 const msg = store.state.chat.find(m => m.id === msgId);
                 if (!msg) return;
                 const reactions = msg.reactions || [];
-                document.getElementById('reaction-count-title').innerText = `${ reactions.length } ${ this.t('chat') } `; // Placeholder for count
+                document.getElementById('reaction-count-title').innerText = `${reactions.length} ${this.t('chat')} `; // Placeholder for count
                 document.getElementById('reaction-users-list').innerHTML = reactions.map(r => {
                     const user = store.state.users.find(u => u.id === r.u);
                     const isMe = r.u === store.state.currentUser.id;
