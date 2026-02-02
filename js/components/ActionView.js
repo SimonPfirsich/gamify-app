@@ -21,7 +21,7 @@ export class ActionView {
             <div class="header">
                 <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
                     <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
-                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5</div>
+                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5.1</div>
                 </div>
             </div>
             </div>
