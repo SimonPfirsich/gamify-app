@@ -21,14 +21,6 @@ export class ActionView {
             <div class="header">
                 <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
                     <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
-                        <button id="view-toggle-btn" class="header-icon-btn">
-                            <i class="ph ${this.currentView === 'tile' ? 'ph-list' : 'ph-squares-four'}"></i>
-                        </button>
-                        <button id="add-action-header-btn" class="header-icon-btn">
-                            <i class="ph ph-plus"></i>
-                        </button>
-                    </div>
                 </div>
             </div>
             </div>
@@ -114,7 +106,21 @@ export class ActionView {
 
                                     </div>
                                 `;
+
             }).join('')}
+            <div class="action-card ghost-add-btn" data-cid="${c.id}" style="
+                display: flex; 
+                flex-direction: column; 
+                align-items: center;
+                justify-content: center;
+                padding: 12px 6px;
+                background: transparent; border-radius: 20px; border: 2px dashed #e2e8f0; 
+                /* box-shadow: none; */
+                min-height: 110px; cursor: pointer; opacity: 0.6;
+            ">
+                <i class="ph ph-plus" style="font-size: 32px; color: #cbd5e1;"></i>
+                <div style="font-size: 12px; color: #94a3b8; font-weight: 600; margin-top: 8px;">Neu</div>
+            </div>
                         </div>
                     </div>
                 `;
@@ -170,18 +176,16 @@ export class ActionView {
 
     afterRender() {
         // VIEW TOGGLE
-        const viewBtn = document.getElementById('view-toggle-btn');
-        if (viewBtn) {
-            viewBtn.onclick = () => {
-                this.currentView = this.currentView === 'tile' ? 'list' : 'tile';
-                store.setActionsView(this.currentView);
-                this.renderUpdate();
-            };
-        }
+        // VIEW TOGGLE REMOVED
+
 
         // ADD BUTTON
-        const addBtn = document.getElementById('add-action-header-btn');
-        if (addBtn) addBtn.onclick = () => this.openModal();
+        // ADD BUTTON HEADER REMOVED
+
+        // GHOST BUTTONS logic
+        document.querySelectorAll('.ghost-add-btn').forEach(btn => {
+            btn.onclick = () => this.openModal(null, btn.dataset.cid);
+        });
 
         const cards = document.querySelectorAll('.action-card');
 
@@ -593,27 +597,30 @@ export class ActionView {
         `;
         document.head.appendChild(styleEl);
 
-        // Confetti particles - more explosive
-        for (let i = 0; i < 80; i++) {
+        // Confetti particles - Smaller & Spread further
+        for (let i = 0; i < 200; i++) { // More particles
             const confetti = document.createElement('div');
             const color = colors[Math.floor(Math.random() * colors.length)];
-            const size = Math.random() * 12 + 6;
+            const size = Math.random() * 5 + 3; // Smaller: 3-8px
             const angle = Math.random() * Math.PI * 2;
-            const velocity = Math.random() * 200 + 100;
-            const tx1 = Math.cos(angle) * velocity * 0.3;
-            const ty1 = Math.sin(angle) * velocity * 0.3 - 50;
-            const tx2 = Math.cos(angle) * velocity + (Math.random() - 0.5) * 100;
-            const ty2 = Math.sin(angle) * velocity + window.innerHeight * 0.6;
+            // High velocity to reach edges
+            const velocity = Math.random() * (Math.max(window.innerWidth, window.innerHeight)) + 200;
+
+            const tx1 = Math.cos(angle) * (velocity * 0.2);
+            const ty1 = Math.sin(angle) * (velocity * 0.2);
+            const tx2 = Math.cos(angle) * velocity;
+            const ty2 = Math.sin(angle) * velocity;
+
             const rotation = Math.random() * 1440;
             const duration = Math.random() * 1500 + 2000;
-            const delay = Math.random() * 150;
+            const delay = Math.random() * 200;
 
             confetti.style.cssText = `
                 position: absolute;
                 width: ${size}px;
                 height: ${size}px;
                 background: ${color};
-                border-radius: ${Math.random() > 0.6 ? '50%' : Math.random() > 0.5 ? '2px' : '0'};
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
                 left: ${originX}px;
                 top: ${originY}px;
                 --tx1: ${tx1}px;
@@ -621,22 +628,24 @@ export class ActionView {
                 --tx2: ${tx2}px;
                 --ty2: ${ty2}px;
                 --rot: ${rotation}deg;
-                animation: confettiExplode ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms forwards;
+                animation: confettiExplode ${duration}ms cubic-bezier(0.25, 1, 0.5, 1) ${delay}ms forwards;
+                opacity: 0;
             `;
             container.appendChild(confetti);
         }
 
-        // Lametta / streamers
-        for (let i = 0; i < 30; i++) {
+        // Lametta / streamers - Longer & Thinner
+        for (let i = 0; i < 50; i++) {
             const lametta = document.createElement('div');
             const color = colors[Math.floor(Math.random() * colors.length)];
-            const width = Math.random() * 4 + 2;
-            const height = Math.random() * 30 + 20;
+            const width = Math.random() * 2 + 1; // Very thin: 1-3px
+            const height = Math.random() * 25 + 15; // Longer
             const angle = Math.random() * Math.PI * 2;
-            const velocity = Math.random() * 150 + 80;
+            const velocity = Math.random() * (Math.max(window.innerWidth, window.innerHeight) * 0.8) + 100;
+
             const lx = Math.cos(angle) * velocity;
-            const ly = Math.sin(angle) * velocity + window.innerHeight * 0.5;
-            const lrot = (Math.random() - 0.5) * 360;
+            const ly = Math.sin(angle) * velocity;
+            const lrot = (Math.random() - 0.5) * 720;
             const duration = Math.random() * 2000 + 2500;
             const delay = Math.random() * 200;
 
@@ -645,7 +654,7 @@ export class ActionView {
                 width: ${width}px;
                 height: ${height}px;
                 background: linear-gradient(to bottom, ${color}, ${color}88);
-                border-radius: 2px;
+                border-radius: 1px;
                 left: ${originX}px;
                 top: ${originY}px;
                 --lx: ${lx}px;
@@ -653,34 +662,9 @@ export class ActionView {
                 --lrot: ${lrot}deg;
                 animation: lamettaFall ${duration}ms ease-out ${delay}ms forwards;
                 transform-style: preserve-3d;
+                opacity: 0;
             `;
             container.appendChild(lametta);
-        }
-
-        // Stars / sparkles
-        for (let i = 0; i < 20; i++) {
-            const star = document.createElement('div');
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = Math.random() * 120 + 60;
-            const tx2 = Math.cos(angle) * velocity;
-            const ty2 = Math.sin(angle) * velocity;
-
-            star.style.cssText = `
-                position: absolute;
-                width: 0; height: 0;
-                border-left: 6px solid transparent;
-                border-right: 6px solid transparent;
-                border-bottom: 10px solid #ffd700;
-                left: ${originX}px;
-                top: ${originY}px;
-                --tx1: ${tx2 * 0.3}px;
-                --ty1: ${ty2 * 0.3 - 30}px;
-                --tx2: ${tx2}px;
-                --ty2: ${ty2 + 200}px;
-                --rot: ${Math.random() * 720}deg;
-                animation: confettiExplode ${Math.random() * 1000 + 1500}ms ease-out ${Math.random() * 100}ms forwards;
-            `;
-            container.appendChild(star);
         }
 
         setTimeout(() => {
