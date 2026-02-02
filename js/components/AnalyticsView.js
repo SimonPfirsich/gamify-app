@@ -127,11 +127,7 @@ export class AnalyticsView {
                 ${savedRatios.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
                 <div id="ratio-list" class="ratios-grid" style="max-height: 240px; overflow-y: auto;">
                     ${savedRatios.map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions)).join('')}
-                    <div id="add-ratio-trigger" class="ratio-card ghost-ratio-btn" style="
-                        display: flex; flex-direction: column; align-items: center; justify-content: center;
-                        background: transparent; border: 2px dashed #e2e8f0; opacity: 0.6; cursor: pointer;
-                        min-height: 110px; border-radius: 20px;
-                    ">
+                    <div id="add-ratio-trigger" class="ratio-card ghost-ratio-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border: 2px dashed #e2e8f0; opacity: 0.6; cursor: pointer; min-height: 110px; border-radius: 20px;">
                         <i class="ph ph-plus" style="font-size: 32px; color: #cbd5e1;"></i>
                     </div>
                 </div>

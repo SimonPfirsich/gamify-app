@@ -186,7 +186,7 @@ export class ActionView {
             btn.onclick = () => this.openModal(null, btn.dataset.cid);
         });
 
-        const cards = document.querySelectorAll('.action-card');
+        const cards = document.querySelectorAll('.action-card:not(.ghost-add-btn)');
 
         cards.forEach(card => {
             let startX, startY, initialTouchIdentifier;

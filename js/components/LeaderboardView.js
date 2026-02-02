@@ -121,7 +121,7 @@ export class LeaderboardView {
                     ${leaderboard.map((entry, idx) => `
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; margin-bottom: 2px; background: ${idx < 3 ? 'linear-gradient(to right, #ffffff, #fdfdfd)' : 'white'};">
                             <div style="display: flex; align-items: center; gap: 14px;">
-                                <div style="font-weight: ${idx < 3 ? '800' : '600'}; width: 28px; font-size: ${idx < 3 ? '24px' : '14px'}; color: ${idx < 3 ? 'var(--text-dark)' : '#94a3b8'}; text-align: center; line-height: 1;">
+                                <div style="font-weight: ${idx < 3 ? '800' : '600'}; width: 28px; font-size: ${idx < 3 ? '24px' : '13px'}; color: ${idx < 3 ? 'var(--text-dark)' : '#94a3b8'}; text-align: center; line-height: 1;">
                                     ${idx < 3 ? medals[idx] : (idx + 1)}
                                 </div>
                                 <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 2px solid ${idx === 0 ? '#fbbf24' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : 'transparent'))};">

@@ -218,8 +218,9 @@ export class ChatView {
 
                         if (emojiBar) {
                             emojiBar.style.display = 'flex';
-                            const topPos = currentRect.top < 150 ? currentRect.bottom + 10 : currentRect.top - 65;
-                            emojiBar.style.top = `${Math.max(10, topPos)} px`;
+                            // Position above the bubble, or below if too close to top
+                            const topPos = currentRect.top < 100 ? currentRect.bottom + 10 : currentRect.top - 55;
+                            emojiBar.style.top = `${topPos}px`;
                         }
 
                         pickerContainer.classList.add('active');
