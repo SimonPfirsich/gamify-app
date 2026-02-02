@@ -445,7 +445,7 @@ body.chat-active #content {
 /* Chat feed padding based on keyboard state */
 /* Chat feed padding based on keyboard state */
 #chat-feed {
-    padding-bottom: 127px;
+    padding-bottom: 125px;
 }
 
 .keyboard-open #chat-feed {
