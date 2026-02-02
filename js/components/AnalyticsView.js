@@ -127,7 +127,7 @@ export class AnalyticsView {
             <div id="ratios-container" style="margin-top: 10px;">
                 ${savedRatios.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
                 <div id="ratio-list" class="ratios-grid" style="max-height: 240px; overflow-y: auto;">
-                    ${savedRatios.filter(r => r && r.act1 && r.act2).map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions)).join('')}
+                    ${savedRatios.filter(r => r && r.act1 && r.act2).map((ratio, index) => this.renderRatioCard(ratio, index, events, allActions, savedRatios.filter(r => r && r.act1 && r.act2).length)).join('')}
                     <div id="add-ratio-trigger" class="ratio-card ghost-ratio-btn" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border: 2px dashed #e2e8f0; opacity: 0.6; cursor: pointer; min-height: 110px; border-radius: 20px;">
                         <i class="ph ph-plus" style="font-size: 32px; color: #cbd5e1;"></i>
                     </div>
@@ -192,7 +192,7 @@ export class AnalyticsView {
         }
     }
 
-    renderRatioCard(ratio, index, events, allActions) {
+    renderRatioCard(ratio, index, events, allActions, totalRatios) {
         const act1 = allActions.find(a => a.id === ratio.act1);
         const act2 = allActions.find(a => a.id === ratio.act2);
         if (!act1 || !act2) return '';
@@ -229,26 +229,35 @@ export class AnalyticsView {
         const plural2 = this.pluralize(act2.name);
 
         const isEditingThis = this.editingId === String(index);
+        const isFirst = index === 0;
+        const isLast = index === totalRatios - 1;
 
         return `
-            <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" draggable="${!!this.editingId}" style="position: relative; overflow: visible;">
+            <div class="ratio-card ${isEditingThis ? 'edit-mode' : ''}" data-index="${index}" style="position: relative; overflow: visible;">
 
-                
-                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.2 : 1}; word-break: break-word; hyphens: auto; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%;">
+                <div class="ratio-info" style="opacity: ${isEditingThis ? 0.1 : 1}; word-break: break-word; hyphens: auto; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; pointer-events: none;">
                     <span class="ratio-label" style="word-break: break-word; hyphens: auto; font-size: 13px; line-height: 1.3; margin-bottom: 4px;">${plural1} ${this.t('pro')} ${act2.name}</span>
                     <span class="ratio-value">${percentage}%</span>
                     <span class="ratio-details" style="word-break: break-word;">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
 
-                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 20;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-ratio">
-                        <i class="ph ph-hand-grabbing" style="font-size: 18px; color: #64748b; transform: rotate(-30deg);"></i>
+                <!-- Edit Controls 2x2 Grid -->
+                ${isEditingThis ? `
+                    <div class="edit-controls-tile" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; z-index: 102; background: rgba(255,255,255,0.93); border-radius: 20px;">
+                        <button class="move-ratio-left action-mini-btn" data-index="${index}" ${isFirst ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                            <i class="ph ph-arrow-left" style="font-size: 20px; color: #334155;"></i>
+                        </button>
+                        <button class="move-ratio-right action-mini-btn" data-index="${index}" ${isLast ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                            <i class="ph ph-arrow-right" style="font-size: 20px; color: #334155;"></i>
+                        </button>
+                        <button class="edit-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                            <i class="ph ph-pencil-simple" style="font-size: 20px; color: var(--primary);"></i>
+                        </button>
+                        <button class="delete-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                            <i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i>
+                        </button>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 18px; color: #64748b;"></i></button>
-                        <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 36px; height: 36px; border-radius: 10px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.12); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 18px; color: #64748b;"></i></button>
-                    </div>
-                </div>
+                ` : ''}
             </div>
         `;
     }
@@ -297,7 +306,7 @@ export class AnalyticsView {
             setTimeout(() => modal.classList.remove('active'), 300);
         };
 
-        this.closeModal = closeModal; // Bind to instance for App.js to call
+        this.closeModal = closeModal;
 
         if (trigger) trigger.onclick = () => openModal();
         if (overlay) overlay.onclick = closeModal;
@@ -317,91 +326,22 @@ export class AnalyticsView {
             this.renderUpdate();
         };
 
-        document.querySelectorAll('.delete-ratio-btn').forEach(btn => btn.onclick = (e) => {
-            e.stopPropagation();
-            const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-            rs.splice(btn.dataset.index, 1);
-            localStorage.setItem('gamify_ratios', JSON.stringify(rs));
-            this.renderUpdate();
-        });
-
-        document.querySelectorAll('.edit-ratio-btn').forEach(btn => btn.onclick = (e) => { e.stopPropagation(); openModal(parseInt(btn.dataset.index)); });
-
-        // DRAG AND DROP
-        // LONG PRESS TO ENTER EDIT MODE with immediate drag
-        const cards = document.querySelectorAll('.ratio-card');
+        // Card Event Handlers
+        const cards = document.querySelectorAll('.ratio-card:not(.ghost-ratio-btn)');
         cards.forEach(card => {
-            let startX, startY, initialTouchIdentifier;
-
+            // LONG PRESS (Simple)
             card.ontouchstart = (e) => {
                 if (this.editingId) return;
-                const touch = e.touches[0];
-                startX = touch.clientX;
-                startY = touch.clientY;
-                initialTouchIdentifier = touch.identifier;
-
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = card.dataset.index;
                     if (navigator.vibrate) navigator.vibrate(50);
                     history.pushState({ editMode: true }, '');
-
-                    // Mark as dragging immediately
-                    card.classList.add('dragging');
-                    this.draggedCard = card;
-                    this.isDraggingAfterLongPress = true;
-                    this.hasMoved = false;
-
                     this.renderUpdate();
-
-                    setTimeout(() => {
-                        const newCard = document.querySelector(`.ratio-card[data-index="${card.dataset.index}"]`);
-                        if (newCard) {
-                            newCard.classList.add('dragging');
-                            this.draggedCard = newCard;
-                        }
-                    }, 50);
-                }, 700);
-            };
-
-            card.ontouchmove = (e) => {
-                if (!this.isDraggingAfterLongPress && this.longPressTimer) {
-                    const touch = [...e.touches].find(t => t.identifier === initialTouchIdentifier);
-                    if (touch) {
-                        const dx = Math.abs(touch.clientX - startX);
-                        const dy = Math.abs(touch.clientY - startY);
-                        if (dx > 10 || dy > 10) {
-                            clearTimeout(this.longPressTimer);
-                        }
-                    }
-                }
-
-                if (this.isDraggingAfterLongPress && this.draggedCard) {
-                    const t = e.touches[0];
-                    if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const grid = document.getElementById('ratio-list');
-                    if (grid) {
-                        const afterElement = this.getDragAfterElement(grid, touch.clientX, touch.clientY);
-                        if (afterElement == null) grid.appendChild(this.draggedCard);
-                        else grid.insertBefore(this.draggedCard, afterElement);
-                    }
-                }
+                }, 600);
             };
 
             card.ontouchend = card.ontouchcancel = () => {
                 clearTimeout(this.longPressTimer);
-
-                if (this.isDraggingAfterLongPress && this.draggedCard) {
-                    this.draggedCard.classList.remove('dragging');
-                    const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                    const newOrder = [...document.querySelectorAll('.ratio-card:not(.ghost-ratio-btn)')].map(c => rs[parseInt(c.dataset.index)]);
-                    localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
-                    if (this.hasMoved) this.editingId = null;
-                    this.isDraggingAfterLongPress = false;
-                    this.draggedCard = null;
-                    this.renderUpdate();
-                }
             };
 
             // Mouse events for desktop
@@ -412,76 +352,64 @@ export class AnalyticsView {
                     if (navigator.vibrate) navigator.vibrate(50);
                     history.pushState({ editMode: true }, '');
                     this.renderUpdate();
-                }, 700);
+                }, 600);
             };
 
             card.onmouseup = card.onmouseleave = () => {
                 clearTimeout(this.longPressTimer);
             };
 
-            if (this.editingId) {
-                card.addEventListener('dragstart', () => {
-                    if (card.dataset.index === this.editingId) card.classList.add('dragging');
-                });
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                    const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                    // Need to reconstruct order from DOM
-                    const newOrder = [...document.querySelectorAll('.ratio-card')].map(c => rs[parseInt(c.dataset.index)]);
-                    localStorage.setItem('gamify_ratios', JSON.stringify(newOrder));
-                    // Exit edit mode after drag
-                    this.editingId = null;
-                    this.renderUpdate();
-                });
-            }
+            // CLICK ACTION
+            card.onclick = (e) => {
+                if (this.editingId) {
+                    if (e.target.closest('.move-ratio-left')) {
+                        const idx = parseInt(e.target.closest('.move-ratio-left').dataset.index);
+                        this.moveRatio(idx, -1);
+                        e.stopPropagation();
+                    } else if (e.target.closest('.move-ratio-right')) {
+                        const idx = parseInt(e.target.closest('.move-ratio-right').dataset.index);
+                        this.moveRatio(idx, 1);
+                        e.stopPropagation();
+                    } else if (e.target.closest('.edit-ratio-btn')) {
+                        const idx = parseInt(e.target.closest('.edit-ratio-btn').dataset.index);
+                        this.editingId = null;
+                        openModal(idx);
+                        e.stopPropagation();
+                    } else if (e.target.closest('.delete-ratio-btn')) {
+                        const idx = parseInt(e.target.closest('.delete-ratio-btn').dataset.index);
+                        this.editingId = null;
+                        const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+                        rs.splice(idx, 1);
+                        localStorage.setItem('gamify_ratios', JSON.stringify(rs));
+                        this.renderUpdate();
+                        e.stopPropagation();
+                    } else {
+                        this.editingId = null;
+                        this.renderUpdate();
+                    }
+                    return;
+                }
+            };
         });
 
         // Exit edit mode on click outside
-        // Using global click handler for robustness
-        const appContainer = document.getElementById('app');
-        if (appContainer) {
-            this.handleOutsideClick = (e) => {
-                if (this.editingId && !e.target.closest('.ratio-card')) {
-                    // Check if history state needs popping
-                    if (history.state && history.state.editMode) history.back();
-                    else {
-                        this.editingId = null;
-                        this.renderUpdate();
-                    }
-                }
-            };
-            document.body.addEventListener('click', this.handleOutsideClick, { once: true }); // Attach once per render or handle cleanup? 
-            // Better: attached globally but checked. Since we render often, maybe attaching to body repeatedly is bad.
-            // Actually renderUpdate is called, which re-attaches. 
-            // Let's use the local container click for simplicity first, as ActionView did it globally but we can try local if it works.
-        }
+        document.body.addEventListener('click', (e) => {
+            if (this.editingId && !e.target.closest('.ratio-card')) {
+                this.editingId = null;
+                this.renderUpdate();
+            }
+        }, { once: true });
+    }
 
-        const ratioList = document.getElementById('ratio-list');
-        if (ratioList) {
-            ratioList.onclick = (e) => {
-                if (this.editingId && !e.target.closest('.ratio-card') && !e.target.closest('.edit-controls')) {
-                    // Manual exit
-                    if (history.state && history.state.editMode) history.back();
-                    else {
-                        this.editingId = null;
-                        this.renderUpdate();
-                    }
-                }
-            };
-        }
+    moveRatio(index, direction) {
+        const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+        const newIdx = index + direction;
+        if (newIdx < 0 || newIdx >= rs.length) return;
 
-        const list = document.getElementById('ratio-list');
-        if (list) {
-            list.addEventListener('dragover', e => {
-                if (!this.editingId) return;
-                e.preventDefault();
-                const dragging = document.querySelector('.dragging');
-                if (!dragging) return;
-                const afterElement = this.getDragAfterElement(list, e.clientY);
-                if (afterElement == null) list.appendChild(dragging);
-                else list.insertBefore(dragging, afterElement);
-            });
-        }
+        // Swap
+        [rs[index], rs[newIdx]] = [rs[newIdx], rs[index]];
+        localStorage.setItem('gamify_ratios', JSON.stringify(rs));
+        this.renderUpdate();
     }
 
     getDragAfterElement(container, x, y) {

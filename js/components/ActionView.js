@@ -21,7 +21,7 @@ export class ActionView {
             <div class="header">
                 <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
                     <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
-                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5.1</div>
+                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5.2</div>
                 </div>
             </div>
             </div>
@@ -180,11 +180,15 @@ export class ActionView {
         // VIEW TOGGLE
         // VIEW TOGGLE REMOVED
 
-        // Input Validation for Icon
+        // Input Validation for Icon (Single Emoji Only)
         const iconInp = document.getElementById('edit-action-icon');
         if (iconInp) {
             iconInp.oninput = (e) => {
-                e.target.value = e.target.value.replace(/[a-zA-Z0-9]/g, '');
+                // Remove any alphanumeric and whitespace
+                let val = e.target.value.replace(/[a-zA-Z0-9\s]/g, '');
+                // Keep only first character cluster (emoji)
+                const chars = [...val];
+                e.target.value = chars.length > 0 ? chars[0] : '';
             };
         }
 
@@ -239,10 +243,13 @@ export class ActionView {
                         e.stopPropagation();
                     } else if (e.target.closest('.delete-action')) {
                         if (confirm(this.t('delete_confirm'))) {
-                            await store.deleteAction(aId);
-                            this.exitEditMode();
+                            // Clear editing BEFORE delete to avoid stale state on re-render
+                            const deleteAid = aId;
+                            this.editingId = null;
+                            await store.deleteAction(deleteAid);
                         }
                         e.stopPropagation();
+                        return;
                     } else {
                         // Click elsewhere on card exits edit mode
                         this.editingId = null;
@@ -734,7 +741,7 @@ export class ActionView {
             } catch (e) {
                 // Fallback
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.15;
+                a.volume = 0.05;
                 a.play().catch(() => { });
                 return;
             }
@@ -745,7 +752,7 @@ export class ActionView {
         }
 
         if (this.confettiBuffer) {
-            this.playSoundFromBuffer(this.confettiBuffer, 0.15);
+            this.playSoundFromBuffer(this.confettiBuffer, 0.05);
             return;
         }
 
@@ -754,11 +761,11 @@ export class ActionView {
             .then(arr => this.audioCtx.decodeAudioData(arr))
             .then(audioBuffer => {
                 this.confettiBuffer = audioBuffer;
-                this.playSoundFromBuffer(audioBuffer, 0.15);
+                this.playSoundFromBuffer(audioBuffer, 0.05);
             })
             .catch(() => {
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.15;
+                a.volume = 0.05;
                 a.play().catch(() => { });
             });
     }

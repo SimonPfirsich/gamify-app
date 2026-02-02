@@ -128,10 +128,10 @@ export class LogbookView {
                             ${isEditingThis && isMe ? `
                                 <div class="edit-controls-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 12px; z-index: 102;">
                                     <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                        <i class="ph ph-pencil-simple" style="font-size: 22px; color: #64748b;"></i>
+                                        <i class="ph ph-pencil-simple" style="font-size: 22px; color: var(--primary);"></i>
                                     </button>
                                     <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                        <i class="ph ph-trash" style="font-size: 22px; color: #64748b;"></i>
+                                        <i class="ph ph-trash" style="font-size: 22px; color: #ef4444;"></i>
                                     </button>
                                 </div>
                             ` : ''
@@ -258,10 +258,9 @@ export class LogbookView {
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = item.dataset.id;
                     if (navigator.vibrate) navigator.vibrate(50);
-                    // Push state for back button integration
                     history.pushState({ editMode: true }, '');
                     this.renderUpdate();
-                }, 700);
+                }, 600);
             };
 
             item.onmouseup = item.onmouseleave = item.ontouchend = () => {
@@ -300,10 +299,9 @@ export class LogbookView {
         document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
             e.stopPropagation();
             if (confirm(this.t('delete_confirm'))) {
-                await store.deleteEvent(btn.dataset.id);
-                // Stay in edit mode if there are other items? 
-                // Currently store delete triggers notify -> re-render -> isEditMode persists if instance not recreated?
-                // The re-render creates a new view instance if done via app.js? No, app.js calls render() on same instance.
+                const deleteId = btn.dataset.id;
+                this.editingId = null;
+                await store.deleteEvent(deleteId);
             }
         });
 
