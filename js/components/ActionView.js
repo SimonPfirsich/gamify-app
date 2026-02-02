@@ -21,7 +21,7 @@ export class ActionView {
             <div class="header">
                 <div style="display: flex; flex-direction: column; width: 100%; gap: 15px;">
                     <h1 style="text-align: center; margin: 0; font-size: 22px;">${this.t('actions')}</h1>
-                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5.2</div>
+                    <div style="font-size:10px; color:#cbd5e1; text-align:center; margin-top:-10px;">v1.5.3</div>
                 </div>
             </div>
             </div>
@@ -243,10 +243,13 @@ export class ActionView {
                         e.stopPropagation();
                     } else if (e.target.closest('.delete-action')) {
                         if (confirm(this.t('delete_confirm'))) {
-                            // Clear editing BEFORE delete to avoid stale state on re-render
+                            // Fade out animation
+                            card.classList.add('deleting');
                             const deleteAid = aId;
                             this.editingId = null;
-                            await store.deleteAction(deleteAid);
+                            setTimeout(async () => {
+                                await store.deleteAction(deleteAid);
+                            }, 400);
                         }
                         e.stopPropagation();
                         return;
@@ -741,7 +744,7 @@ export class ActionView {
             } catch (e) {
                 // Fallback
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.05;
+                a.volume = 1.0;
                 a.play().catch(() => { });
                 return;
             }
@@ -752,7 +755,7 @@ export class ActionView {
         }
 
         if (this.confettiBuffer) {
-            this.playSoundFromBuffer(this.confettiBuffer, 0.05);
+            this.playSoundFromBuffer(this.confettiBuffer, 1.0);
             return;
         }
 
@@ -761,11 +764,11 @@ export class ActionView {
             .then(arr => this.audioCtx.decodeAudioData(arr))
             .then(audioBuffer => {
                 this.confettiBuffer = audioBuffer;
-                this.playSoundFromBuffer(audioBuffer, 0.05);
+                this.playSoundFromBuffer(audioBuffer, 1.0);
             })
             .catch(() => {
                 const a = new Audio('confetti.mp3');
-                a.volume = 0.05;
+                a.volume = 1.0;
                 a.play().catch(() => { });
             });
     }

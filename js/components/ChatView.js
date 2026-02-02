@@ -305,7 +305,7 @@ export class ChatView {
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="font-size: 20px;">${r.e}</span>
-                                ${isMe ? `<span class="delete-x" style="font-size: 14px; color: #ef4444; font-weight: bold; cursor: pointer; padding: 10px;">✕</span>` : ''}
+                                ${isMe ? `<i class="ph ph-trash delete-x" style="font-size: 16px; color: #ef4444; cursor: pointer; padding: 10px;"></i>` : ''}
                             </div>
                         </div >
                         `;

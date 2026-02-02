@@ -299,9 +299,14 @@ export class LogbookView {
         document.querySelectorAll('.delete-log-btn').forEach(btn => btn.onclick = async (e) => {
             e.stopPropagation();
             if (confirm(this.t('delete_confirm'))) {
+                const logItem = btn.closest('.log-item');
                 const deleteId = btn.dataset.id;
                 this.editingId = null;
-                await store.deleteEvent(deleteId);
+                // Fade out animation
+                if (logItem) logItem.classList.add('deleting');
+                setTimeout(async () => {
+                    await store.deleteEvent(deleteId);
+                }, 400);
             }
         });
 

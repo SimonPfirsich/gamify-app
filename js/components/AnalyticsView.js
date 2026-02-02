@@ -244,16 +244,16 @@ export class AnalyticsView {
                 <!-- Edit Controls 2x2 Grid -->
                 ${isEditingThis ? `
                     <div class="edit-controls-tile" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; z-index: 102; background: rgba(255,255,255,0.93); border-radius: 20px;">
-                        <button class="move-ratio-left action-mini-btn" data-index="${index}" ${isFirst ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                        <button class="move-ratio-left action-mini-btn" data-index="${index}" ${isFirst ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;"' : 'style="width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;"'}>
                             <i class="ph ph-arrow-left" style="font-size: 20px; color: #334155;"></i>
                         </button>
-                        <button class="move-ratio-right action-mini-btn" data-index="${index}" ${isLast ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                        <button class="move-ratio-right action-mini-btn" data-index="${index}" ${isLast ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;"' : 'style="width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;"'}>
                             <i class="ph ph-arrow-right" style="font-size: 20px; color: #334155;"></i>
                         </button>
-                        <button class="edit-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                        <button class="edit-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
                             <i class="ph ph-pencil-simple" style="font-size: 20px; color: var(--primary);"></i>
                         </button>
-                        <button class="delete-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                        <button class="delete-ratio-btn action-mini-btn" data-index="${index}" style="width:100%; height:100%; border:none; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center;">
                             <i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i>
                         </button>
                     </div>
@@ -377,11 +377,15 @@ export class AnalyticsView {
                         e.stopPropagation();
                     } else if (e.target.closest('.delete-ratio-btn')) {
                         const idx = parseInt(e.target.closest('.delete-ratio-btn').dataset.index);
+                        // Fade out animation
+                        card.classList.add('deleting');
                         this.editingId = null;
-                        const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
-                        rs.splice(idx, 1);
-                        localStorage.setItem('gamify_ratios', JSON.stringify(rs));
-                        this.renderUpdate();
+                        setTimeout(() => {
+                            const rs = JSON.parse(localStorage.getItem('gamify_ratios') || '[]');
+                            rs.splice(idx, 1);
+                            localStorage.setItem('gamify_ratios', JSON.stringify(rs));
+                            this.renderUpdate();
+                        }, 400);
                         e.stopPropagation();
                     } else {
                         this.editingId = null;
@@ -409,6 +413,9 @@ export class AnalyticsView {
         // Swap
         [rs[index], rs[newIdx]] = [rs[newIdx], rs[index]];
         localStorage.setItem('gamify_ratios', JSON.stringify(rs));
+
+        // Update editingId to follow the moved ratio
+        this.editingId = String(newIdx);
         this.renderUpdate();
     }
 

@@ -540,7 +540,10 @@ select.filter-pill option:first-child {
     justify-content: center;
 }
 
-.reaction-row.deleting {
+.reaction-row.deleting,
+.action-card.deleting,
+.ratio-card.deleting,
+.log-item.deleting {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s ease-out;
