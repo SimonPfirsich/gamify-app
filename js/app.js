@@ -61,6 +61,9 @@ class App {
         const icon = document.getElementById('refresh-icon');
 
         document.addEventListener('touchstart', (e) => {
+            const chatFeed = document.getElementById('chat-feed');
+            if (chatFeed && chatFeed.scrollTop > 0) return; // Prevent pulling if chat is scrolled down
+
             const scrollTop = Math.max(content.scrollTop, window.scrollY, document.documentElement.scrollTop);
             if (scrollTop <= 0) {
                 this.startY = e.touches[0].pageY;

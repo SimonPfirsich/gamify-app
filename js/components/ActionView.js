@@ -228,8 +228,12 @@ export class ActionView {
                     this.dragGhost.style.height = rect.height + 'px';
                     this.dragGhost.style.zIndex = '9999';
                     this.dragGhost.style.pointerEvents = 'none';
-                    this.dragGhost.style.opacity = '0.9';
-                    this.dragGhost.style.transform = 'scale(1.1)'; // Pops out
+                    this.dragGhost.style.opacity = '0.95'; // More opaque for solid feel
+                    this.dragGhost.style.transform = 'scale(1.1)';
+                    this.dragGhost.style.border = '2px solid #1e293b'; // Dark highlight
+                    this.dragGhost.style.borderRadius = '16px';
+                    this.dragGhost.style.backgroundColor = '#ffffff';
+                    this.dragGhost.style.boxShadow = '0 15px 30px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)';
                     document.body.appendChild(this.dragGhost);
                     card.style.opacity = '0.3'; // Placeholder style
 
@@ -357,8 +361,9 @@ export class ActionView {
                     }
                 }, 10);
 
-                // Confetti celebration - explode from button
+                // Confetti celebration
                 this.showConfetti(rect);
+                new Audio('confetti.mp3').play().catch(() => { });
             };
 
             // DRAG AND DROP
@@ -445,6 +450,35 @@ export class ActionView {
 
         if (overlay) overlay.onclick = this.closeModal;
         if (cancelBtn) cancelBtn.onclick = this.closeModal;
+
+        // Swipe to Close Sheet Logic
+        if (sheet) {
+            let startY = 0;
+            let currentY = 0;
+            const handle = sheet.querySelector('.sheet-handle') || sheet; // Fallback to sheet if no handle
+
+            handle.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                currentY = startY;
+            }, { passive: true });
+
+            handle.addEventListener('touchmove', (e) => {
+                const y = e.touches[0].clientY;
+                const delta = y - startY;
+                if (delta > 0) { // Dragging down only
+                    sheet.style.transform = `translate3d(-50%, ${delta}px, 0)`;
+                }
+            }, { passive: true }); // Use passive for smoothness, might not stop scroll though
+
+            handle.addEventListener('touchend', (e) => {
+                const y = e.changedTouches[0].clientY;
+                if (y - startY > 100) {
+                    this.closeModal();
+                } else {
+                    sheet.style.transform = ''; // Spring back
+                }
+            });
+        }
 
         if (saveBtn) {
             saveBtn.onclick = async () => {
