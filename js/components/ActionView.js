@@ -66,19 +66,21 @@ export class ActionView {
                                          ">
                                         
                                         <!-- Edit Controls Tile View -->
+                                        <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="edit-controls-tile" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; z-index: 102;">
-                                                <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-tile">
-                                                    <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
-                                                </div>
-                                                <div style="display: flex; gap: 8px;">
-                                                    <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                                        <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
-                                                    </button>
-                                                    <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: white; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                                        <i class="ph ph-trash" style="font-size: 16px; color: #64748b;"></i>
-                                                    </button>
-                                                </div>
+                                            <div class="edit-controls-tile" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; z-index: 102; background: rgba(255,255,255,0.93); border-radius: 20px;">
+                                                <button class="move-action-left action-mini-btn" data-aid="${a.id}" data-cid="${c.id}" ${actions.indexOf(a) === 0 ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                                                    <i class="ph ph-arrow-left" style="font-size: 20px; color: #334155;"></i>
+                                                </button>
+                                                <button class="move-action-right action-mini-btn" data-aid="${a.id}" data-cid="${c.id}" ${actions.indexOf(a) === actions.length - 1 ? 'disabled style="opacity:0.3;pointer-events:none; width:100%; height:100%; box-shadow:none; background:#f1f5f9;"' : 'style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;"'}>
+                                                    <i class="ph ph-arrow-right" style="font-size: 20px; color: #334155;"></i>
+                                                </button>
+                                                <button class="edit-action action-mini-btn" data-aid="${a.id}" data-cid="${c.id}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                                                    <i class="ph ph-pencil-simple" style="font-size: 20px; color: var(--primary);"></i>
+                                                </button>
+                                                <button class="delete-action action-mini-btn" data-aid="${a.id}" style="width:100%; height:100%; box-shadow:none; background:#f1f5f9;">
+                                                    <i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i>
+                                                </button>
                                             </div>
                                         ` : ''}
 
@@ -200,115 +202,71 @@ export class ActionView {
             let startX, startY, initialTouchIdentifier;
 
             // LONG PRESS DETECTION with immediate drag
+            // LONG PRESS DETECTION (Simple Edit Mode Trigger)
             card.ontouchstart = (e) => {
                 if (this.editingId) return;
-                const touch = e.touches[0];
-                startX = touch.clientX;
-                startY = touch.clientY;
-                initialTouchIdentifier = touch.identifier;
-
                 this.longPressTimer = setTimeout(() => {
                     this.editingId = card.dataset.aid;
                     if (navigator.vibrate) navigator.vibrate(50);
                     history.pushState({ editMode: true }, '');
-
-                    // Mark this card as being dragged immediately
-                    card.classList.add('dragging');
-                    this.draggedCard = card;
-                    this.isDraggingAfterLongPress = true;
-                    this.hasMoved = false;
-
-                    // Create Ghost
-                    const rect = card.getBoundingClientRect();
-                    // Calculate offset from the initial touch point to the card's top-left corner
-                    this.dragOffsetX = this.touchStartX - rect.left;
-                    this.dragOffsetY = this.touchStartY - rect.top;
-
-                    this.dragGhost = card.cloneNode(true);
-                    this.dragGhost.style.position = 'fixed';
-                    this.dragGhost.style.left = rect.left + 'px';
-                    this.dragGhost.style.top = rect.top + 'px';
-                    this.dragGhost.style.width = rect.width + 'px';
-                    this.dragGhost.style.height = rect.height + 'px';
-                    this.dragGhost.style.zIndex = '9999';
-                    this.dragGhost.style.pointerEvents = 'none';
-                    this.dragGhost.style.opacity = '0.95'; // More opaque for solid feel
-                    this.dragGhost.style.transform = 'scale(1.1)';
-                    this.dragGhost.style.border = '2px solid #1e293b'; // Dark highlight
-                    this.dragGhost.style.borderRadius = '16px';
-                    this.dragGhost.style.backgroundColor = '#ffffff';
-                    this.dragGhost.style.boxShadow = '0 15px 30px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)';
-                    document.body.appendChild(this.dragGhost);
-                    card.style.opacity = '0.3'; // Placeholder style
-
                     this.renderUpdate();
-
-                    // Re-select the card after re-render
-                    setTimeout(() => {
-                        const newCard = document.querySelector(`.action-card[data-aid="${card.dataset.aid}"]`);
-                        if (newCard) {
-                            newCard.classList.add('dragging');
-                            this.draggedCard = newCard;
-                        }
-                    }, 50);
                 }, 600);
-            };
-
-            card.ontouchmove = (e) => {
-                // If moved more than threshold, cancel long press
-                if (!this.isDraggingAfterLongPress && this.longPressTimer) {
-                    const touch = [...e.touches].find(t => t.identifier === initialTouchIdentifier);
-                    if (touch) {
-                        const dx = Math.abs(touch.clientX - startX);
-                        const dy = Math.abs(touch.clientY - startY);
-                        if (dx > 10 || dy > 10) {
-                            clearTimeout(this.longPressTimer);
-                        }
-                    }
-                }
-
-                // Handle drag if in drag mode
-                if (this.isDraggingAfterLongPress && this.draggedCard) {
-                    const t = e.touches[0];
-                    if (Math.abs(t.clientX - startX) > 5 || Math.abs(t.clientY - startY) > 5) this.hasMoved = true;
-
-                    if (this.hasMoved && this.dragGhost) {
-                        const t = e.touches[0];
-                        // Use offset to keep ghost exactly under finger as it was grabbed
-                        const x = t.clientX - this.dragOffsetX;
-                        const y = t.clientY - this.dragOffsetY;
-                        this.dragGhost.style.left = x + 'px';
-                        this.dragGhost.style.top = y + 'px';
-                    }
-
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const grid = this.draggedCard.closest('.actions-grid');
-                    if (grid) {
-                        const afterElement = this.getDragAfterElement(grid, touch.clientX, touch.clientY);
-                        if (afterElement == null) grid.appendChild(this.draggedCard);
-                        else grid.insertBefore(this.draggedCard, afterElement);
-                    }
-                }
             };
 
             card.ontouchend = card.ontouchcancel = () => {
                 clearTimeout(this.longPressTimer);
+            };
 
-                if (this.isDraggingAfterLongPress && this.draggedCard) {
-                    if (this.dragGhost) {
-                        this.dragGhost.remove();
-                        this.dragGhost = null;
+            // CLICK ACTION
+            card.onclick = async (e) => {
+                const aId = card.dataset.aid;
+
+                if (this.editingId) {
+                    // Controls Logic for Grid/Arrows
+                    if (e.target.closest('.move-action-left')) {
+                        const btn = e.target.closest('.move-action-left');
+                        this.moveAction(btn.dataset.cid, btn.dataset.aid, -1);
+                        e.stopPropagation();
+                    } else if (e.target.closest('.move-action-right')) {
+                        const btn = e.target.closest('.move-action-right');
+                        this.moveAction(btn.dataset.cid, btn.dataset.aid, 1);
+                        e.stopPropagation();
+                    } else if (e.target.closest('.edit-action')) {
+                        const btn = e.target.closest('.edit-action');
+                        this.openModal(btn.dataset.aid, btn.dataset.cid);
+                        this.editingId = null;
+                        e.stopPropagation();
+                    } else if (e.target.closest('.delete-action')) {
+                        if (confirm(this.t('delete_confirm'))) {
+                            store.deleteAction(aId);
+                            this.editingId = null;
+                        }
+                        e.stopPropagation();
+                    } else {
+                        // Click elsewhere on card exits edit mode
+                        this.editingId = null;
+                        this.renderUpdate();
                     }
-                    this.draggedCard.style.opacity = '';
-                    this.draggedCard.classList.remove('dragging');
-                    this.saveOrder(this.draggedCard.closest('.challenge-group'));
-                    // If we moved (dragged), exit mode. If we just held (symbol access), keep mode.
-                    if (this.hasMoved) this.editingId = null;
-                    this.isDraggingAfterLongPress = false;
-                    this.draggedCard = null;
-                    this.renderUpdate();
+                    return;
                 }
+
+                const rect = card.getBoundingClientRect();
+                const cId = card.dataset.cid;
+
+                await store.addEvent(cId, aId);
+
+                if (navigator.vibrate) navigator.vibrate(20);
+                setTimeout(() => {
+                    const newCard = document.querySelector(`.action-card[data-aid="${aId}"]`);
+                    if (newCard) {
+                        newCard.style.transform = 'scale(0.95)';
+                        setTimeout(() => newCard.style.transform = '', 100);
+                    }
+                }, 10);
+
+                // Confetti celebration
+                this.showConfetti(rect);
+                this.playConfettiSound();
             };
 
             // Mouse events for desktop
@@ -337,6 +295,12 @@ export class ActionView {
                             store.deleteAction(aId);
                             this.editingId = null;
                         }
+                    } else if (e.target.closest('.move-action-left')) {
+                        const btn = e.target.closest('.move-action-left');
+                        this.moveAction(btn.dataset.cid, btn.dataset.aid, -1);
+                    } else if (e.target.closest('.move-action-right')) {
+                        const btn = e.target.closest('.move-action-right');
+                        this.moveAction(btn.dataset.cid, btn.dataset.aid, 1);
                     } else if (e.target.closest('.edit-action')) {
                         const btn = e.target.closest('.edit-action');
                         this.openModal(btn.dataset.aid, btn.dataset.cid);
@@ -754,5 +718,81 @@ export class ActionView {
             container.remove();
             styleEl.remove();
         }, 4000);
+    }
+
+    async moveAction(cid, aid, direction) {
+        const challenge = store.state.challenges.find(c => c.id === cid);
+        if (!challenge) return;
+
+        // Get current order or default order
+        let order = store.state.actionOrder[cid];
+        if (!order) {
+            order = challenge.actions.map(a => a.id);
+        } else {
+            // Ensure order contains all current actions if any added recently
+            const currentIds = challenge.actions.map(a => a.id);
+            // Filter order to only keep existing, append new ones? 
+            // For now, assume order is mostly correct or just use it.
+            // To be robust:
+            order = [...order];
+        }
+
+        const idx = order.indexOf(aid);
+        if (idx === -1) return;
+
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= order.length) return; // Boundary check
+
+        // Swap
+        [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+
+        store.saveActionOrder(cid, order);
+        this.renderUpdate();
+    }
+
+    playConfettiSound() {
+        if (!this.audioCtx) {
+            try {
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                // Fallback
+                const a = new Audio('confetti.mp3');
+                a.volume = 0.3;
+                a.play().catch(() => { });
+                return;
+            }
+        }
+
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+
+        if (this.confettiBuffer) {
+            this.playSoundFromBuffer(this.confettiBuffer, 0.3);
+            return;
+        }
+
+        fetch('confetti.mp3')
+            .then(res => res.arrayBuffer())
+            .then(arr => this.audioCtx.decodeAudioData(arr))
+            .then(audioBuffer => {
+                this.confettiBuffer = audioBuffer;
+                this.playSoundFromBuffer(audioBuffer, 0.3);
+            })
+            .catch(() => {
+                const a = new Audio('confetti.mp3');
+                a.volume = 0.3;
+                a.play().catch(() => { });
+            });
+    }
+
+    playSoundFromBuffer(buffer, vol) {
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        const gainNode = this.audioCtx.createGain();
+        gainNode.gain.value = vol;
+        source.connect(gainNode);
+        gainNode.connect(this.audioCtx.destination);
+        source.start(0);
     }
 }
