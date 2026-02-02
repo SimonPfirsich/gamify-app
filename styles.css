@@ -445,11 +445,11 @@ body.chat-active #content {
 /* Chat feed padding based on keyboard state */
 /* Chat feed padding based on keyboard state */
 #chat-feed {
-    padding-bottom: 130px;
+    padding-bottom: 127px;
 }
 
 .keyboard-open #chat-feed {
-    padding-bottom: 60px;
+    padding-bottom: 59px;
 }
 
 select.filter-pill option:first-child {
