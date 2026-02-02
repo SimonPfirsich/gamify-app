@@ -106,9 +106,9 @@ export class ActionView {
                                         ` : ''}
 
                                         <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
-                                        <div style="${this.currentView === 'list' ? 'flex:1;' : 'text-align: center; width: 100%;'} opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
+                                        <div style="${this.currentView === 'list' ? 'flex:1; text-align: center;' : 'text-align: center; width: 100%;'} opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">
                                             <div style="font-weight: 700; font-size: ${this.currentView === 'tile' ? '12px' : '14px'}; color: var(--text-dark); word-break: break-word; hyphens: auto;">${a.name}</div>
-                                            <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${this.t('points') || 'Punkte'}</div>
+                                            <div style="font-size: 10px; color: #10b981; font-weight: 600; margin-top: 2px;">+${a.points} ${a.points === 1 ? (this.t('point') || 'Punkt') : (this.t('points') || 'Punkte')}</div>
                                         </div>
 
 

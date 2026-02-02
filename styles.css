@@ -446,11 +446,11 @@ body.chat-active #content {
 /* Chat feed padding based on keyboard state */
 /* Chat feed padding based on keyboard state */
 #chat-feed {
-    padding-bottom: 100px;
+    padding-bottom: 40px;
 }
 
 .keyboard-open #chat-feed {
-    padding-bottom: 30px;
+    padding-bottom: 110px;
 }
 
 select.filter-pill option:first-child {

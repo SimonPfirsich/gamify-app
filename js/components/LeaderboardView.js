@@ -6,6 +6,8 @@ export class LeaderboardView {
         this.selectedChallenge = null;
         this.filterTime = 'all';
         this.filterAction = 'all';
+        this.customStart = '';
+        this.customEnd = '';
     }
 
     t(key) {
@@ -14,33 +16,35 @@ export class LeaderboardView {
 
     getFilteredEvents() {
         let events = store.state.events;
-
-        // Time filter
         const now = new Date();
-        let startDate = null;
 
-        if (this.filterTime === 'today') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-        } else if (this.filterTime === 'week') {
-            const dayOfWeek = now.getDay();
-            const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysFromMonday, 0, 0, 0);
-        } else if (this.filterTime === 'month') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-        } else if (this.filterTime === 'year') {
-            startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
-        }
+        return events.filter(e => {
+            const date = new Date(e.created_at);
+            let timeMatch = true;
 
-        if (startDate) {
-            events = events.filter(e => new Date(e.created_at) >= startDate);
-        }
+            if (this.filterTime === 'today') {
+                timeMatch = date.toDateString() === now.toDateString();
+            } else if (this.filterTime === 'week') {
+                const firstDay = new Date(now);
+                firstDay.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+                firstDay.setHours(0, 0, 0, 0);
+                timeMatch = date >= firstDay;
+            } else if (this.filterTime === 'month') {
+                timeMatch = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            } else if (this.filterTime === 'year') {
+                timeMatch = date.getFullYear() === now.getFullYear();
+            } else if (this.filterTime === 'custom') {
+                if (this.customStart) timeMatch = timeMatch && date >= new Date(this.customStart);
+                if (this.customEnd) timeMatch = timeMatch && date <= new Date(this.customEnd + 'T23:59:59');
+            }
 
-        // Action filter
-        if (this.filterAction !== 'all') {
-            events = events.filter(e => e.action_id === this.filterAction);
-        }
+            let actionMatch = true;
+            if (this.filterAction !== 'all') {
+                actionMatch = e.action_id === this.filterAction;
+            }
 
-        return events;
+            return timeMatch && actionMatch;
+        });
     }
 
     getLeaderboard(challengeId) {
@@ -74,6 +78,7 @@ export class LeaderboardView {
         }
 
         const leaderboard = this.getLeaderboard(this.selectedChallenge);
+        const medals = ['🏆', '🥈', '🥉'];
 
         return `
             <div class="header">
@@ -92,44 +97,52 @@ export class LeaderboardView {
                     <option value="week" ${this.filterTime === 'week' ? 'selected' : ''}>${this.t('this_week')}</option>
                     <option value="month" ${this.filterTime === 'month' ? 'selected' : ''}>${this.t('this_month')}</option>
                     <option value="year" ${this.filterTime === 'year' ? 'selected' : ''}>${this.t('this_year')}</option>
+                    <option value="custom" ${this.filterTime === 'custom' ? 'selected' : ''}>${this.t('custom')}</option>
                 </select>
             </div>
-            
-            <div style="padding: 0 16px; margin-bottom: 20px; display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
-                ${challenges.map(c => `
-                    <button class="challenge-tab ${this.selectedChallenge === c.id ? 'active' : ''}" data-id="${c.id}" style="
-                        padding: 8px 16px; border-radius: 20px; border: none; font-size: 13px; font-weight: 500;
-                        background: ${this.selectedChallenge === c.id ? 'var(--primary)' : '#f1f5f9'};
-                        color: ${this.selectedChallenge === c.id ? 'white' : 'var(--text-muted)'};
-                        cursor: pointer;
-                    ">${c.name}</button>
-                `).join('')}
-            </div>
 
-            <div style="padding: 0 16px;">
-                ${leaderboard.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
-                ${leaderboard.map((entry, idx) => `
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-radius: 16px; margin-bottom: 8px; border: 1px solid #f1f5f9;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="font-weight: 700; width: 20px; color: ${idx < 3 ? 'var(--primary)' : '#94a3b8'};">#${idx + 1}</div>
-                            <div style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 18px;">${entry.user.avatar}</div>
-                            <div style="font-weight: 600; font-size: 14px;">${entry.user.name}</div>
-                        </div>
-                        <div style="font-weight: 700; color: var(--primary);">${entry.score} <span style="font-size: 10px; font-weight: 400; color: var(--text-muted);">${this.t('points') || 'Punkte'}</span></div>
+            ${this.filterTime === 'custom' ? `
+                <div class="filter-bar" style="padding-top: 0;">
+                    <div style="display:flex; align-items:center; gap:5px; flex:1;">
+                        <span style="font-size:11px; color:var(--text-muted)">${this.t('from')}</span>
+                        <input type="date" id="lb-custom-start" class="date-pill" value="${this.customStart}">
                     </div>
-                `).join('')}
+                    <div style="display:flex; align-items:center; gap:5px; flex:1;">
+                        <span style="font-size:11px; color:var(--text-muted)">${this.t('to')}</span>
+                        <input type="date" id="lb-custom-end" class="date-pill" value="${this.customEnd}">
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div style="padding: 0 16px;">
+                <div style="background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #f1f5f9;">
+                    ${leaderboard.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">${this.t('no_entries')}</div>` : ''}
+                    
+                    ${leaderboard.map((entry, idx) => `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f8fafc; background: ${idx < 3 ? 'linear-gradient(to right, #fff, #fafafa)' : 'white'};">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="font-weight: 800; width: 24px; font-size: 16px; color: ${idx < 3 ? 'var(--text-dark)' : '#cbd5e1'}; text-align: center;">
+                                    ${idx < 3 ? medals[idx] : '#' + (idx + 1)}
+                                </div>
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid ${idx === 0 ? '#fbbf24' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : 'transparent'))};">
+                                    ${entry.user.avatar}
+                                </div>
+                                <div style="font-weight: 600; font-size: 15px; color: var(--text-dark);">${entry.user.name}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 800; font-size: 18px; color: var(--primary);">${entry.score}</div>
+                                <div style="font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                                    ${entry.score === 1 ? (this.t('point') || 'Punkt') : (this.t('points') || 'Punkte')}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
         `;
     }
 
     afterRender() {
-        document.querySelectorAll('.challenge-tab').forEach(tab => {
-            tab.onclick = () => {
-                this.selectedChallenge = tab.dataset.id;
-                this.renderUpdate();
-            };
-        });
-
         const timeFilter = document.getElementById('lb-filter-time');
         if (timeFilter) {
             timeFilter.onchange = () => {
@@ -145,12 +158,20 @@ export class LeaderboardView {
                 this.renderUpdate();
             };
         }
+
+        const startInput = document.getElementById('lb-custom-start');
+        const endInput = document.getElementById('lb-custom-end');
+
+        if (startInput) startInput.onchange = () => { this.customStart = startInput.value; this.renderUpdate(); };
+        if (endInput) endInput.onchange = () => { this.customEnd = endInput.value; this.renderUpdate(); };
     }
 
     renderUpdate() {
         const content = document.getElementById('content');
-        content.innerHTML = this.render();
-        this.afterRender();
+        if (content) {
+            content.innerHTML = this.render();
+            this.afterRender();
+        }
     }
 }
 
