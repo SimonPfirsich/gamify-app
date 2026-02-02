@@ -75,33 +75,35 @@ export class ActionView {
                                         
                                         <!-- Edit Controls Tile View -->
                                         ${isEditingThis && this.currentView === 'tile' ? `
-                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 102;">
+                                            <div class="edit-controls-tile" style="position: absolute; bottom: 8px; left: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 102;">
                                                 <div style="width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-tile">
                                                     <i class="ph ph-hand-grabbing" style="font-size: 16px; color: #64748b; transform: rotate(-30deg);"></i>
                                                 </div>
-                                                <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
-                                                </button>
-                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="ph ph-trash" style="font-size: 16px; color: #ef4444;"></i>
-                                                </button>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="ph ph-pencil-simple" style="font-size: 16px; color: #64748b;"></i>
+                                                    </button>
+                                                    <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: white; pointer-events: auto; width: 32px; height: 32px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="ph ph-trash" style="font-size: 16px; color: #64748b;"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         ` : ''}
 
                                         <!-- Edit Controls List View -->
                                         ${isEditingThis && this.currentView === 'list' ? `
                                             <div class="edit-controls-list-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; z-index: 102;">
-                                                <div style="width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-list">
-                                                    <i class="ph ph-hand-grabbing" style="font-size: 20px; color: #64748b; transform: rotate(-30deg);"></i>
-                                                </div>
                                                 <button class="action-mini-btn edit-action" data-aid="${a.id}" data-cid="${c.id}" style="pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
                                                     <i class="ph ph-pencil-simple" style="font-size: 20px; color: #64748b;"></i>
                                                 </button>
-                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: #fee2e2; pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="ph ph-trash" style="font-size: 20px; color: #ef4444;"></i>
+                                                <button class="action-mini-btn delete-action" data-aid="${a.id}" style="background: white; pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="ph ph-trash" style="font-size: 20px; color: #64748b;"></i>
                                                 </button>
+                                                <div style="width: 40px; height: 40px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-list">
+                                                    <i class="ph ph-hand-grabbing" style="font-size: 20px; color: #64748b; transform: rotate(-30deg);"></i>
+                                                </div>
                                             </div>
-                                        ` : ''}
+                                        ` : ''}}
 
                                         <div style="font-size: ${this.currentView === 'tile' ? '28px' : '20px'}; margin: ${this.currentView === 'tile' ? '0 0 8px 0' : '0 15px 0 0'}; line-height: 1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">${iconDisplay}</div>
                                         <div style="flex:1; opacity: ${isEditingThis ? '0.1' : '1'}; pointer-events: none;">

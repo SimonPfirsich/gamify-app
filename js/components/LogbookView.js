@@ -130,8 +130,8 @@ export class LogbookView {
                                     <button class="action-mini-btn edit-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
                                         <i class="ph ph-pencil-simple" style="font-size: 22px; color: #64748b;"></i>
                                     </button>
-                                    <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: #fee2e2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
-                                        <i class="ph ph-trash" style="font-size: 22px; color: #ef4444;"></i>
+                                    <button class="action-mini-btn delete-log-btn" data-id="${event.id}" style="pointer-events: auto; width: 44px; height: 44px; border-radius: 12px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: none; display: flex; align-items: center; justify-content: center;">
+                                        <i class="ph ph-trash" style="font-size: 22px; color: #64748b;"></i>
                                     </button>
                                 </div>
                             ` : ''

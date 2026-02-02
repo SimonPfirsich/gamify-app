@@ -137,22 +137,22 @@ export class AnalyticsView {
             <div style="margin-top: 30px; padding: 0 16px 100px;">
                 <h3 style="font-size: 14px; margin-bottom: 16px; color: var(--text-muted);">${this.t('charts')}</h3>
                 
-                <!-- LINE CHART: Activity over last 7 days -->
+                <!-- LINE CHART: Activity Trend -->
                 <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
-                    <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('activity_trend') || 'Aktivitäts-Trend (7 Tage)'}</div>
-                    ${this.renderLineChart(events)}
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('activity_trend') || 'Aktivitäts-Trend'}</div>
+                    ${this.renderLineChart(this.getFilteredEvents(events))}
                 </div>
                 
                 <!-- DONUT CHART: Action Distribution -->
                 <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
                     <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('action_distribution') || 'Verteilung der Actions'}</div>
-                    ${this.renderDonutChart(events, allActions)}
+                    ${this.renderDonutChart(this.getFilteredEvents(events), allActions)}
                 </div>
                 
                 <!-- BAR CHART: Top Actions -->
                 <div style="background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; border: 1px solid #f1f5f9;">
                     <div style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">${this.t('top_actions') || 'Top Actions'}</div>
-                    ${this.renderBarChart(events, allActions)}
+                    ${this.renderBarChart(this.getFilteredEvents(events), allActions)}
                 </div>
             </div>
 
@@ -237,12 +237,14 @@ export class AnalyticsView {
                     <span class="ratio-details" style="word-break: break-word;">${count1} ${plural1} / ${count2} ${plural2}</span>
                 </div>
 
-                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: center; gap: 12px; z-index: 20;">
+                <div class="edit-controls" style="display: ${isEditingThis ? 'flex' : 'none'}; position: absolute; bottom: 10px; left: 0; width: 100%; flex-direction: column; align-items: center; gap: 8px; z-index: 20;">
                     <div style="width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: grab;" class="drag-handle-ratio">
                         <i class="ph ph-hand-grabbing" style="font-size: 24px; color: #64748b; transform: rotate(-30deg);"></i>
                     </div>
-                    <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 24px; color: #64748b;"></i></button>
-                    <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 24px; color: #ef4444;"></i></button>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="action-btn edit-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-pencil-simple" style="font-size: 24px; color: #64748b;"></i></button>
+                        <button class="action-btn delete delete-ratio-btn" data-index="${index}" style="pointer-events:auto; width: 48px; height: 48px; border-radius: 14px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: none; display: flex; align-items: center; justify-content: center;"><i class="ph ph-trash" style="font-size: 24px; color: #64748b;"></i></button>
+                    </div>
                 </div>
             </div>
         `;
@@ -418,6 +420,53 @@ export class AnalyticsView {
         if (content) { content.innerHTML = this.render(); this.afterRender(); }
     }
 
+    getFilteredEvents(events) {
+        let filtered = events;
+
+        // User filter
+        if (this.filterUser !== 'all') {
+            filtered = filtered.filter(e => e.user_id === this.filterUser);
+        }
+
+        // Time filter
+        const now = new Date();
+        let startDate = null;
+
+        if (this.filterTime === 'today') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        } else if (this.filterTime === 'week') {
+            // Since Monday 00:00 of current week
+            const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+            const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysFromMonday, 0, 0, 0);
+        } else if (this.filterTime === 'month') {
+            // Since 1st of current month 00:00
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+        } else if (this.filterTime === 'year') {
+            // Since Jan 1st 00:00 of current year
+            startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+        } else if (this.filterTime === 'custom' && this.customStart && this.customEnd) {
+            const start = new Date(this.customStart);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(this.customEnd);
+            end.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(e => {
+                const d = new Date(e.created_at);
+                return d >= start && d <= end;
+            });
+            return filtered;
+        }
+
+        if (startDate) {
+            filtered = filtered.filter(e => {
+                const d = new Date(e.created_at);
+                return d >= startDate;
+            });
+        }
+
+        return filtered;
+    }
+
     renderLineChart(events) {
         const counts = [];
         const labels = [];
@@ -490,10 +539,6 @@ export class AnalyticsView {
             }
         }
 
-        if (this.filterUser !== 'all') {
-            // Already filtered in events from render
-        }
-
         const max = Math.max(...counts, 1);
         const width = 280;
         const height = 100;
@@ -518,11 +563,10 @@ export class AnalyticsView {
     }
 
     renderDonutChart(events, allActions) {
-        let filtered = events;
-        if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
+        // Events are already filtered by getFilteredEvents
 
         const actionCounts = {};
-        filtered.forEach(e => {
+        events.forEach(e => {
             actionCounts[e.action_id] = (actionCounts[e.action_id] || 0) + 1;
         });
 
@@ -580,11 +624,10 @@ export class AnalyticsView {
     }
 
     renderBarChart(events, allActions) {
-        let filtered = events;
-        if (this.filterUser !== 'all') filtered = filtered.filter(e => e.user_id === this.filterUser);
+        // Events are already filtered by getFilteredEvents
 
         const actionCounts = {};
-        filtered.forEach(e => {
+        events.forEach(e => {
             actionCounts[e.action_id] = (actionCounts[e.action_id] || 0) + 1;
         });
 
